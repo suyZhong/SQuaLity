@@ -2,3 +2,4 @@
 cockroach-data/
 __pycache__
 *.log
+*.db
