@@ -1,7 +1,9 @@
 from ast import parse
+import os
 from src import testparser
-
+from src import testrunner
 file = "demo/sqlite_tests-random-aggregates-slt_good_100.test"
+db_name = "demo/sqlite_demo.db"
 # file = "demo/trashy.slt"
 script = """query
 SHOW CREATE TABLE t1
@@ -22,4 +24,7 @@ p.print_records()
 p.get_file_content()
 p.parse_file()
 # p.print_scripts()
-p.print_records()
+# p.print_records()
+os.system('rm %s' % db_name)
+r = testrunner.SQLiteRunner(p.records,db_name)
+r.run()
