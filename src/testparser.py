@@ -46,10 +46,11 @@ class SLTParser(Parser):
         r = Statement()
 
         if record_type == 'statement':
-            assert (line_num <= 2), 'statement too long: ' + '\n'.join(lines)
+            # assert (line_num <= 2), 'statement too long: ' + '\n'.join(lines)
             status = (tokens[1] == 'ok')
             # Only a single SQL command is allowed per statement
-            r = Statement(sql=lines[1], status=status)
+            # r = Statement(sql=lines[1], status=status)
+            r = Statement(sql="".join(lines[1:]), status=status)
         elif record_type == 'query':
             # A query record begins with a line of the following form:
             #       query <type-string> <sort-mode> <label>

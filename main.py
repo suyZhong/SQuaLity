@@ -69,4 +69,4 @@ if __name__ == "__main__":
         r.connect(db_file)
         print("-----------------------------")
         print("running", test_file)
-        r.debug_run(10)
+        r.debug_run(30)
