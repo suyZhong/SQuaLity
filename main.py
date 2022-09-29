@@ -44,30 +44,41 @@ if __name__ == "__main__":
     test_files = find_tests(testcase_name)
     
     # set the runner
-    if dbms_name == 'sqlite':
-        r = testrunner.SQLiteRunner(db=db_file)
-    elif dbms_name == 'duckdb':
-        r = testrunner.DuckDBRunner(db=db_file)
-    else:
-        exit("Not implement yet")
+    # if dbms_name == 'sqlite':
+    #     r = testrunner.SQLiteRunner(db=db_file)
+    # elif dbms_name == 'duckdb':
+    #     r = testrunner.DuckDBRunner(db=db_file)
+    # else:
+    #     exit("Not implement yet")
     
-    # set the parser
-    if testcase_name == 'sqlite':
-        p = testparser.SLTParser()
-    else:
-        exit("Not implement yet")
+    # # set the parser
+    # if testcase_name == 'sqlite':
+    #     p = testparser.SLTParser()
+    # else:
+    #     exit("Not implement yet")
     
     for i, test_file in enumerate(test_files):
+        db_file = args.db_file + str(i)
         if max_files > 0 and i > max_files:
             break
+        if dbms_name == 'sqlite':
+            r = testrunner.SQLiteRunner(db=db_file)
+        elif dbms_name == 'duckdb':
+            r = testrunner.DuckDBRunner(db=db_file)
+        else:
+            exit("Not implement yet")
+
+        # set the parser
+        if testcase_name == 'sqlite':
+            p = testparser.SLTParser()
+        else:
+            exit("Not implement yet")
         print("test file", i)
         print("-----------------------------")
         print("parsing", test_file)
         p.get_file_name(test_file)
         p.get_file_content()
         p.parse_file()
-        os.system('rm %s' % db_file)
-        
         r.get_records(p.get_records())
         r.connect(db_file)
         print("-----------------------------")
@@ -76,3 +87,8 @@ if __name__ == "__main__":
         if not r.allright:
             print("Wrong!", test_file)
         print ("##########################\n\n")
+        r.close()
+        try:
+            os.remove(db_file)
+        except:
+            print("No such file or directory:")

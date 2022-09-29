@@ -87,7 +87,7 @@ class Runner():
             result_len = 0
         result_string = self._replace_None(result_string)
         
-        if result_len >= self.hash_threshold:
+        if result_len > self.hash_threshold:
             result_string = self._hash_results(result_string)
             result_string = str(result_len) + " values hashing to " + result_string
         
@@ -112,9 +112,12 @@ class SQLiteRunner(Runner):
         
     
     def connect(self, file_path):
-        self.db = file_path
-        self.con = sqlite3.connect(self.db)
+        print("connect to db", file_path)
+        self.con = sqlite3.connect(file_path)
         self.cur = self.con.cursor()
+        
+    def close(self):
+        self.con.close()
     
     
     def set_dbfile(self, file_path):
