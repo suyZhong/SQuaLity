@@ -10,6 +10,9 @@ class Parser:
 
     # read the whole file
 
+    def get_file_name(self, filename):
+        self.filename = filename
+
     def get_file_content(self):
         with open(self.filename, 'r') as f:
             self.test_content = f.read()
