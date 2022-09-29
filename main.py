@@ -33,17 +33,17 @@ if __name__ == "__main__":
     parser.add_argument('-d', "--dbms", type=str,help="Enter the DBMS name")
     parser.add_argument('-t',"--db_test", type=str,default="sqlite", help="Enter the db test cases")
     parser.add_argument('-f',"--db_file", type=str, default="output/test.db", help="Enter the in-mem db file save path")
-    # parser.add_argument("--max_iter", type=int, default=-1, help="Max test files it run")
+    parser.add_argument("--max_files", type=int, default=-1, help="Max test files it run")
     
     
     args= parser.parse_args()
     dbms_name = str.lower(args.dbms)
     testcase_name = str.lower(args.db_test)
-    # max_iter = args.max_iter
+    max_files = args.max_files
     db_file = args.db_file
     test_files = find_tests(testcase_name)
     
-    # set the r
+    # set the runner
     if dbms_name == 'sqlite':
         r = testrunner.SQLiteRunner(db=db_file)
     elif dbms_name == 'duckdb':
@@ -58,6 +58,9 @@ if __name__ == "__main__":
         exit("Not implement yet")
     
     for i, test_file in enumerate(test_files):
+        if max_files > 0 and i > max_files:
+            break
+        print("test file", i)
         print("-----------------------------")
         print("parsing", test_file)
         p.get_file_name(test_file)
@@ -69,4 +72,7 @@ if __name__ == "__main__":
         r.connect(db_file)
         print("-----------------------------")
         print("running", test_file)
-        r.debug_run(30)
+        r.run()
+        if not r.allright:
+            print("Wrong!", test_file)
+        print ("##########################\n\n")

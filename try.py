@@ -2,7 +2,7 @@ from ast import parse
 import os
 from src import testparser
 from src import testrunner
-file = "demo/sqlite_tests-random-aggregates-slt_good_100.test"
+file = "demo/slt_good_0.test"
 db_name = "demo/sqlite_demo.db"
 # file = "demo/trashy.slt"
 script = """query
@@ -26,5 +26,9 @@ p.parse_file()
 # p.print_scripts()
 # p.print_records()
 os.system('rm %s' % db_name)
-r = testrunner.SQLiteRunner(p.records,db_name)
+r = testrunner.DuckDBRunner(p.records,db_name)
+r.connect(db_name)
+# r.debug_run(30)
 r.run()
+if not r.allright:
+  print("Wrong!", file)
