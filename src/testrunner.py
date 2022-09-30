@@ -104,9 +104,8 @@ class Runner():
         
 
 class SQLiteRunner(Runner):
-    def __init__(self, records: List[Record]=[], db="demo.db") -> None:
+    def __init__(self, records: List[Record]=[]) -> None:
         super().__init__(records)
-        self.db = db
         self.con = None
         self.cur = None
         
@@ -119,10 +118,6 @@ class SQLiteRunner(Runner):
     def close(self):
         self.con.close()
     
-    
-    def set_dbfile(self, file_path):
-        self.db = file_path
-
     
     def _single_run(self, record:Record):
         # print(record.sql)
@@ -138,14 +133,12 @@ class SQLiteRunner(Runner):
             
 
 class DuckDBRunner(Runner):
-    def __init__(self, records: List[Record] = [], db = "demo.db") -> None:
+    def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
-        self.db = db
         self.con = None
 
     def connect(self, file_path):
-        self.db = file_path
-        self.con = duckdb.connect(database=self.db)
+        self.con = duckdb.connect(database=file_path)
     
     def _single_run(self, record: Record):
         # print(record.sql)

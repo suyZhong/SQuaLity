@@ -1,6 +1,7 @@
 *_tests/
 cockroach-data/
 __pycache__
+logs/
 *.log
 *.db
 output

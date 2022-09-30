@@ -31,48 +31,42 @@ def find_tests(db_name:str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--dbms", type=str,help="Enter the DBMS name")
-    parser.add_argument('-t',"--db_test", type=str,default="sqlite", help="Enter the db test cases")
+    parser.add_argument('-s',"--suite_name", type=str,default="sqlite", help="Enter the dbms test suites")
+    parser.add_argument('-t', '--test_file', type=str, default="", help="test a specific file")
     parser.add_argument('-f',"--db_file", type=str, default="output/test.db", help="Enter the in-mem db file save path")
     parser.add_argument("--max_files", type=int, default=-1, help="Max test files it run")
     
     
     args= parser.parse_args()
     dbms_name = str.lower(args.dbms)
-    testcase_name = str.lower(args.db_test)
+    suite_name = str.lower(args.suite_name)
     max_files = args.max_files
     db_file = args.db_file
-    test_files = find_tests(testcase_name)
+    test_file = args.test_file
+    if test_file:
+        test_files = [test_file]
+    else:
+        test_files = find_tests(suite_name)
     
     # set the runner
-    # if dbms_name == 'sqlite':
-    #     r = testrunner.SQLiteRunner(db=db_file)
-    # elif dbms_name == 'duckdb':
-    #     r = testrunner.DuckDBRunner(db=db_file)
-    # else:
-    #     exit("Not implement yet")
+    if dbms_name == 'sqlite':
+        r = testrunner.SQLiteRunner()
+    elif dbms_name == 'duckdb':
+        r = testrunner.DuckDBRunner()
+    else:
+        exit("Not implement yet")
     
-    # # set the parser
-    # if testcase_name == 'sqlite':
-    #     p = testparser.SLTParser()
-    # else:
-    #     exit("Not implement yet")
+    # set the parser
+    if suite_name == 'sqlite':
+        p = testparser.SLTParser()
+    else:
+        exit("Not implement yet")
     
     for i, test_file in enumerate(test_files):
         db_file = args.db_file + str(i)
         if max_files > 0 and i > max_files:
             break
-        if dbms_name == 'sqlite':
-            r = testrunner.SQLiteRunner(db=db_file)
-        elif dbms_name == 'duckdb':
-            r = testrunner.DuckDBRunner(db=db_file)
-        else:
-            exit("Not implement yet")
 
-        # set the parser
-        if testcase_name == 'sqlite':
-            p = testparser.SLTParser()
-        else:
-            exit("Not implement yet")
         print("test file", i)
         print("-----------------------------")
         print("parsing", test_file)
@@ -84,11 +78,11 @@ if __name__ == "__main__":
         print("-----------------------------")
         print("running", test_file)
         r.run()
-        if not r.allright:
-            print("Wrong!", test_file)
-        print ("##########################\n\n")
         r.close()
-        try:
-            os.remove(db_file)
-        except:
-            print("No such file or directory:")
+        if r.allright:
+            print("Pass all test case!")
+            try:
+                os.remove(db_file)
+            except:
+                print("No such file or directory:", db_file)
+        print ("###########################\n\n")
