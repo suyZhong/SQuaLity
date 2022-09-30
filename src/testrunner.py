@@ -87,7 +87,7 @@ class Runner():
             result_len = 0
         result_string = self._replace_None(result_string)
         
-        if result_len >= self.hash_threshold:
+        if result_len > self.hash_threshold:
             result_string = self._hash_results(result_string)
             result_string = str(result_len) + " values hashing to " + result_string
         
@@ -104,22 +104,20 @@ class Runner():
         
 
 class SQLiteRunner(Runner):
-    def __init__(self, records: List[Record]=[], db="demo.db") -> None:
+    def __init__(self, records: List[Record]=[]) -> None:
         super().__init__(records)
-        self.db = db
         self.con = None
         self.cur = None
         
     
     def connect(self, file_path):
-        self.db = file_path
-        self.con = sqlite3.connect(self.db)
+        print("connect to db", file_path)
+        self.con = sqlite3.connect(file_path)
         self.cur = self.con.cursor()
+        
+    def close(self):
+        self.con.close()
     
-    
-    def set_dbfile(self, file_path):
-        self.db = file_path
-
     
     def _single_run(self, record:Record):
         # print(record.sql)
@@ -135,14 +133,12 @@ class SQLiteRunner(Runner):
             
 
 class DuckDBRunner(Runner):
-    def __init__(self, records: List[Record] = [], db = "demo.db") -> None:
+    def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
-        self.db = db
         self.con = None
 
     def connect(self, file_path):
-        self.db = file_path
-        self.con = duckdb.connect(database=self.db)
+        self.con = duckdb.connect(database=file_path)
     
     def _single_run(self, record: Record):
         # print(record.sql)

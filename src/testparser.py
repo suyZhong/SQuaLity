@@ -133,6 +133,7 @@ class SLTParser(Parser):
     def parse_file(self):
         self.scripts = [script.strip()
                         for script in self.test_content.split('\n\n') if script != '']
+        self.records = []
         for i, script in enumerate(self.scripts):
             self.parse_script(script.strip())
 
