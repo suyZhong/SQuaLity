@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--test_file', type=str, default="", help="test a specific file")
     parser.add_argument('-f',"--db_file", type=str, default=":memory:", help="Enter the in-mem db file save path")
     parser.add_argument('--log', type=str, default="", help="logging path")
-    parser.add_argument("--max_files", type=int, default=-1, help="Max test files it run")
+    parser.add_argument("--max_files", type=int, default=0, help="Max test files it run")
     
     
     args= parser.parse_args()
@@ -51,6 +51,7 @@ if __name__ == "__main__":
         test_files = [test_file]
     else:
         test_files = find_tests(suite_name)
+    file_num = len(test_files)
     
     log_file = "logs/" + datetime.now().strftime("%m-%d-%H%M") + ".log"
     if log_level != "DEBUG":
@@ -73,11 +74,12 @@ if __name__ == "__main__":
         exit("Not implement yet")
     
     for i, test_file in enumerate(test_files):
+        if max_files <= 0 and i < abs(max_files):
+            continue
         db_file = args.db_file + str(i)
         os.system('rm %s'% db_file)
         if max_files > 0 and i > max_files:
             break
-
         # print("-----------------------------------")
         logging.info("test file %d", i)
         logging.info("parsing %s", test_file)
@@ -96,4 +98,5 @@ if __name__ == "__main__":
                 os.remove(db_file)
             except:
                 logging.error("No such file or directory:", db_file)
+        r.running_summary(test_file)
         # print ("#############################\n\n")

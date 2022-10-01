@@ -12,10 +12,33 @@ class Runner():
         self.records = records
         self.hash_threshold = 8
         self.allright = True
+        self.total_sql = 0
+        self.failed_statement_num = 0
+        self.failed_query_num = 0
+        self.wrong_query_num = 0
+        self.statement_num = 0
+        self.query_num = 0
         
     def run(self):
+        self.total_sql = 0
+        self.failed_statement_num = 0
+        self.failed_query_num = 0
+        self.wrong_query_num = 0
+        self.statement_num = 0
+        self.query_num = 0
         for record in self.records:
             self._single_run(record)
+    
+    def running_summary(self, test_name):
+        print("-------------------------------------------")
+        print("%s Result", test_name)
+        print("Total execute SQL: ", self.total_sql)
+        print("Total SQL statement: ", self.statement_num)
+        print("Total SQL query: ", self.query_num)
+        print("Failed SQL statement: ", self.failed_statement_num)
+        print("Failed SQL query: ", self.failed_query_num)
+        print("Wrong SQL query: ", self.wrong_query_num)
+        print("-------------------------------------------")
     
     def get_records(self, records:List[Record]):
         self.allright = True
@@ -105,6 +128,7 @@ class Runner():
             myDebug("Query %s Success", record.sql)
             pass
         else:
+            self.wrong_query_num += 1
             logging.error("Query %s does not return expected result", record.sql)
             logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
                           record.result.strip(), result_string.strip(), results)
@@ -135,22 +159,27 @@ class SQLiteRunner(Runner):
         # print(record.sql)
         if 'sqlite' not in record.db:
             return
+        self.total_sql += 1
         if type(record) is Statement:
             status = True
+            self.statement_num += 1
             try:
                 res = self.cur.execute(record.sql)
             except sqlite3.OperationalError as e:
                 status = False
+                self.failed_statement_num += 1
                 logging.debug("Statement '%s' execution error: %s",record.sql, e)
             
             self.handle_stmt_result(status, record)
             self.con.commit()
         elif type(record) is Query:
+            self.query_num += 1
             results = []
             try:
                 res = self.cur.execute(record.sql)
                 results = res.fetchall()
             except sqlite3.OperationalError as e:
+                self.failed_query_num += 1
                 logging.debug("Query '%s' execution error: %s",record.sql, e)
             self.handle_query_result(results, record)
             
@@ -173,21 +202,38 @@ class DuckDBRunner(Runner):
         if 'duckdb' not in record.db:
             # print("skip this statement")
             return
+        self.total_sql += 1
         if type(record) is Statement:
+            self.statement_num += 1
             status = True
             try:
                 res = self.con.execute(record.sql)
             except duckdb.ProgrammingError as e:
                 status = False
+                self.failed_statement_num +=1
                 logging.debug(
                     "Statement '%s' execution error: %s", record.sql, e)
+            except duckdb.DataError as e:
+                status = False
+                self.failed_statement_num +=1
+                logging.debug("Statement '%s' execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record)
         elif type(record) is Query:
+            self.query_num += 1
             results = []
             try:
                 self.con.execute(record.sql)
                 results = self.con.fetchall()
             except duckdb.ProgrammingError as e:
+                self.failed_query_num += 1
                 logging.debug("Query '%s' execution error: %s",record.sql, e)
+            except duckdb.DataError as e:
+                self.failed_query_num += 1
+                logging.debug("Query '%s' execution error: %s", record.sql, e)
             # print(results)
             self.handle_query_result(results, record)
+    
+class CockroachDBRunner(Runner):
+    def __init__(self, records: List[Record]) -> None:
+        super().__init__(records)
+        self.con = None
