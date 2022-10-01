@@ -91,7 +91,7 @@ if __name__ == "__main__":
         r.run()
         r.close()
         if r.allright:
-            logging.info("Pass all test case!")
+            logging.info("Pass all test case!", )
             try:
                 os.remove(db_file)
             except:

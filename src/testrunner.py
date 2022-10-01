@@ -76,7 +76,15 @@ class Runner():
     def _replace_None(self, result_string:str):
         return result_string.replace("None", "NULL")
     
-    def handle_query_result(self, results:list, record:Record):
+    def handle_stmt_result(self, status, record:Statement):
+        # myDebug("%r %r", status, record.status)
+        if status == record.status:
+            logging.debug(record.sql + " Success")
+        else:
+            logging.error("Statement %s does not behave as expected", record.sql)
+            self.allright = False
+    
+    def handle_query_result(self, results:list, record:Query):
         result_string = ""
             # get result length
         if results:
@@ -97,8 +105,9 @@ class Runner():
             myDebug("Query %s Success", record.sql)
             pass
         else:
-            logging.error("Query %s does not return expected result\nExpected: %s\nActually: %s\nReturn Table: %s",
-                          record.sql, record.result, result_string, results)
+            logging.error("Query %s does not return expected result", record.sql)
+            logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
+                          record.result.strip(), result_string.strip(), results)
             # print(record.sql)
             # print("False")
             # print(results, result_string)
@@ -121,7 +130,7 @@ class SQLiteRunner(Runner):
     def close(self):
         self.con.close()
     
-    
+    # TODO make it go to super class (Runner) 
     def _single_run(self, record:Record):
         # print(record.sql)
         if 'sqlite' not in record.db:
@@ -134,13 +143,7 @@ class SQLiteRunner(Runner):
                 status = False
                 logging.debug("Statement '%s' execution error: %s",record.sql, e)
             
-            # myDebug("%r %r", status, record.status)
-            if status == record.status:
-                logging.debug(record.sql + " Success")
-                pass
-            else:
-                logging.error("Statement %s does not behave as expected", record.sql)
-                self.allright = False
+            self.handle_stmt_result(status, record)
             self.con.commit()
         elif type(record) is Query:
             results = []
@@ -158,8 +161,11 @@ class DuckDBRunner(Runner):
         self.con = None
 
     def connect(self, file_path):
-        logging.INFO("connect to db %s", file_path)
+        logging.info("connect to db %s", file_path)
         self.con = duckdb.connect(database=file_path)
+    
+    def close(self):
+        self.con.close()
     
     def _single_run(self, record: Record):
         # print(record.sql)
@@ -168,10 +174,20 @@ class DuckDBRunner(Runner):
             # print("skip this statement")
             return
         if type(record) is Statement:
-            res = self.con.execute(record.sql)
-            # self.con.commit()
+            status = True
+            try:
+                res = self.con.execute(record.sql)
+            except duckdb.ProgrammingError as e:
+                status = False
+                logging.debug(
+                    "Statement '%s' execution error: %s", record.sql, e)
+            self.handle_stmt_result(status, record)
         elif type(record) is Query:
-            self.con.execute(record.sql)
-            results = self.con.fetchall()
+            results = []
+            try:
+                self.con.execute(record.sql)
+                results = self.con.fetchall()
+            except duckdb.ProgrammingError as e:
+                logging.debug("Query '%s' execution error: %s",record.sql, e)
             # print(results)
             self.handle_query_result(results, record)
