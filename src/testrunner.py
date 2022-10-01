@@ -97,15 +97,12 @@ class Runner():
             myDebug("Query %s Success", record.sql)
             pass
         else:
-            logging.error("""Query %s does not return expected result\n
-                          Expected: %s\n
-                          Actually: %s\n
-                          Return Table: %s""",
+            logging.error("Query %s does not return expected result\nExpected: %s\nActually: %s\nReturn Table: %s",
                           record.sql, record.result, result_string, results)
-            print(record.sql)
-            print("False")
-            print(results, result_string)
-            print(record.result)
+            # print(record.sql)
+            # print("False")
+            # print(results, result_string)
+            # print(record.result)
             self.allright = False
         
 
@@ -146,8 +143,12 @@ class SQLiteRunner(Runner):
                 self.allright = False
             self.con.commit()
         elif type(record) is Query:
-            res = self.cur.execute(record.sql)
-            results = res.fetchall()
+            results = []
+            try:
+                res = self.cur.execute(record.sql)
+                results = res.fetchall()
+            except sqlite3.OperationalError as e:
+                logging.debug("Query '%s' execution error: %s",record.sql, e)
             self.handle_query_result(results, record)
             
 

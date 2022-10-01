@@ -53,8 +53,10 @@ if __name__ == "__main__":
         test_files = find_tests(suite_name)
     
     log_file = "logs/" + datetime.now().strftime("%m-%d-%H%M") + ".log"
-    if log_level:
+    if log_level != "DEBUG":
         logging.basicConfig(filename=log_file, encoding='utf-8', level=getattr(logging, log_level.upper()),)
+    else:
+        logging.basicConfig(filename="logs/debug.log", encoding='utf-8', level=getattr(logging, log_level.upper()),)
     
     # set the runner
     if dbms_name == 'sqlite':
