@@ -1,4 +1,5 @@
 from enum import Enum
+import logging
 
 
 class SortType(Enum):
@@ -45,3 +46,6 @@ class Control(Record):
     def __init__(self, action="") -> None:
         super().__init__()
         self.action = action
+
+def myDebug(mystr:str, *args):
+    logging.debug(mystr, *args)

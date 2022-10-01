@@ -1,8 +1,8 @@
-from dataclasses import dataclass
 import os
 from typing import List
 from .utils import *
 import hashlib
+import logging
 
 import sqlite3
 import duckdb
@@ -94,8 +94,14 @@ class Runner():
         
         if result_string.strip() == record.result.strip():
             # print("True!")
+            myDebug("Query %s Success", record.sql)
             pass
         else:
+            logging.error("""Query %s does not return expected result\n
+                          Expected: %s\n
+                          Actually: %s\n
+                          Return Table: %s""",
+                          record.sql, record.result, result_string, results)
             print(record.sql)
             print("False")
             print(results, result_string)
@@ -111,7 +117,7 @@ class SQLiteRunner(Runner):
         
     
     def connect(self, file_path):
-        print("connect to db", file_path)
+        logging.info("connect to db %s", file_path)
         self.con = sqlite3.connect(file_path)
         self.cur = self.con.cursor()
         
@@ -124,7 +130,20 @@ class SQLiteRunner(Runner):
         if 'sqlite' not in record.db:
             return
         if type(record) is Statement:
-            res = self.cur.execute(record.sql)
+            status = True
+            try:
+                res = self.cur.execute(record.sql)
+            except sqlite3.OperationalError as e:
+                status = False
+                logging.debug("Statement '%s' execution error: %s",record.sql, e)
+            
+            # myDebug("%r %r", status, record.status)
+            if status == record.status:
+                logging.debug(record.sql + " Success")
+                pass
+            else:
+                logging.error("Statement %s does not behave as expected", record.sql)
+                self.allright = False
             self.con.commit()
         elif type(record) is Query:
             res = self.cur.execute(record.sql)
@@ -138,6 +157,7 @@ class DuckDBRunner(Runner):
         self.con = None
 
     def connect(self, file_path):
+        logging.INFO("connect to db %s", file_path)
         self.con = duckdb.connect(database=file_path)
     
     def _single_run(self, record: Record):

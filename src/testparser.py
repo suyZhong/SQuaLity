@@ -110,14 +110,14 @@ class SLTParser(Parser):
             if tokens[1] in DBMS_Set:
                 tmp_dbms_set = set([tokens[1]])
             else:
-                print(
-                    "DBMS %s support is stll not implemented, skip this script" % tokens[1])
+                logging.warning(
+                    "DBMS %s support is stll not implemented, skip this script", tokens[1])
                 return
             r = self._parse_script_lines(lines[1:])
             r.set_execute_db(tmp_dbms_set)
         else:
-            print("This script has not implement")
-            print(lines)
+            logging.warning("This script has not implement: %s", lines)
+            # print(lines)
             return
         return r
     
@@ -134,7 +134,6 @@ class SLTParser(Parser):
     # Each record is separated from its neighbors by one or more blank line.
 
     def parse_file(self):
-        print(123)
         self.scripts = [script.strip()
                         for script in self.test_content.split('\n\n') if script != '']
         # print(self.scripts)
@@ -154,8 +153,9 @@ class SLTParser(Parser):
             # rec = Query(rec)
             print('type:', type(rec), type(rec) is Statement)
             print('sql: \n', rec.sql)
-            print('result: \n', rec.result)
+            print('result:', rec.result)
             print('support db:', rec.db)
+            print('status', rec.status)
             #For query
             # print('data_type: ',rec.data_type)
             # print('label:', rec.label)

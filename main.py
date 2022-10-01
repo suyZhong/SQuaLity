@@ -2,6 +2,8 @@ import os
 from src import testparser
 from src import testrunner
 import argparse
+import logging
+from datetime import datetime
 
 def find_tests(db_name:str):
     db_name = db_name.lower()
@@ -34,6 +36,7 @@ if __name__ == "__main__":
     parser.add_argument('-s',"--suite_name", type=str,default="sqlite", help="Enter the dbms test suites")
     parser.add_argument('-t', '--test_file', type=str, default="", help="test a specific file")
     parser.add_argument('-f',"--db_file", type=str, default=":memory:", help="Enter the in-mem db file save path")
+    parser.add_argument('--log', type=str, default="", help="logging path")
     parser.add_argument("--max_files", type=int, default=-1, help="Max test files it run")
     
     
@@ -43,10 +46,15 @@ if __name__ == "__main__":
     max_files = args.max_files
     db_file = args.db_file
     test_file = args.test_file
+    log_level = args.log
     if test_file:
         test_files = [test_file]
     else:
         test_files = find_tests(suite_name)
+    
+    log_file = "logs/" + datetime.now().strftime("%m-%d-%H%M") + ".log"
+    if log_level:
+        logging.basicConfig(filename=log_file, encoding='utf-8', level=getattr(logging, log_level.upper()),)
     
     # set the runner
     if dbms_name == 'sqlite':
@@ -64,25 +72,26 @@ if __name__ == "__main__":
     
     for i, test_file in enumerate(test_files):
         db_file = args.db_file + str(i)
+        os.system('rm %s'% db_file)
         if max_files > 0 and i > max_files:
             break
 
-        print("test file", i)
-        print("-----------------------------")
-        print("parsing", test_file)
+        # print("-----------------------------------")
+        logging.info("test file %d", i)
+        logging.info("parsing %s", test_file)
         p.get_file_name(test_file)
         p.get_file_content()
         p.parse_file()
         r.get_records(p.get_records())
         r.connect(db_file)
-        print("-----------------------------")
-        print("running", test_file)
+        # print("-----------------------------------")
+        logging.info("running %s", test_file)
         r.run()
         r.close()
         if r.allright:
-            print("Pass all test case!")
+            logging.info("Pass all test case!")
             try:
                 os.remove(db_file)
             except:
-                print("No such file or directory:", db_file)
-        print ("###########################\n\n")
+                logging.error("No such file or directory:", db_file)
+        # print ("#############################\n\n")
