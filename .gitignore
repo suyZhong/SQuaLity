@@ -5,3 +5,4 @@ logs/
 *.log
 *.db
 output
+test.ipynb

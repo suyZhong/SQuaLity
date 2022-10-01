@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', "--dbms", type=str,help="Enter the DBMS name")
     parser.add_argument('-s',"--suite_name", type=str,default="sqlite", help="Enter the dbms test suites")
     parser.add_argument('-t', '--test_file', type=str, default="", help="test a specific file")
-    parser.add_argument('-f',"--db_file", type=str, default="output/test.db", help="Enter the in-mem db file save path")
+    parser.add_argument('-f',"--db_file", type=str, default=":memory:", help="Enter the in-mem db file save path")
     parser.add_argument("--max_files", type=int, default=-1, help="Max test files it run")
     
     

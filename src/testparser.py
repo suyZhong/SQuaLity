@@ -41,6 +41,8 @@ class SLTParser(Parser):
     def _parse_script_lines(self, lines: list):
         # Now the first line are exact command
         line_num = len(lines)
+        if line_num == 0:
+            return
         tokens = lines[0].split()
         record_type = tokens[0]
         r = Statement()
@@ -97,8 +99,9 @@ class SLTParser(Parser):
                 tmp_dbms_set.remove(tokens[1])
             else:
                 # print (DBMS_Set)
-                print(
-                    "DBMS %s support is stll not implemented, skip nothing" % tokens[1])
+                pass
+                # print(
+                #     "DBMS %s support is stll not implemented, skip nothing" % tokens[1])
                 # exit(0)
             r = self._parse_script_lines(lines[1:])
             r.set_execute_db(tmp_dbms_set)
@@ -131,8 +134,10 @@ class SLTParser(Parser):
     # Each record is separated from its neighbors by one or more blank line.
 
     def parse_file(self):
+        print(123)
         self.scripts = [script.strip()
                         for script in self.test_content.split('\n\n') if script != '']
+        # print(self.scripts)
         self.records = []
         for i, script in enumerate(self.scripts):
             self.parse_script(script.strip())
