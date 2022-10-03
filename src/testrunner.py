@@ -79,12 +79,16 @@ class Runner():
         try:
             x = int(x)
         except ValueError:
+            if pd.isna(x):
+                return "NULL"
             x = 0
         except TypeError: # when the element is None
             return "NULL"
         return "%d" % x
     
     def float_format(self,x):
+        if pd.isna(x):
+            return "NULL"
         try:
             x = float(x)
         except ValueError: # When the element is long string
@@ -93,14 +97,22 @@ class Runner():
             return "NULL"
         return "%.3f" % x
     
+    def text_format(self, x):
+        return str(x)
+    
     def _format_results(self, results, datatype:str):
         cols = list(datatype)
         tmp_results = pd.DataFrame(results)
+        # tmp_results = tmp_results.fillna('NULL')
         for i, col in enumerate(cols):
             if col == "I":
                 tmp_results[i] = tmp_results[i].apply(self.int_format)
             elif col == "R":
                 tmp_results[i] = tmp_results[i].apply(self.float_format)
+            elif col == "T":
+                tmp_results[i] = tmp_results[i].apply(self.text_format)
+            else:
+                logging.warning("Datatype not support")
         return tmp_results.values.tolist()
     
     def _hash_results(self,results:str):
@@ -126,7 +138,7 @@ class Runner():
         """        
         result_flat = []
         if sort_type == SortType.RowSort:
-            # results = [list(map(str,row)) for row in results]
+            results = [list(map(str,row)) for row in results]
             results.sort()
             for row in results:
                 for item in row:
@@ -134,12 +146,13 @@ class Runner():
         elif sort_type == SortType.ValueSort:
             for row in results:
                 for item in row:
-                    result_flat.append(item+'\n')
+                    result_flat.append(str(item)+'\n')
             result_flat.sort()
         else:
             for row in results:
                 for item in row:
-                    result_flat.append(item+'\n')
+                    result_flat.append(str(item)+'\n')
+        # myDebug(result_flat)
         return ''.join(result_flat)
     
     def _replace_None(self, result_string:str):
@@ -167,9 +180,10 @@ class Runner():
         if results:
             result_len = len(results) * len(results[0])
             # Format the result by the query command para
-            results = self._format_results(results=results, datatype=record.data_type)
+            results_fmt = self._format_results(results=results, datatype=record.data_type)
             # sort result and output flat list
-            result_string = self._sort_result(results, sort_type=record.sort)
+            # myDebug(results_fmt)
+            result_string = self._sort_result(results_fmt, sort_type=record.sort)
         else:
             result_len = 0
             
@@ -213,9 +227,6 @@ class SQLiteRunner(Runner):
     
     # TODO make it go to super class (Runner) 
     def _single_run(self, record:Record):
-        # print(record.sql)
-        if 'sqlite' not in record.db:
-            return
         self.total_sql += 1
         if type(record) is Statement:
             status = True
@@ -254,11 +265,6 @@ class DuckDBRunner(Runner):
         self.con.close()
     
     def _single_run(self, record: Record):
-        # print(record.sql)
-        
-        if 'duckdb' not in record.db:
-            # print("skip this statement")
-            return
         self.total_sql += 1
         if type(record) is Statement:
             self.statement_num += 1
