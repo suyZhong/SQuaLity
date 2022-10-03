@@ -58,18 +58,19 @@ if __name__ == "__main__":
     else:
         test_files = find_tests(suite_name)
     file_num = len(test_files)
-
+    begin_time = datetime.now()
     log_file = "logs/" + dbms_name + '_' + suite_name + \
-        '-' + datetime.now().strftime("%m-%d-%H%M") 
-    sys.stdout =  open(log_file + ".out", "a")
+        '-' + begin_time.strftime("%m-%d-%H%M") 
         
     log_file += ".log"
     if log_level != "DEBUG":
         logging.basicConfig(filename=log_file, encoding='utf-8',
                             level=getattr(logging, log_level.upper()),)
+        sys.stdout =  open(log_file + ".out", "a")
     else:
         logging.basicConfig(filename="logs/debug.log", encoding='utf-8',
                             level=getattr(logging, log_level.upper()),)
+        sys.stdout =  open("logs/debug" + ".out", "a")
 
     # set the runner
     if dbms_name == 'sqlite':
@@ -86,6 +87,7 @@ if __name__ == "__main__":
         exit("Not implement yet")
 
     for i, test_file in enumerate(test_files):
+        single_begin_time = datetime.now()
         if max_files <= 0 and i < abs(max_files):
             continue
         db_file = args.db_file + str(i)
@@ -110,5 +112,7 @@ if __name__ == "__main__":
                 os.remove(db_file)
             except:
                 logging.error("No such file or directory:", db_file)
-        r.running_summary(test_file)
+        single_end_time = datetime.now()
+        single_running_time = (single_end_time - single_begin_time).seconds
+        r.running_summary(test_file, single_running_time)
         # print ("#############################\n\n")

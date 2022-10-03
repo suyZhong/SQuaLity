@@ -3,6 +3,7 @@ from typing import List
 from .utils import *
 import hashlib
 import logging
+import pandas as pd
 
 import sqlite3
 import duckdb
@@ -12,10 +13,12 @@ class Runner():
         self.records = records
         self.hash_threshold = 8
         self.allright = True
+        # TODO make all these stats saving to a dict
         self.total_sql = 0
         self.failed_statement_num = 0
         self.failed_query_num = 0
         self.wrong_query_num = 0
+        self.wrong_stmt_num = 0
         self.statement_num = 0
         self.query_num = 0
         
@@ -24,6 +27,7 @@ class Runner():
         self.failed_statement_num = 0
         self.failed_query_num = 0
         self.wrong_query_num = 0
+        self.wrong_stmt_num = 0
         self.statement_num = 0
         self.query_num = 0
         class_name = type(self).__name__
@@ -40,15 +44,17 @@ class Runner():
                 
             self._single_run(record)
     
-    def running_summary(self, test_name):
+    def running_summary(self, test_name, running_time):
         print("-------------------------------------------")
         print("Testing DBMS: %s" % type(self).__name__.lower().removesuffix("runner"))
         print("Test Case: %s" % test_name)
         print("Total execute SQL: ", self.total_sql)
+        print("Total execution time: %ds" % running_time)
         print("Total SQL statement: ", self.statement_num)
         print("Total SQL query: ", self.query_num)
         print("Failed SQL statement: ", self.failed_statement_num)
         print("Failed SQL query: ", self.failed_query_num)
+        print("Wrong SQL statement: ", self.wrong_stmt_num)
         print("Wrong SQL query: ", self.wrong_query_num)
         print("-------------------------------------------")
     
@@ -68,6 +74,34 @@ class Runner():
     
     def not_allright(self):
         self.allright = False
+    
+    def int_format(self,x):
+        try:
+            x = int(x)
+        except ValueError:
+            x = 0
+        except TypeError: # when the element is None
+            return "NULL"
+        return "%d" % x
+    
+    def float_format(self,x):
+        try:
+            x = float(x)
+        except ValueError: # When the element is long string
+            x = 0.0
+        except TypeError: # when the element is None
+            return "NULL"
+        return "%.3f" % x
+    
+    def _format_results(self, results, datatype:str):
+        cols = list(datatype)
+        tmp_results = pd.DataFrame(results)
+        for i, col in enumerate(cols):
+            if col == "I":
+                tmp_results[i] = tmp_results[i].apply(self.int_format)
+            elif col == "R":
+                tmp_results[i] = tmp_results[i].apply(self.float_format)
+        return tmp_results.values.tolist()
     
     def _hash_results(self,results:str):
         """hash the result string
@@ -92,7 +126,7 @@ class Runner():
         """        
         result_flat = []
         if sort_type == SortType.RowSort:
-            results = [list(map(str,row)) for row in results]
+            # results = [list(map(str,row)) for row in results]
             results.sort()
             for row in results:
                 for item in row:
@@ -100,12 +134,12 @@ class Runner():
         elif sort_type == SortType.ValueSort:
             for row in results:
                 for item in row:
-                    result_flat.append(str(item)+'\n')
+                    result_flat.append(item+'\n')
             result_flat.sort()
         else:
             for row in results:
                 for item in row:
-                    result_flat.append(str(item)+'\n')
+                    result_flat.append(item+'\n')
         return ''.join(result_flat)
     
     def _replace_None(self, result_string:str):
@@ -122,19 +156,24 @@ class Runner():
         if status == record.status:
             logging.debug(record.sql + " Success")
         else:
+            self.wrong_stmt_num += 1
             logging.error("Statement %s does not behave as expected", record.sql)
             self.allright = False
     
     def handle_query_result(self, results:list, record:Query):
         result_string = ""
             # get result length
+        # myDebug(results)
         if results:
             result_len = len(results) * len(results[0])
+            # Format the result by the query command para
+            results = self._format_results(results=results, datatype=record.data_type)
             # sort result and output flat list
             result_string = self._sort_result(results, sort_type=record.sort)
         else:
             result_len = 0
-        result_string = self._replace_None(result_string)
+            
+        # result_string = self._replace_None(result_string)
         
         if result_len > self.hash_threshold:
             result_string = self._hash_results(result_string)
