@@ -26,12 +26,24 @@ class Runner():
         self.wrong_query_num = 0
         self.statement_num = 0
         self.query_num = 0
+        class_name = type(self).__name__
+        dbms_name = class_name.lower().removesuffix("runner")
         for record in self.records:
+            if dbms_name not in record.db:
+                continue
+            if type(record) == Control:
+                action = record.action
+                try:
+                    self.handle_control(action)
+                except StopRunnerException:
+                    break
+                
             self._single_run(record)
     
     def running_summary(self, test_name):
         print("-------------------------------------------")
-        print("%s Result", test_name)
+        print("Testing DBMS: %s" % type(self).__name__.lower().removesuffix("runner"))
+        print("Test Case: %s" % test_name)
         print("Total execute SQL: ", self.total_sql)
         print("Total SQL statement: ", self.statement_num)
         print("Total SQL query: ", self.query_num)
@@ -98,6 +110,12 @@ class Runner():
     
     def _replace_None(self, result_string:str):
         return result_string.replace("None", "NULL")
+    
+    def handle_control(self, action:RunnerAction):
+        if action == RunnerAction.halt:
+            logging.warn("halt the rest of the test cases")
+            self.allright = False
+            raise StopRunnerException
     
     def handle_stmt_result(self, status, record:Statement):
         # myDebug("%r %r", status, record.status)

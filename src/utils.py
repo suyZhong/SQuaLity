@@ -11,7 +11,11 @@ class SortType(Enum):
 class SLTKeywords(Enum):
     query = 1
     statement = 2
+    
+class RunnerAction(Enum):
+    halt = 1
 
+class StopRunnerException(Exception):pass
 
 DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb'])
 
@@ -43,8 +47,8 @@ class Query(Record):
 
 
 class Control(Record):
-    def __init__(self, action="") -> None:
-        super().__init__()
+    def __init__(self, sql="", result="", db=DBMS_Set, action=RunnerAction.halt) -> None:
+        super().__init__(sql, result, db)
         self.action = action
 
 def myDebug(mystr:str, *args):

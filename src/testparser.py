@@ -7,6 +7,7 @@ class Parser:
     def __init__(self, filename='') -> None:
         self.filename = filename
         self.test_content = ""
+        self.hash_threshold = 8
 
     # read the whole file
 
@@ -98,13 +99,10 @@ class SLTParser(Parser):
             if tokens[1] in DBMS_Set:
                 tmp_dbms_set.remove(tokens[1])
             else:
-                # print (DBMS_Set)
                 pass
-                # print(
-                #     "DBMS %s support is stll not implemented, skip nothing" % tokens[1])
-                # exit(0)
             r = self._parse_script_lines(lines[1:])
-            r.set_execute_db(tmp_dbms_set)
+            if r:
+                r.set_execute_db(tmp_dbms_set)
             # print(tmp_dbms_set)
         elif record_type == 'onlyif':
             if tokens[1] in DBMS_Set:
@@ -114,10 +112,14 @@ class SLTParser(Parser):
                     "DBMS %s support is stll not implemented, skip this script", tokens[1])
                 return
             r = self._parse_script_lines(lines[1:])
-            r.set_execute_db(tmp_dbms_set)
+            if r:
+                r.set_execute_db(tmp_dbms_set)
+        elif record_type == 'hash-threshold':
+            self.hash_threshold = eval(tokens[1])
+        elif record_type == 'halt':
+            r = Control(action=RunnerAction.halt)
         else:
             logging.warning("This script has not implement: %s", lines)
-            # print(lines)
             return
         return r
     

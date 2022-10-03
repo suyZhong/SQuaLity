@@ -60,14 +60,16 @@ if __name__ == "__main__":
     file_num = len(test_files)
 
     log_file = "logs/" + dbms_name + '_' + suite_name + \
-        '-' + datetime.now().strftime("%m-%d-%H%M") + ".log"
+        '-' + datetime.now().strftime("%m-%d-%H%M") 
+    sys.stdout =  open(log_file + ".out", "a")
+        
+    log_file += ".log"
     if log_level != "DEBUG":
         logging.basicConfig(filename=log_file, encoding='utf-8',
                             level=getattr(logging, log_level.upper()),)
     else:
         logging.basicConfig(filename="logs/debug.log", encoding='utf-8',
                             level=getattr(logging, log_level.upper()),)
-    sys.stdout =  open(log_file, "a")
 
     # set the runner
     if dbms_name == 'sqlite':
