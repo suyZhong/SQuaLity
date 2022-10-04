@@ -13,23 +13,10 @@ class Runner():
         self.records = records
         self.hash_threshold = 8
         self.allright = True
-        # TODO make all these stats saving to a dict
-        self.total_sql = 0
-        self.failed_statement_num = 0
-        self.failed_query_num = 0
-        self.wrong_query_num = 0
-        self.wrong_stmt_num = 0
-        self.statement_num = 0
-        self.query_num = 0
+        self.all_run_stats = dict.fromkeys(Running_Stats, 0)
+        self.single_run_stats = dict().fromkeys(Running_Stats, 0)
         
     def run(self):
-        self.total_sql = 0
-        self.failed_statement_num = 0
-        self.failed_query_num = 0
-        self.wrong_query_num = 0
-        self.wrong_stmt_num = 0
-        self.statement_num = 0
-        self.query_num = 0
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
         for record in self.records:
@@ -42,20 +29,27 @@ class Runner():
                 except StopRunnerException:
                     break
                 
+            self.single_run_stats = dict().fromkeys(Running_Stats, 0)
             self._single_run(record)
+            for key in self.single_run_stats:
+                self.all_run_stats[key] += self.single_run_stats[key]
     
     def running_summary(self, test_name, running_time):
+        if test_name == "ALL":
+            stats = self.all_run_stats
+        else:
+            stats = self.single_run_stats
         print("-------------------------------------------")
         print("Testing DBMS: %s" % type(self).__name__.lower().removesuffix("runner"))
         print("Test Case: %s" % test_name)
-        print("Total execute SQL: ", self.total_sql)
+        print("Total execute SQL: ", stats['total_sql'])
         print("Total execution time: %ds" % running_time)
-        print("Total SQL statement: ", self.statement_num)
-        print("Total SQL query: ", self.query_num)
-        print("Failed SQL statement: ", self.failed_statement_num)
-        print("Failed SQL query: ", self.failed_query_num)
-        print("Wrong SQL statement: ", self.wrong_stmt_num)
-        print("Wrong SQL query: ", self.wrong_query_num)
+        print("Total SQL statement: ", stats['statement_num'])
+        print("Total SQL query: ", stats['query_num'])
+        print("Failed SQL statement: ", stats['failed_statement_num'])
+        print("Failed SQL query: ", stats['failed_query_num'])
+        print("Wrong SQL statement: ", stats['wrong_stmt_num'])
+        print("Wrong SQL query: ", stats['wrong_query_num'])
         print("-------------------------------------------")
     
     def get_records(self, records:List[Record]):
@@ -169,7 +163,7 @@ class Runner():
         if status == record.status:
             logging.debug(record.sql + " Success")
         else:
-            self.wrong_stmt_num += 1
+            self.single_run_stats['wrong_stmt_num'] += 1
             logging.error("Statement %s does not behave as expected", record.sql)
             self.allright = False
     
@@ -199,7 +193,7 @@ class Runner():
             myDebug("Query %s Success", record.sql)
             pass
         else:
-            self.wrong_query_num += 1
+            self.single_run_stats['wrong_query_num'] += 1
             logging.error("Query %s does not return expected result", record.sql)
             logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
                           record.result.strip(), result_string.strip(), results)
@@ -227,27 +221,27 @@ class SQLiteRunner(Runner):
     
     # TODO make it go to super class (Runner) 
     def _single_run(self, record:Record):
-        self.total_sql += 1
+        self.single_run_stats['total_sql'] += 1
         if type(record) is Statement:
             status = True
-            self.statement_num += 1
+            self.single_run_stats['statement_num'] += 1
             try:
                 res = self.cur.execute(record.sql)
             except sqlite3.OperationalError as e:
                 status = False
-                self.failed_statement_num += 1
+                self.single_run_stats['failed_statement_num'] += 1
                 logging.debug("Statement '%s' execution error: %s",record.sql, e)
             
             self.handle_stmt_result(status, record)
             self.con.commit()
         elif type(record) is Query:
-            self.query_num += 1
+            self.single_run_stats['query_num'] += 1
             results = []
             try:
                 res = self.cur.execute(record.sql)
                 results = res.fetchall()
             except sqlite3.OperationalError as e:
-                self.failed_query_num += 1
+                self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query '%s' execution error: %s",record.sql, e)
             self.handle_query_result(results, record)
             
@@ -265,33 +259,33 @@ class DuckDBRunner(Runner):
         self.con.close()
     
     def _single_run(self, record: Record):
-        self.total_sql += 1
+        self.all_run_stats['total_sql'] += 1
         if type(record) is Statement:
-            self.statement_num += 1
+            self.single_run_stats['statement_num'] += 1
             status = True
             try:
                 res = self.con.execute(record.sql)
             except duckdb.ProgrammingError as e:
                 status = False
-                self.failed_statement_num +=1
+                self.single_run_stats['failed_statement_num'] +=1
                 logging.debug(
                     "Statement '%s' execution error: %s", record.sql, e)
             except duckdb.DataError as e:
                 status = False
-                self.failed_statement_num +=1
+                self.single_run_stats['failed_statement_num'] +=1
                 logging.debug("Statement '%s' execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record)
         elif type(record) is Query:
-            self.query_num += 1
+            self.single_run_stats['query_num'] += 1
             results = []
             try:
                 self.con.execute(record.sql)
                 results = self.con.fetchall()
             except duckdb.ProgrammingError as e:
-                self.failed_query_num += 1
+                self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query '%s' execution error: %s",record.sql, e)
             except duckdb.DataError as e:
-                self.failed_query_num += 1
+                self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query '%s' execution error: %s", record.sql, e)
             # print(results)
             self.handle_query_result(results, record)

@@ -19,6 +19,14 @@ class StopRunnerException(Exception):pass
 
 DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb'])
 
+Running_Stats = ['total_sql',
+                 'failed_statement_num',
+                 'failed_query_num',
+                 'wrong_query_num',
+                 'wrong_stmt_num',
+                 'statement_num',
+                 'query_num']
+
 class Record:
     
     def __init__(self, sql="", result="", db=DBMS_Set) -> None:

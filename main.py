@@ -114,5 +114,6 @@ if __name__ == "__main__":
                 logging.error("No such file or directory:", db_file)
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
-        r.running_summary(test_file, single_running_time)
+        r.running_summary(str(i) +" "+ test_file, single_running_time)
         # print ("#############################\n\n")
+    r.running_summary("ALL", (datetime.now()-begin_time).seconds)
