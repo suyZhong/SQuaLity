@@ -21,6 +21,7 @@ DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb'])
 
 Running_Stats = ['total_sql',
                  'failed_statement_num',
+                 'success_query_num',
                  'failed_query_num',
                  'wrong_query_num',
                  'wrong_stmt_num',

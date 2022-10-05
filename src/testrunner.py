@@ -7,6 +7,7 @@ import pandas as pd
 
 import sqlite3
 import duckdb
+import psycopg2
 
 class Runner():
     def __init__(self, records:List[Record]) -> None:
@@ -15,10 +16,27 @@ class Runner():
         self.allright = True
         self.all_run_stats = dict.fromkeys(Running_Stats, 0)
         self.single_run_stats = dict().fromkeys(Running_Stats, 0)
-        
+        self.db_error = Exception
+        self.db = ":memory:"
+    
+    def set_db(self, db_name:str):
+        if not db_name.startswith(":memory:"):
+            db_name = "/temp/zsy/" + db_name
+            os.system('rm %s' % db_name)
+        self.db = db_name
+    
+    def remove_db(self):
+        if self.allright:
+            logging.info("Pass all test cases!")
+            try:
+                os.remove(self.db)
+            except:
+                logging.error("No such file or directory: %s", self.db)
+    
     def run(self):
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
+        self.single_run_stats = dict().fromkeys(Running_Stats, 0)
         for record in self.records:
             if dbms_name not in record.db:
                 continue
@@ -29,10 +47,9 @@ class Runner():
                 except StopRunnerException:
                     break
                 
-            self.single_run_stats = dict().fromkeys(Running_Stats, 0)
             self._single_run(record)
-            for key in self.single_run_stats:
-                self.all_run_stats[key] += self.single_run_stats[key]
+        for key in self.single_run_stats:
+            self.all_run_stats[key] += self.single_run_stats[key]
     
     def running_summary(self, test_name, running_time):
         if test_name == "ALL":
@@ -48,6 +65,7 @@ class Runner():
         print("Total SQL query: ", stats['query_num'])
         print("Failed SQL statement: ", stats['failed_statement_num'])
         print("Failed SQL query: ", stats['failed_query_num'])
+        print("Success SQL query: ", stats['success_query_num'])
         print("Wrong SQL statement: ", stats['wrong_stmt_num'])
         print("Wrong SQL query: ", stats['wrong_query_num'])
         print("-------------------------------------------")
@@ -55,9 +73,46 @@ class Runner():
     def get_records(self, records:List[Record]):
         self.allright = True
         self.records = records
-        
-    def _single_run(record):
+    
+    def execute_stmt(self, sql):
         pass
+    
+    def execute_query(self, sql):
+        pass
+    
+    def commit(self):
+        pass
+    
+    def _single_run(self, record):
+        self.single_run_stats['total_sql'] += 1
+        if type(record) is Statement:
+            self.single_run_stats['statement_num'] += 1
+            status = True
+            try:
+                self.execute_stmt(record.sql)
+            except self.db_error as e:
+                status = False
+                self.single_run_stats['failed_statement_num'] +=1
+                logging.debug(
+                    "Statement '%s' execution error: %s", record.sql, e)
+                return
+            self.handle_stmt_result(status, record)
+            self.commit()
+        elif type(record) is Query:
+            self.single_run_stats['query_num'] += 1
+            results = []
+            try:
+                results = self.execute_query(record.sql)
+            except self.db_error as e:
+                self.single_run_stats['failed_query_num'] += 1
+                logging.debug("Query '%s' execution error: %s",record.sql, e)
+                self.commit()
+                return
+            else:
+                self.single_run_stats['success_query_num'] += 1
+            # print(results)
+            self.handle_query_result(results, record)
+            
         
     def debug_run(self, iter=1):
         for i, record in enumerate(self.records):
@@ -213,84 +268,135 @@ class SQLiteRunner(Runner):
     
     def connect(self, file_path):
         logging.info("connect to db %s", file_path)
-        self.con = sqlite3.connect(file_path)
+        self.con = sqlite3.connect(self.db)
         self.cur = self.con.cursor()
         
     def close(self):
         self.con.close()
     
+    def execute_stmt(self, sql):
+        self.cur.execute(sql)
+        return 
+    
+    def execute_query(self, sql):
+        res = self.cur.execute(sql)
+        return res.fetchall()
+    
+    def commit(self):
+        self.con.commit()
+    
     # TODO make it go to super class (Runner) 
-    def _single_run(self, record:Record):
-        self.single_run_stats['total_sql'] += 1
-        if type(record) is Statement:
-            status = True
-            self.single_run_stats['statement_num'] += 1
-            try:
-                res = self.cur.execute(record.sql)
-            except sqlite3.OperationalError as e:
-                status = False
-                self.single_run_stats['failed_statement_num'] += 1
-                logging.debug("Statement '%s' execution error: %s",record.sql, e)
+    # def _single_run(self, record:Record):
+    #     self.single_run_stats['total_sql'] += 1
+    #     if type(record) is Statement:
+    #         status = True
+    #         self.single_run_stats['statement_num'] += 1
+    #         try:
+    #             res = self.cur.execute(record.sql)
+    #         except sqlite3.OperationalError as e:
+    #             status = False
+    #             self.single_run_stats['failed_statement_num'] += 1
+    #             logging.debug("Statement '%s' execution error: %s",record.sql, e)
             
-            self.handle_stmt_result(status, record)
-            self.con.commit()
-        elif type(record) is Query:
-            self.single_run_stats['query_num'] += 1
-            results = []
-            try:
-                res = self.cur.execute(record.sql)
-                results = res.fetchall()
-            except sqlite3.OperationalError as e:
-                self.single_run_stats['failed_query_num'] += 1
-                logging.debug("Query '%s' execution error: %s",record.sql, e)
-            self.handle_query_result(results, record)
+    #         self.handle_stmt_result(status, record)
+    #         self.con.commit()
+    #     elif type(record) is Query:
+    #         self.single_run_stats['query_num'] += 1
+    #         results = []
+    #         try:
+    #             res = self.cur.execute(record.sql)
+    #             results = res.fetchall()
+    #         except sqlite3.OperationalError as e:
+    #             self.single_run_stats['failed_query_num'] += 1
+    #             logging.debug("Query '%s' execution error: %s",record.sql, e)
+    #         self.handle_query_result(results, record)
             
 
 class DuckDBRunner(Runner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
         self.con = None
-
+        self.db_error = (duckdb.ProgrammingError, duckdb.DataError)
+    
     def connect(self, file_path):
         logging.info("connect to db %s", file_path)
-        self.con = duckdb.connect(database=file_path)
+        self.con = duckdb.connect(database=self.db)
     
     def close(self):
         self.con.close()
     
-    def _single_run(self, record: Record):
-        self.all_run_stats['total_sql'] += 1
-        if type(record) is Statement:
-            self.single_run_stats['statement_num'] += 1
-            status = True
-            try:
-                res = self.con.execute(record.sql)
-            except duckdb.ProgrammingError as e:
-                status = False
-                self.single_run_stats['failed_statement_num'] +=1
-                logging.debug(
-                    "Statement '%s' execution error: %s", record.sql, e)
-            except duckdb.DataError as e:
-                status = False
-                self.single_run_stats['failed_statement_num'] +=1
-                logging.debug("Statement '%s' execution error: %s", record.sql, e)
-            self.handle_stmt_result(status, record)
-        elif type(record) is Query:
-            self.single_run_stats['query_num'] += 1
-            results = []
-            try:
-                self.con.execute(record.sql)
-                results = self.con.fetchall()
-            except duckdb.ProgrammingError as e:
-                self.single_run_stats['failed_query_num'] += 1
-                logging.debug("Query '%s' execution error: %s",record.sql, e)
-            except duckdb.DataError as e:
-                self.single_run_stats['failed_query_num'] += 1
-                logging.debug("Query '%s' execution error: %s", record.sql, e)
-            # print(results)
-            self.handle_query_result(results, record)
+    def execute_query(self, sql):
+        self.con.execute(sql)
+        return self.con.fetchall()
+    
+    def execute_stmt(self, sql):
+        self.con.execute(sql)
+        return 
     
 class CockroachDBRunner(Runner):
-    def __init__(self, records: List[Record]) -> None:
+    def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
         self.con = None
+        # self.db_error(psycopg2.ProgrammingError)
+    
+    def set_db(self, db_name):
+        self.db = "postgresql://root@localhost:26257/defaultdb?sslmode=disable"
+        self.connect("defaultdb")
+        
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+        self.execute_stmt("CREATE DATABASE %s" % db_name)
+        self.execute_stmt("USE %s" % db_name)
+        self.commit()
+        self.close()
+        dsn = "postgresql://root@localhost:26257/%s?sslmode=disable" % db_name
+        self.db = dsn
+    
+    def remove_db(self, db_name):
+        self.db = "postgresql://root@localhost:26257/defaultdb?sslmode=disable"
+        self.connect("defaultdb")
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+        self.commit()
+        self.close()
+    
+    def connect(self, file_name):
+        logging.info("connect to db %s", file_name)
+        
+        self.con = psycopg2.connect(dsn=self.db)
+        self.cur = self.con.cursor()
+    
+    def close(self):
+        self.con.close()
+        
+    def execute_query(self, sql):
+        self.cur.execute(sql)
+        return self.cur.fetchall()
+    
+    def execute_stmt(self, sql):
+        self.cur.execute(sql)
+    
+    def commit(self):
+        self.con.commit()
+    # def _single_run(self, record:Record):
+    #     self.single_run_stats['total_sql'] += 1
+    #     if type(record) is Statement:
+    #         status = True
+    #         self.single_run_stats['statement_num'] += 1
+    #         try:
+    #             res = self.cur.execute(record.sql)
+    #         except psycopg2.DatabaseError as e:
+    #             status = False
+    #             self.single_run_stats['failed_statement_num'] += 1
+    #             logging.debug("Statement '%s' execution error: %s",record.sql, e)
+            
+    #         self.handle_stmt_result(status, record)
+    #         self.con.commit()
+    #     elif type(record) is Query:
+    #         self.single_run_stats['query_num'] += 1
+    #         results = []
+    #         try:
+    #             res = self.cur.execute(record.sql)
+    #             results = self.cur.fetchall()
+    #         except psycopg2.DatabaseError as e:
+    #             self.single_run_stats['failed_query_num'] += 1
+    #             logging.debug("Query '%s' execution error: %s",record.sql, e)
+    #         self.handle_query_result(results, record)
