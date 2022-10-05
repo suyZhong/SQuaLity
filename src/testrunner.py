@@ -284,33 +284,6 @@ class SQLiteRunner(Runner):
     
     def commit(self):
         self.con.commit()
-    
-    # TODO make it go to super class (Runner) 
-    # def _single_run(self, record:Record):
-    #     self.single_run_stats['total_sql'] += 1
-    #     if type(record) is Statement:
-    #         status = True
-    #         self.single_run_stats['statement_num'] += 1
-    #         try:
-    #             res = self.cur.execute(record.sql)
-    #         except sqlite3.OperationalError as e:
-    #             status = False
-    #             self.single_run_stats['failed_statement_num'] += 1
-    #             logging.debug("Statement '%s' execution error: %s",record.sql, e)
-            
-    #         self.handle_stmt_result(status, record)
-    #         self.con.commit()
-    #     elif type(record) is Query:
-    #         self.single_run_stats['query_num'] += 1
-    #         results = []
-    #         try:
-    #             res = self.cur.execute(record.sql)
-    #             results = res.fetchall()
-    #         except sqlite3.OperationalError as e:
-    #             self.single_run_stats['failed_query_num'] += 1
-    #             logging.debug("Query '%s' execution error: %s",record.sql, e)
-    #         self.handle_query_result(results, record)
-            
 
 class DuckDBRunner(Runner):
     def __init__(self, records: List[Record] = []) -> None:
@@ -376,27 +349,3 @@ class CockroachDBRunner(Runner):
     
     def commit(self):
         self.con.commit()
-    # def _single_run(self, record:Record):
-    #     self.single_run_stats['total_sql'] += 1
-    #     if type(record) is Statement:
-    #         status = True
-    #         self.single_run_stats['statement_num'] += 1
-    #         try:
-    #             res = self.cur.execute(record.sql)
-    #         except psycopg2.DatabaseError as e:
-    #             status = False
-    #             self.single_run_stats['failed_statement_num'] += 1
-    #             logging.debug("Statement '%s' execution error: %s",record.sql, e)
-            
-    #         self.handle_stmt_result(status, record)
-    #         self.con.commit()
-    #     elif type(record) is Query:
-    #         self.single_run_stats['query_num'] += 1
-    #         results = []
-    #         try:
-    #             res = self.cur.execute(record.sql)
-    #             results = self.cur.fetchall()
-    #         except psycopg2.DatabaseError as e:
-    #             self.single_run_stats['failed_query_num'] += 1
-    #             logging.debug("Query '%s' execution error: %s",record.sql, e)
-    #         self.handle_query_result(results, record)
