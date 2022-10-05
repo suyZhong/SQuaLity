@@ -1,8 +1,8 @@
 *_tests/
 cockroach-data/
 __pycache__
-logs/
+logs/*
 *.log
 *.db
-output
+output/*
 test.ipynb

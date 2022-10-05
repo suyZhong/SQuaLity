@@ -1,0 +1,42 @@
+asttokens @ file:///opt/conda/conda-bld/asttokens_1646925590279/work
+autopep8==1.7.0
+backcall @ file:///home/ktietz/src/ci/backcall_1611930011877/work
+certifi @ file:///opt/conda/conda-bld/certifi_1663615672595/work/certifi
+cx-Oracle==8.3.0
+debugpy @ file:///tmp/build/80754af9/debugpy_1637091799509/work
+decorator @ file:///opt/conda/conda-bld/decorator_1643638310831/work
+duckdb==0.5.1
+entrypoints @ file:///tmp/build/80754af9/entrypoints_1649926439650/work
+executing @ file:///opt/conda/conda-bld/executing_1646925071911/work
+ipykernel @ file:///opt/conda/conda-bld/ipykernel_1662361798230/work
+ipython @ file:///opt/conda/conda-bld/ipython_1657652213665/work
+jedi @ file:///tmp/build/80754af9/jedi_1644297102865/work
+jupyter-core @ file:///opt/conda/conda-bld/jupyter_core_1651671229925/work
+jupyter_client @ file:///opt/conda/conda-bld/jupyter_client_1662504365333/work
+matplotlib-inline @ file:///opt/conda/conda-bld/matplotlib-inline_1662014470464/work
+mysql-connector-python==8.0.30
+nest-asyncio @ file:///tmp/build/80754af9/nest-asyncio_1649847906199/work
+numpy==1.23.3
+packaging @ file:///tmp/build/80754af9/packaging_1637314298585/work
+pandas==1.5.0
+parso @ file:///opt/conda/conda-bld/parso_1641458642106/work
+pexpect @ file:///tmp/build/80754af9/pexpect_1605563209008/work
+pickleshare @ file:///tmp/build/80754af9/pickleshare_1606932040724/work
+prompt-toolkit @ file:///tmp/build/80754af9/prompt-toolkit_1633440160888/work
+protobuf==3.20.1
+psutil @ file:///opt/conda/conda-bld/psutil_1656431268089/work
+psycopg2-binary==2.9.3
+ptyprocess @ file:///tmp/build/80754af9/ptyprocess_1609355006118/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
+pure-eval @ file:///opt/conda/conda-bld/pure_eval_1646925070566/work
+pycodestyle==2.9.1
+Pygments @ file:///opt/conda/conda-bld/pygments_1644249106324/work
+pyparsing @ file:///opt/conda/conda-bld/pyparsing_1661452539315/work
+python-dateutil @ file:///tmp/build/80754af9/python-dateutil_1626374649649/work
+pytz==2022.4
+pyzmq @ file:///opt/conda/conda-bld/pyzmq_1657724186960/work
+six @ file:///tmp/build/80754af9/six_1644875935023/work
+stack-data @ file:///opt/conda/conda-bld/stack_data_1646927590127/work
+toml==0.10.2
+tornado @ file:///opt/conda/conda-bld/tornado_1662061693373/work
+traitlets @ file:///tmp/build/80754af9/traitlets_1636710298902/work
+wcwidth @ file:///Users/ktietz/demo/mc3/conda-bld/wcwidth_1629357192024/work
