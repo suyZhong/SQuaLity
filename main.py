@@ -40,11 +40,11 @@ if __name__ == "__main__":
                         default="sqlite", help="Enter the dbms test suites")
     parser.add_argument('-t', '--test_file', type=str,
                         default="", help="test a specific file")
-    parser.add_argument('-f', "--db_file", type=str, default=":memory:",
-                        help="Enter the in-mem db file save path")
+    parser.add_argument('-f', "--db_name", type=str, default=":memory:",
+                        help="Enter the database name. For embedded database it's the file path.")
     parser.add_argument('-u', "--db_url", type=str, default="postgresql://root@localhost:26257/defaultdb?sslmode=disable",
                         help="Enter the Dabase url")
-    parser.add_argument('--log', type=str, default="", help="logging path")
+    parser.add_argument('--log', type=str, default="", help="logging level")
     parser.add_argument("--max_files", type=int, default=0,
                         help="Max test files it run")
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     suite_name = str.lower(args.suite_name)
     max_files = args.max_files
     db_url = args.db_url
-    db_file = args.db_file
+    db_name = args.db_name
     test_file = args.test_file
     log_level = args.log
     if test_file:
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         exit("Not implement yet")
 
     for i, test_file in enumerate(test_files):
-        db_file = args.db_file + str(i)
+        db_name = args.db_name + str(i)
         single_begin_time = datetime.now()
         if max_files <= 0 and i < abs(max_files):
             continue
@@ -105,14 +105,14 @@ if __name__ == "__main__":
         p.get_file_content()
         p.parse_file()
         
-        r.set_db(db_file)
+        r.set_db(db_name)
         r.get_records(p.get_records())
-        r.connect(db_file)
+        r.connect(db_name)
         # print("-----------------------------------")
         logging.info("running %s", test_file)
         r.run()
         r.close()
-        r.remove_db(db_file)
+        r.remove_db(db_name)
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) +" "+ test_file, single_running_time)

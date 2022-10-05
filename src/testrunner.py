@@ -21,11 +21,10 @@ class Runner():
     
     def set_db(self, db_name:str):
         if not db_name.startswith(":memory:"):
-            db_name = "/temp/zsy/" + db_name
             os.system('rm %s' % db_name)
         self.db = db_name
     
-    def remove_db(self):
+    def remove_db(self, db_name:str):
         if self.allright:
             logging.info("Pass all test cases!")
             try:
@@ -204,9 +203,6 @@ class Runner():
         # myDebug(result_flat)
         return ''.join(result_flat)
     
-    def _replace_None(self, result_string:str):
-        return result_string.replace("None", "NULL")
-    
     def handle_control(self, action:RunnerAction):
         if action == RunnerAction.halt:
             logging.warn("halt the rest of the test cases")
@@ -235,8 +231,6 @@ class Runner():
             result_string = self._sort_result(results_fmt, sort_type=record.sort)
         else:
             result_len = 0
-            
-        # result_string = self._replace_None(result_string)
         
         if result_len > self.hash_threshold:
             result_string = self._hash_results(result_string)
@@ -252,10 +246,6 @@ class Runner():
             logging.error("Query %s does not return expected result", record.sql)
             logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
                           record.result.strip(), result_string.strip(), results)
-            # print(record.sql)
-            # print("False")
-            # print(results, result_string)
-            # print(record.result)
             self.allright = False
         
 
