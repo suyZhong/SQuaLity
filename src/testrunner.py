@@ -94,7 +94,6 @@ class Runner():
                 self.single_run_stats['failed_statement_num'] +=1
                 logging.debug(
                     "Statement '%s' execution error: %s", record.sql, e)
-                return
             self.handle_stmt_result(status, record)
             self.commit()
         elif type(record) is Query:
