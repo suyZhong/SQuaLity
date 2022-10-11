@@ -8,6 +8,7 @@ import pandas as pd
 import sqlite3
 import duckdb
 import psycopg2
+import mysql.connector
 
 class Runner():
     def __init__(self, records:List[Record]) -> None:
@@ -67,7 +68,7 @@ class Runner():
         print("Success SQL query: ", stats['success_query_num'])
         print("Wrong SQL statement: ", stats['wrong_stmt_num'])
         print("Wrong SQL query: ", stats['wrong_query_num'])
-        print("-------------------------------------------")
+        print("-------------------------------------------",flush=True)
     
     def get_records(self, records:List[Record]):
         self.allright = True
@@ -338,3 +339,43 @@ class CockroachDBRunner(Runner):
     
     def commit(self):
         self.con.commit()
+        
+        
+class MySQLRunner(Runner):
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
+        self.cur = None
+    
+    def set_db(self, db_name):
+        self.db = db_name
+    
+    def remove_db(self, db_name):
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+        self.commit()
+        self.con.close()
+    
+    def connect(self, db_name = ""):
+        logging.info("connect to db %s", db_name)
+        self.con = mysql.connector.connect(host="localhost", user="root", password="root", port=3336)
+        self.cur = self.con.cursor()
+        
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+        self.execute_stmt("CREATE DATABASE %s" % db_name)
+        self.execute_stmt("USE %s" % db_name)
+        self.commit()
+
+    
+    def close(self):
+        # self.con.close()
+        pass
+        
+    def execute_query(self, sql):
+        self.cur.execute(sql)
+        return self.cur.fetchall()
+    
+    def execute_stmt(self, sql):
+        self.cur.execute(sql)
+    
+    def commit(self):
+        self.con.commit()
+        

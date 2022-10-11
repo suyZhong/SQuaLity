@@ -72,8 +72,8 @@ if __name__ == "__main__":
         sys.stdout =  open(log_file + ".out", "a")
     else:
         logging.basicConfig(filename="logs/debug.log", encoding='utf-8',
-                            level=getattr(logging, log_level.upper()),)
-        sys.stdout =  open("logs/debug" + ".out", "a")
+                            level=getattr(logging, log_level.upper()),filemode='w')
+        sys.stdout =  open("logs/debug" + ".out", "w")
 
     # set the runner
     if dbms_name == 'sqlite':
@@ -82,6 +82,8 @@ if __name__ == "__main__":
         r = testrunner.DuckDBRunner()
     elif dbms_name == 'cockroachdb':
         r = testrunner.CockroachDBRunner()
+    elif dbms_name == 'mysql':
+        r = testrunner.MySQLRunner()
     else:
         exit("Not implement yet")
 
@@ -112,7 +114,8 @@ if __name__ == "__main__":
         logging.info("running %s", test_file)
         r.run()
         r.close()
-        r.remove_db(db_name)
+        if log_level != "DEBUG":
+            r.remove_db(db_name)
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) +" "+ test_file, single_running_time)
