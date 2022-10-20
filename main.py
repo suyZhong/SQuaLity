@@ -90,6 +90,8 @@ if __name__ == "__main__":
     # set the parser
     if suite_name == 'sqlite':
         p = testparser.SLTParser()
+    elif suite_name == 'duckdb':
+        p = testparser.DTParser()
     else:
         exit("Not implement yet")
 

@@ -6,3 +6,4 @@ logs/*
 *.db
 output/*
 test.ipynb
+demo/*
