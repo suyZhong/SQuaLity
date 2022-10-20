@@ -279,7 +279,7 @@ class DuckDBRunner(Runner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
         self.con = None
-        self.db_error = (duckdb.ProgrammingError, duckdb.DataError)
+        # self.db_error = (duckdb.ProgrammingError, duckdb.DataError, duckdb.IOException,duckdb.PermissionException)
     
     def connect(self, file_path):
         logging.info("connect to db %s", file_path)
@@ -294,6 +294,7 @@ class DuckDBRunner(Runner):
     
     def execute_stmt(self, sql):
         self.con.execute(sql)
+        self.con.fetchall()
         return 
     
 class CockroachDBRunner(Runner):
