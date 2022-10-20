@@ -7,7 +7,9 @@ class Parser:
     def __init__(self, filename='') -> None:
         self.filename = filename
         self.test_content = ""
+        self.result_content = ""
         self.hash_threshold = 8
+        self.records: List[Record] = list()
 
     # read the whole file
 
@@ -21,6 +23,9 @@ class Parser:
     def parse_file(self):
         pass
 
+    def testfile_dialect_handler(self,*args, **kwargs):
+        pass
+        
     def parse_file_by_lines(self):
         for line in self.test_content:
             self.parse_line(line)
@@ -37,7 +42,6 @@ class SLTParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.scripts = ""
-        self.records: List[Record] = list()
     
     def _parse_script_lines(self, lines: list):
         # Now the first line are exact command
@@ -119,6 +123,9 @@ class SLTParser(Parser):
         elif record_type == 'halt':
             r = Control(action=RunnerAction.halt)
         else:
+            r = self.testfile_dialect_handler(lines = lines, record_type = record_type)
+            if r:
+                return r
             logging.warning("This script has not implement: %s", lines)
             return
         return r
@@ -137,7 +144,7 @@ class SLTParser(Parser):
 
     def parse_file(self):
         self.scripts = [script.strip()
-                        for script in self.test_content.split('\n\n') if script != '']
+                        for script in self.test_content.strip().split('\n\n') if script != '']
         # print(self.scripts)
         self.records = []
         for i, script in enumerate(self.scripts):
@@ -164,3 +171,38 @@ class SLTParser(Parser):
             # print('sort:',rec.sort)
     def get_records(self):
         return self.records
+    
+class MYTParser(Parser):
+    def __init__(self, filename='') -> None:
+        super().__init__(filename)
+        self.testfile = filename
+        self.resultfile = filename.replace('/t/', '/r/')
+        
+    def get_file_name(self, filename):
+        self.testfile = filename
+        self.resultfile = filename.replace('/t/','/r/')
+    
+    def get_file_content(self):
+        with open(self.testfile, 'r') as f:
+            self.test_content = f.read()
+            
+        with open(self.resultfile ,'r') as f:
+            self.result_content = f.read()
+            
+    
+
+class DTParser(SLTParser):
+    def __init__(self, filename='') -> None:
+        super().__init__(filename)
+    
+    def testfile_dialect_handler(self, *args, **kwargs):
+        record_type = kwargs['record_type']
+        lines = kwargs['lines']
+        if record_type == 'loop' or record_type == 'require':
+            logging.warning("This script has not implement: %s", lines)
+            return Control(action=RunnerAction.halt)
+        return super().testfile_dialect_handler(*args, **kwargs)
+    
+    def parse_file(self):
+        
+        return super().parse_file()
