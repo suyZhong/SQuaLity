@@ -1,6 +1,7 @@
 import os
 from typing import List
 from .utils import *
+from .bugdumper import *
 import hashlib
 import logging
 import pandas as pd
@@ -19,6 +20,8 @@ class Runner():
         self.single_run_stats = dict().fromkeys(Running_Stats, 0)
         self.db_error = Exception
         self.db = ":memory:"
+        self.records_log = []
+        self.bug_dumper = BugDumper()
     
     def set_db(self, db_name:str):
         if not db_name.startswith(":memory:"):
@@ -37,6 +40,7 @@ class Runner():
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
         self.single_run_stats = dict().fromkeys(Running_Stats, 0)
+        self.records_log = []
         for record in self.records:
             if dbms_name not in record.db:
                 continue
@@ -97,6 +101,7 @@ class Runner():
                     "Statement '%s' execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record)
             self.commit()
+            self.records_log.append(record)
         elif type(record) is Query:
             self.single_run_stats['query_num'] += 1
             results = []
@@ -217,6 +222,7 @@ class Runner():
             self.single_run_stats['wrong_stmt_num'] += 1
             logging.error("Statement %s does not behave as expected", record.sql)
             self.allright = False
+            self.bug_dumper.output_single_state(self.records_log, record)
     
     def handle_query_result(self, results:list, record:Query):
         result_string = ""
@@ -247,6 +253,7 @@ class Runner():
             logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
                           record.result.strip(), result_string.strip(), results)
             self.allright = False
+            self.bug_dumper.output_single_state(self.records_log, record)
         
 
 class SQLiteRunner(Runner):

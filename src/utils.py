@@ -30,7 +30,7 @@ Running_Stats = ['total_sql',
 
 class Record:
     
-    def __init__(self, sql="", result="", db=DBMS_Set) -> None:
+    def __init__(self, sql="", result="", db=DBMS_Set, **kwargs) -> None:
         self.sql = sql
         self.result = result
         self.db = db
@@ -40,7 +40,7 @@ class Record:
 
 
 class Statement(Record):
-    def __init__(self, sql="", result="",db=DBMS_Set, status=True, affected_rows=0) -> None:
+    def __init__(self, sql="", result="",db=DBMS_Set, status=True, affected_rows=0, *args, **kwargs) -> None:
         super().__init__(sql=sql, result=result, db=db)
         self.status = status
         self.affected_rows = affected_rows
