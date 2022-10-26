@@ -114,6 +114,7 @@ if __name__ == "__main__":
         r.connect(db_name)
         # print("-----------------------------------")
         logging.info("running %s", test_file)
+        r.bug_dumper.get_testfile_data(testfile_index=i, testfile_path=test_file)
         r.run()
         r.close()
         if log_level != "DEBUG":
@@ -123,3 +124,4 @@ if __name__ == "__main__":
         r.running_summary(str(i) +" "+ test_file, single_running_time)
         # print ("#############################\n\n")
     r.running_summary("ALL", (datetime.now()-begin_time).seconds)
+    r.dump()

@@ -34,6 +34,7 @@ class Record:
         self.sql = sql
         self.result = result
         self.db = db
+        self.id = kwargs['id']
         
     def set_execute_db(self, db=set()):
         self.db = db
@@ -41,14 +42,14 @@ class Record:
 
 class Statement(Record):
     def __init__(self, sql="", result="",db=DBMS_Set, status=True, affected_rows=0, *args, **kwargs) -> None:
-        super().__init__(sql=sql, result=result, db=db)
+        super().__init__(sql, result, db, **kwargs)
         self.status = status
         self.affected_rows = affected_rows
 
 
 class Query(Record):
-    def __init__(self, sql="", result="",db=DBMS_Set, data_type="I", sort=SortType.NoSort, label="") -> None:
-        super().__init__(sql=sql, result=result,db=db)
+    def __init__(self, sql="", result="",db=DBMS_Set, data_type="I", sort=SortType.NoSort, label="", *args, **kwargs) -> None:
+        super().__init__(sql=sql, result=result,db=db, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label
@@ -56,8 +57,8 @@ class Query(Record):
 
 
 class Control(Record):
-    def __init__(self, sql="", result="", db=DBMS_Set, action=RunnerAction.halt) -> None:
-        super().__init__(sql, result, db)
+    def __init__(self, sql="", result="", db=DBMS_Set, action=RunnerAction.halt, *args, **kwargs) -> None:
+        super().__init__(sql, result, db, **kwargs)
         self.action = action
 
 def myDebug(mystr:str, *args):

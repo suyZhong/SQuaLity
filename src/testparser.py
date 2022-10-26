@@ -10,6 +10,7 @@ class Parser:
         self.result_content = ""
         self.hash_threshold = 8
         self.records: List[Record] = list()
+        self.record_id = 0
 
     # read the whole file
 
@@ -50,14 +51,15 @@ class SLTParser(Parser):
             return
         tokens = lines[0].split()
         record_type = tokens[0]
-        r = Statement()
+        r = Statement(id=self.record_id)
 
         if record_type == 'statement':
             # assert (line_num <= 2), 'statement too long: ' + '\n'.join(lines)
             status = (tokens[1] == 'ok')
             # Only a single SQL command is allowed per statement
             # r = Statement(sql=lines[1], status=status)
-            r = Statement(sql="".join(lines[1:]), status=status)
+            r = Statement(sql="".join(lines[1:]),result=str(status), status=status, id=self.record_id)
+            self.record_id += 1
         elif record_type == 'query':
             # A query record begins with a line of the following form:
             #       query <type-string> <sort-mode> <label>
@@ -96,7 +98,9 @@ class SLTParser(Parser):
                 result = '\n'.join(lines[ind + 1:])
 
             r = Query(sql=sql, result=result, data_type=data_type,
-                      sort=sort_mode, label=label)
+                      sort=sort_mode, label=label, id= self.record_id)
+            self.record_id += 1
+            
 
         elif record_type == 'skipif':
             tmp_dbms_set = copy(DBMS_Set)
@@ -112,7 +116,7 @@ class SLTParser(Parser):
             if tokens[1] in DBMS_Set:
                 tmp_dbms_set = set([tokens[1]])
             else:
-                logging.warning(
+                logging.debug(
                     "DBMS %s support is stll not implemented, skip this script", tokens[1])
                 return
             r = self._parse_script_lines(lines[1:])
@@ -120,8 +124,10 @@ class SLTParser(Parser):
                 r.set_execute_db(tmp_dbms_set)
         elif record_type == 'hash-threshold':
             self.hash_threshold = eval(tokens[1])
+            return
         elif record_type == 'halt':
             r = Control(action=RunnerAction.halt)
+            self.record_id += 1
         else:
             r = self.testfile_dialect_handler(lines = lines, record_type = record_type)
             if r:
@@ -147,6 +153,7 @@ class SLTParser(Parser):
                         for script in self.test_content.strip().split('\n\n') if script != '']
         # print(self.scripts)
         self.records = []
+        self.record_id = 0
         for i, script in enumerate(self.scripts):
             self.parse_script(script.strip())
 

@@ -36,6 +36,9 @@ class Runner():
             except:
                 logging.error("No such file or directory: %s", self.db)
     
+    def dump(self):
+        self.bug_dumper.dump_to_csv()
+    
     def run(self):
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
@@ -222,7 +225,7 @@ class Runner():
             self.single_run_stats['wrong_stmt_num'] += 1
             logging.error("Statement %s does not behave as expected", record.sql)
             self.allright = False
-            self.bug_dumper.output_single_state(self.records_log, record)
+            self.bug_dumper.save_state(self.records_log, record, str(status))
     
     def handle_query_result(self, results:list, record:Query):
         result_string = ""
@@ -253,7 +256,8 @@ class Runner():
             logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
                           record.result.strip(), result_string.strip(), results)
             self.allright = False
-            self.bug_dumper.output_single_state(self.records_log, record)
+            self.bug_dumper.save_state(self.records_log, record, result_string)
+            # self.bug_dumper.print_state()
         
 
 class SQLiteRunner(Runner):
