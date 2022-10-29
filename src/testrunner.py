@@ -1,5 +1,7 @@
 import os
 from typing import List
+
+from numpy import rec
 from .utils import *
 from .bugdumper import *
 import hashlib
@@ -23,10 +25,12 @@ class Runner():
         self.single_run_stats = dict().fromkeys(Running_Stats, 0)
         self.db_error = Exception
         self.db = ":memory:"
+        self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.records_log = []
-        self.bug_dumper = BugDumper()
+        self.bug_dumper = BugDumper(self.dbms_name)
         self.log_level = logging.root.level
         self.exec_time = 0
+        self.dump_every = True
     
     def set_db(self, db_name:str):
         if not db_name.startswith(":memory:"):
@@ -42,8 +46,7 @@ class Runner():
                 logging.error("No such file or directory: %s", self.db)
     
     def dump(self):
-        self.bug_dumper.dump_to_csv(
-            type(self).__name__.lower().removesuffix("runner"))
+        self.bug_dumper.dump_to_csv(self.dbms_name)
     
     def run(self):
         class_name = type(self).__name__
@@ -70,7 +73,7 @@ class Runner():
             exec_time = (self.end_time-self.cur_time).seconds
             if exec_time > self.MAX_RUNTIME_PERSQL:
                 logging.warn("Time Exceed - %d" % exec_time)
-                self.bug_dumper.save_state(self.records_log, record, "Time Exceed - %d" %exec_time)
+                self.bug_dumper.save_state(self.records_log, record, "Time Exceed - %d" % exec_time)
                 break
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
@@ -106,6 +109,9 @@ class Runner():
     def execute_stmt(self, sql):
         pass
     
+    def executemany_stmt(self):
+        pass
+    
     def execute_query(self, sql):
         pass
     
@@ -126,7 +132,8 @@ class Runner():
                     "Statement %s execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record)
             self.commit()
-            self.records_log.append(record)
+            if status:
+                self.records_log.append(record)
         elif type(record) is Query:
             self.single_run_stats['query_num'] += 1
             results = []
@@ -136,6 +143,7 @@ class Runner():
                 self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query %s execution error: %s",record.sql, e)
                 self.commit()
+                self.bug_dumper.save_state(self.records_log, record, "Execution Failed", (datetime.now()-self.cur_time).microseconds)
                 return
             else:
                 self.single_run_stats['success_query_num'] += 1
@@ -243,11 +251,15 @@ class Runner():
         # myDebug("%r %r", status, record.status)
         if status == record.status:
             logging.debug(record.sql + " Success")
+            if self.dump_every:
+                self.bug_dumper.save_state(self.records_log, record, str(status), (datetime.now()-self.cur_time).microseconds)
+            return True
         else:
             self.single_run_stats['wrong_stmt_num'] += 1
             logging.error("Statement %s does not behave as expected", record.sql)
             self.allright = False
-            self.bug_dumper.save_state(self.records_log, record, str(status))
+            self.bug_dumper.save_state(self.records_log, record, str(status), (datetime.now()-self.cur_time).microseconds)
+            return False
     
     def handle_query_result(self, results:list, record:Query):
         result_string = ""
@@ -271,6 +283,8 @@ class Runner():
         if result_string.strip() == record.result.strip():
             # print("True!")
             myDebug("Query %s Success", record.sql)
+            if self.dump_every:
+                self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
             pass
         else:
             self.single_run_stats['wrong_query_num'] += 1
@@ -278,7 +292,7 @@ class Runner():
             logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
                           record.result.strip(), result_string.strip(), results)
             self.allright = False
-            self.bug_dumper.save_state(self.records_log, record, result_string)
+            self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
             # self.bug_dumper.print_state()
         
 
@@ -414,6 +428,14 @@ class MySQLRunner(Runner):
     
     def execute_stmt(self, sql):
         self.cur.execute(sql)
+    
+    def executemany_stmt(self, sql:str):
+        sql_list = sql.split(";")
+        for stmt in sql_list:
+            self.cur.execute(stmt)
+        # self.cur.fetchall()
+        self.con.commit()
+        return
     
     def commit(self):
         self.con.commit()

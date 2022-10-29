@@ -8,17 +8,19 @@ import logging
 
 class BugDumper():
     """TODO Can we use perhaps pandas? Would it be easier?"""
-    def __init__(self) -> None:
+    def __init__(self, dbms_name) -> None:
         self.conn = sqlite3.connect("database.db")
         self.cur = self.conn.cursor()
         self.output = "output/demo.csv"
         self.tables = ['DBMS_BUGS', 'BUG_LOGS', 'BUG_TEST_CASES']
         self.views = ['DBMS_BUGS_STATUS', 'ORACLES_AGGREGATED', 'TAGS_AGGREGATED', 'DBMS_BUGS_TRUE_POSITIVES', 'BUG_TEST_CASES_NO_FP', 'DBMS_BUGS_FALSE_POSITIVES', 'TAGS_AGGREGATED_WITH_FP']
         self.init_bugs_schema()
+        self.dbms_name = dbms_name
     
     def init_bugs_schema(self):
         # The basic bugs schema
-        self.bugs_columns = ['TESTFILE_INDEX', 'TESTFILE_PATH', 'TESTCASE_INDEX', 'ERROR_SQL', 'CASE_TYPE', 'EXPECTED_RESULT', 'ACTUAL_RESULT']
+        self.bugs_columns = ['DBMS_NAME','TESTFILE_INDEX', 'TESTFILE_PATH',
+                             'TESTCASE_INDEX', 'ERROR_SQL', 'CASE_TYPE', 'EXPECTED_RESULT', 'ACTUAL_RESULT', 'LOGS_INDEX']
         self.bugs_single_row = dict().fromkeys(self.bugs_columns)
         self.bugs_dataframe = pd.DataFrame(columns=self.bugs_columns)
         
@@ -60,8 +62,21 @@ class BugDumper():
         pass
         
     
-    def save_state(self, logs:List[Statement], record:Record, result):
+    def save_state(self, logs:List[Statement], record:Record, result, execution_time:int):
+        # record the log
+        temp_log = ";\n".join([log.sql for log in logs])
+        new_log_flag = (temp_log != self.logs_single_row['LOGS'])
+        
+        # print(self.bugs_single_row)
+        # print(self.logs_single_row)
+        # append to the dataframe
+        if new_log_flag:
+            self.logs_single_row['LOGS'] = temp_log
+            self.logs_dataframe = pd.concat([self.logs_dataframe, pd.DataFrame([self.logs_single_row])], ignore_index = True)
+            
+        
         # record the bug according to bugs schema
+        self.bugs_single_row['DBMS_NAME'] = self.dbms_name
         self.bugs_single_row['TESTFILE_INDEX'] = self.testfile_index
         self.bugs_single_row['TESTFILE_PATH'] = self.testfile_path
         self.bugs_single_row['TESTCASE_INDEX'] = record.id
@@ -70,17 +85,11 @@ class BugDumper():
         self.bugs_single_row['EXPECTED_RESULT'] = record.result
         self.bugs_single_row['ACTUAL_RESULT'] = result.strip() # notice the result is a string
         self.bugs_single_row['DATE'] = datetime.now().strftime("%y-%m-%d-%H:%M")
-        # self.bugs_single_row['EXEC_TIME'] = execution_time
+        self.bugs_single_row['EXEC_TIME'] = execution_time
         
-        # record the log
-        self.logs_single_row['BUGS_INDEX'] = len(self.bugs_dataframe) # no need to -1 because the log is for new bug record
-        self.logs_single_row['LOGS'] = ";\n".join([log.sql for log in logs])
         
-        # print(self.bugs_single_row)
-        # print(self.logs_single_row)
-        # append to the dataframe
+        self.bugs_single_row['LOGS_INDEX'] = len(self.logs_dataframe) - 1 
         self.bugs_dataframe = pd.concat([self.bugs_dataframe, pd.DataFrame([self.bugs_single_row])], ignore_index = True)
-        self.logs_dataframe = pd.concat([self.logs_dataframe, pd.DataFrame([self.logs_single_row])], ignore_index = True)
         
     def output_single_state(self, logs:List[Statement], record:Record):
         myDebug("Find a potential bug! Let's see the log and record.")
@@ -94,5 +103,5 @@ class BugDumper():
     
     def dump_to_csv(self, dbname='demo'):
         myDebug("Dump the bugs as a Dataframe to a csv %s" % dbname)
-        self.bugs_dataframe.to_csv("output/%s_bugs.csv" % dbname, mode="w", header=True)
-        self.logs_dataframe.to_csv("output/%s_logs.csv" % dbname, mode="w", header=True)
+        self.bugs_dataframe.to_csv("output/%s_bugs.zip" % dbname, mode="w", header=True, compression='zip')
+        self.logs_dataframe.to_csv("output/%s_logs.zip" % dbname, mode="w", header=True, compression= 'zip')
