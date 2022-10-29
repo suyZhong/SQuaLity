@@ -94,7 +94,7 @@ class BugDumper():
         self.bugs_single_row['ACTUAL_RESULT'] = result.strip() # notice the result is a string
         self.bugs_single_row['DATE'] = datetime.now().strftime("%y-%m-%d-%H:%M")
         self.bugs_single_row['EXEC_TIME'] = execution_time
-        self.bugs_single_row['IS_ERROR'] = is_error
+        self.bugs_single_row['IS_ERROR'] = str(is_error)
         
         
         self.bugs_single_row['LOGS_INDEX'] = self.log_index - 1
