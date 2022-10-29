@@ -95,7 +95,7 @@ if __name__ == "__main__":
     else:
         exit("Not implement yet")
 
-    skip_index = [140]
+    skip_index = [1]
     for i, test_file in enumerate(test_files):
         db_name = args.db_name + str(i)
         single_begin_time = datetime.now()

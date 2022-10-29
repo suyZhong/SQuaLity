@@ -27,10 +27,10 @@ class Runner():
         self.db = ":memory:"
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.records_log = []
-        self.bug_dumper = BugDumper(self.dbms_name)
         self.log_level = logging.root.level
         self.exec_time = 0
-        self.dump_every = False
+        self.dump_all = True
+        self.bug_dumper = BugDumper(self.dbms_name, self.dump_all)
     
     def set_db(self, db_name:str):
         if not db_name.startswith(":memory:"):
@@ -45,8 +45,8 @@ class Runner():
             except:
                 logging.error("No such file or directory: %s", self.db)
     
-    def dump(self):
-        self.bug_dumper.dump_to_csv(self.dbms_name)
+    def dump(self, mode='a'):
+        self.bug_dumper.dump_to_csv(self.dbms_name, mode=mode)
     
     def run(self):
         class_name = type(self).__name__
@@ -54,6 +54,7 @@ class Runner():
         self.single_run_stats = dict().fromkeys(Running_Stats, 0)
         self.records_log = []
         self.exec_time = datetime.now()
+        self.bug_dumper.reset_schema()
         for record in self.records:
             self.cur_time = datetime.now()
             # if (self.cur_time - self.exec_time).seconds > self.MAX_RUNTIME:
@@ -143,7 +144,7 @@ class Runner():
                 self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query %s execution error: %s",record.sql, e)
                 self.commit()
-                self.bug_dumper.save_state(self.records_log, record, "Execution Failed", (datetime.now()-self.cur_time).microseconds)
+                self.bug_dumper.save_state(self.records_log, record, "Execution Failed: %s" % e, (datetime.now()-self.cur_time).microseconds)
                 return
             else:
                 self.single_run_stats['success_query_num'] += 1
@@ -251,7 +252,7 @@ class Runner():
         # myDebug("%r %r", status, record.status)
         if status == record.status:
             logging.debug(record.sql + " Success")
-            if self.dump_every:
+            if self.dump_all:
                 self.bug_dumper.save_state(self.records_log, record, str(status), (datetime.now()-self.cur_time).microseconds)
             return True
         else:
@@ -283,7 +284,7 @@ class Runner():
         if result_string.strip() == record.result.strip():
             # print("True!")
             myDebug("Query %s Success", record.sql)
-            if self.dump_every:
+            if self.dump_all:
                 self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
             pass
         else:
