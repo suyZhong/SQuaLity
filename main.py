@@ -95,9 +95,12 @@ if __name__ == "__main__":
     else:
         exit("Not implement yet")
 
+    skip_index = [140]
     for i, test_file in enumerate(test_files):
         db_name = args.db_name + str(i)
         single_begin_time = datetime.now()
+        if i in skip_index:
+            continue
         if max_files <= 0 and i < abs(max_files):
             continue
         if max_files > 0 and i > max_files:
@@ -110,12 +113,15 @@ if __name__ == "__main__":
         p.parse_file()
         
         r.set_db(db_name)
-        r.get_records(p.get_records())
+        r.get_records(p.get_records(), testfile_index=i,
+                      testfile_path=test_file)
         r.connect(db_name)
         # print("-----------------------------------")
         logging.info("running %s", test_file)
-        r.bug_dumper.get_testfile_data(testfile_index=i, testfile_path=test_file)
-        r.run()
+        try:
+            r.run()
+        except r.db_error:
+            logging.critical("Runner catch an exception, it is either the runner's bug or the connector's bug.")
         r.close()
         if log_level != "DEBUG":
             r.remove_db(db_name)
@@ -123,5 +129,5 @@ if __name__ == "__main__":
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) +" "+ test_file, single_running_time)
         # print ("#############################\n\n")
+        r.dump()
     r.running_summary("ALL", (datetime.now()-begin_time).seconds)
-    r.dump()
