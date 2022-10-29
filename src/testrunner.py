@@ -30,7 +30,7 @@ class Runner():
         self.bug_dumper = BugDumper(self.dbms_name)
         self.log_level = logging.root.level
         self.exec_time = 0
-        self.dump_every = True
+        self.dump_every = False
     
     def set_db(self, db_name:str):
         if not db_name.startswith(":memory:"):
