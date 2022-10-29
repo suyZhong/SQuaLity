@@ -86,6 +86,7 @@ if __name__ == "__main__":
         r = testrunner.MySQLRunner()
     else:
         exit("Not implement yet")
+    r.init_dumper(dump_all=True)
 
     # set the parser
     if suite_name == 'sqlite':
@@ -95,7 +96,7 @@ if __name__ == "__main__":
     else:
         exit("Not implement yet")
 
-    skip_index = [1]
+    skip_index = [140]
     for i, test_file in enumerate(test_files):
         db_name = args.db_name + str(i)
         single_begin_time = datetime.now()
@@ -120,8 +121,8 @@ if __name__ == "__main__":
         logging.info("running %s", test_file)
         try:
             r.run()
-        except r.db_error:
-            logging.critical("Runner catch an exception, it is either the runner's bug or the connector's bug.")
+        except r.db_error as e:
+            logging.critical("Runner catch an exception %s , it is either the runner's bug or the connector's bug." % e)
         r.close()
         if log_level != "DEBUG":
             r.remove_db(db_name)

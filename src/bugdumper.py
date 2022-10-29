@@ -25,7 +25,8 @@ class BugDumper():
     def init_bugs_schema(self):
         # The basic bugs schema
         self.bugs_columns = ['DBMS_NAME','TESTFILE_INDEX', 'TESTFILE_PATH',
-                             'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT', 'ACTUAL_RESULT','EXEC_TIME', 'DATE','LOGS_INDEX']
+                             'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT', 
+                             'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'LOGS_INDEX']
         self.bugs_single_row = dict().fromkeys(self.bugs_columns)
         self.bugs_dataframe = pd.DataFrame(columns=self.bugs_columns)
         
@@ -35,7 +36,7 @@ class BugDumper():
         self.logs_single_row = dict().fromkeys(self.logs_columns)
         self.logs_dataframe = pd.DataFrame(columns=self.logs_columns)
         
-        self.bugs_dataframe.to_csv("output/%s_bugs.csv" % self.dbms_name, mode="w", header=True)
+        self.bugs_dataframe.to_csv("output/%s_results.csv" % self.dbms_name, mode="w", header=True)
         self.logs_dataframe.to_csv("output/%s_logs.csv" % self.dbms_name, mode="w", header=True, index=False)
         
     def get_testfile_data(self, *args, **kwargs):
@@ -68,7 +69,7 @@ class BugDumper():
         pass
         
     
-    def save_state(self, logs:List[Statement], record:Record, result, execution_time:int):
+    def save_state(self, logs:List[Statement], record:Record, result, execution_time:int, is_error = False):
         # record the log
         temp_log = ";\n".join([log.sql for log in logs])
         new_log_flag = (temp_log != self.logs_single_row['LOGS'])
@@ -76,7 +77,7 @@ class BugDumper():
         # print(self.bugs_single_row)
         # print(self.logs_single_row)
         # append to the dataframe
-        if new_log_flag:
+        if new_log_flag and is_error:
             self.log_index += 1
             self.logs_single_row['LOGS'] = temp_log
             self.logs_dataframe = pd.concat([self.logs_dataframe, pd.DataFrame([self.logs_single_row])], ignore_index = True)
@@ -93,6 +94,7 @@ class BugDumper():
         self.bugs_single_row['ACTUAL_RESULT'] = result.strip() # notice the result is a string
         self.bugs_single_row['DATE'] = datetime.now().strftime("%y-%m-%d-%H:%M")
         self.bugs_single_row['EXEC_TIME'] = execution_time
+        self.bugs_single_row['IS_ERROR'] = is_error
         
         
         self.bugs_single_row['LOGS_INDEX'] = self.log_index - 1
@@ -110,5 +112,5 @@ class BugDumper():
     
     def dump_to_csv(self, dbname='demo', mode='a'):
         myDebug("Dump the bugs as a Dataframe to a csv %s" % dbname)
-        self.bugs_dataframe.to_csv("output/%s_bugs.csv" % dbname, mode=mode, header=False)
+        self.bugs_dataframe.to_csv("output/%s_results.csv" % dbname, mode=mode, header=False)
         self.logs_dataframe.to_csv("output/%s_logs.csv" % dbname, mode=mode, header=False, index=False)
