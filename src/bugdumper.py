@@ -70,6 +70,7 @@ class BugDumper():
         self.bugs_single_row['EXPECTED_RESULT'] = record.result
         self.bugs_single_row['ACTUAL_RESULT'] = result.strip() # notice the result is a string
         self.bugs_single_row['DATE'] = datetime.now().strftime("%y-%m-%d-%H:%M")
+        # self.bugs_single_row['EXEC_TIME'] = execution_time
         
         # record the log
         self.logs_single_row['BUGS_INDEX'] = len(self.bugs_dataframe) # no need to -1 because the log is for new bug record
@@ -91,7 +92,7 @@ class BugDumper():
         print(self.bugs_dataframe)
         print(self.logs_dataframe)
     
-    def dump_to_csv(self):
-        myDebug("Dump the bugs as a Dataframe to a csv")
-        self.bugs_dataframe.to_csv("output/demo_bugs.csv", mode="w", header=True)
-        self.logs_dataframe.to_csv("output/demo_logs.csv", mode="w", header=True)
+    def dump_to_csv(self, dbname='demo'):
+        myDebug("Dump the bugs as a Dataframe to a csv %s" % dbname)
+        self.bugs_dataframe.to_csv("output/%s_bugs.csv" % dbname, mode="w", header=True)
+        self.logs_dataframe.to_csv("output/%s_logs.csv" % dbname, mode="w", header=True)

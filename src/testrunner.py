@@ -12,6 +12,9 @@ import psycopg2
 import mysql.connector
 
 class Runner():
+    MAX_RUNTIME = 500
+    MAX_RUNTIME_PERSQL = 10
+    
     def __init__(self, records:List[Record]) -> None:
         self.records = records
         self.hash_threshold = 8
@@ -22,6 +25,8 @@ class Runner():
         self.db = ":memory:"
         self.records_log = []
         self.bug_dumper = BugDumper()
+        self.log_level = logging.root.level
+        self.exec_time = 0
     
     def set_db(self, db_name:str):
         if not db_name.startswith(":memory:"):
@@ -37,14 +42,20 @@ class Runner():
                 logging.error("No such file or directory: %s", self.db)
     
     def dump(self):
-        self.bug_dumper.dump_to_csv()
+        self.bug_dumper.dump_to_csv(
+            type(self).__name__.lower().removesuffix("runner"))
     
     def run(self):
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
         self.single_run_stats = dict().fromkeys(Running_Stats, 0)
         self.records_log = []
+        self.exec_time = datetime.now()
         for record in self.records:
+            self.cur_time = datetime.now()
+            # if (self.cur_time - self.exec_time).seconds > self.MAX_RUNTIME:
+            #     logging.warning("Time exceed for this testfile", )
+            #     break
             if dbms_name not in record.db:
                 continue
             if type(record) == Control:
@@ -55,12 +66,19 @@ class Runner():
                     break
                 
             self._single_run(record)
+            self.end_time = datetime.now()
+            exec_time = (self.end_time-self.cur_time).seconds
+            if exec_time > self.MAX_RUNTIME_PERSQL:
+                logging.warn("Time Exceed - %d" % exec_time)
+                self.bug_dumper.save_state(self.records_log, record, "Time Exceed - %d" %exec_time)
+                break
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
     
     def running_summary(self, test_name, running_time):
         if test_name == "ALL":
             stats = self.all_run_stats
+            
         else:
             stats = self.single_run_stats
         print("-------------------------------------------")
@@ -77,9 +95,13 @@ class Runner():
         print("Wrong SQL query: ", stats['wrong_query_num'])
         print("-------------------------------------------",flush=True)
     
-    def get_records(self, records:List[Record]):
+    def get_records(self, records:List[Record], testfile_index:int, testfile_path: str):
         self.allright = True
         self.records = records
+        self.testfile_index = testfile_index
+        self.testfile_path = testfile_path
+        self.bug_dumper.get_testfile_data(testfile_index=testfile_index,
+                                          testfile_path=testfile_path)
     
     def execute_stmt(self, sql):
         pass
@@ -101,7 +123,7 @@ class Runner():
                 status = False
                 self.single_run_stats['failed_statement_num'] +=1
                 logging.debug(
-                    "Statement '%s' execution error: %s", record.sql, e)
+                    "Statement %s execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record)
             self.commit()
             self.records_log.append(record)
@@ -112,7 +134,7 @@ class Runner():
                 results = self.execute_query(record.sql)
             except self.db_error as e:
                 self.single_run_stats['failed_query_num'] += 1
-                logging.debug("Query '%s' execution error: %s",record.sql, e)
+                logging.debug("Query %s execution error: %s",record.sql, e)
                 self.commit()
                 return
             else:
@@ -308,6 +330,11 @@ class DuckDBRunner(Runner):
         self.con.fetchall()
         return 
     
+    def executemany_stmt(self, sql):
+        self.con.executemany(sql)
+        # self.con.fetchall()
+        return 
+    
 class CockroachDBRunner(Runner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
@@ -368,7 +395,7 @@ class MySQLRunner(Runner):
     
     def connect(self, db_name = ""):
         logging.info("connect to db %s", db_name)
-        self.con = mysql.connector.connect(host="localhost", user="root", password="root", port=3336)
+        self.con = mysql.connector.connect(host="localhost", user="root", password="root", port=3306)
         self.cur = self.con.cursor()
         
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
