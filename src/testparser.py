@@ -43,6 +43,7 @@ class SLTParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.scripts = ""
+        self.dbms_set = DBMS_Set
     
     def _parse_script_lines(self, lines: list):
         # Now the first line are exact command
@@ -103,14 +104,13 @@ class SLTParser(Parser):
             
 
         elif record_type == 'skipif':
-            tmp_dbms_set = copy(DBMS_Set)
-            if tokens[1] in DBMS_Set:
-                tmp_dbms_set.remove(tokens[1])
+            if tokens[1] in self.dbms_set:
+                self.dbms_set.remove(tokens[1])
             else:
                 pass
             r = self._parse_script_lines(lines[1:])
             if r:
-                r.set_execute_db(tmp_dbms_set)
+                r.set_execute_db(self.dbms_set)
             # print(tmp_dbms_set)
         elif record_type == 'onlyif':
             if tokens[1] in DBMS_Set:
@@ -141,6 +141,7 @@ class SLTParser(Parser):
         # Lines of the test script that begin with the sharp
         # character ("#", ASCII code 35) are comment lines and are ignored
         lines = [line for line in script.split('\n') if line[0] != '#']
+        self.dbms_set = copy(DBMS_Set)
         r = self._parse_script_lines(lines)
         if r:
             self.records.append(r)
