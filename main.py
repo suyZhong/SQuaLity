@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 from src import testparser
 from src import testrunner
