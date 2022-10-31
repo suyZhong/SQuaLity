@@ -3,6 +3,7 @@
 import os
 from src import testparser
 from src import testrunner
+from src.utils import *
 import argparse
 import logging
 from datetime import datetime
@@ -37,18 +38,18 @@ def find_tests(db_name: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', "--dbms", type=str, help="Enter the DBMS name")
-    parser.add_argument('-s', "--suite_name", type=str,
+    parser.add_argument('-d', "--dbms", choices=DBMS_Set, default='duckdb', type=str, help="Enter the DBMS name")
+    parser.add_argument('-s', "--suite_name", type=str,choices=DBMS_Set,
                         default="sqlite", help="Enter the dbms test suites")
     parser.add_argument('-t', '--test_file', type=str,
                         default="", help="test a specific file")
-    parser.add_argument('-f', "--db_name", type=str, default=":memory:",
+    parser.add_argument('-f', "--db_name", type=str, default="output/tempdb",
                         help="Enter the database name. For embedded database it's the file path.")
     parser.add_argument('-u', "--db_url", type=str, default="postgresql://root@localhost:26257/defaultdb?sslmode=disable",
                         help="Enter the Dabase url")
-    parser.add_argument('--log', type=str, default="", help="logging level")
+    parser.add_argument('--log', type=str, default="DEBUG", help="logging level")
     parser.add_argument("--max_files", type=int, default=0,
-                        help="Max test files it run")
+                        help="Max test files it run. Negative value means skipping the absolute number of test files")
 
     args = parser.parse_args()
     dbms_name = str.lower(args.dbms)
