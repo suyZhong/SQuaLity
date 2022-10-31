@@ -16,8 +16,8 @@ class Runner():
     MAX_RUNTIME = 500
     MAX_RUNTIME_PERSQL = 10
     
-    def __init__(self, records:List[Record]) -> None:
-        self.records = records
+    def __init__(self) -> None:
+        self.records = []
         self.hash_threshold = 8
         self.allright = True
         self.all_run_stats = dict.fromkeys(Running_Stats, 0)
@@ -116,7 +116,7 @@ class Runner():
         pass
     
     def execute_query(self, sql):
-        pass
+        return [()]
     
     def commit(self):
         pass
@@ -300,8 +300,8 @@ class Runner():
         
 
 class SQLiteRunner(Runner):
-    def __init__(self, records: List[Record]=[]) -> None:
-        super().__init__(records)
+    def __init__(self) -> None:
+        super().__init__()
         self.con = None
         self.cur = None
         
@@ -326,8 +326,8 @@ class SQLiteRunner(Runner):
         self.con.commit()
 
 class DuckDBRunner(Runner):
-    def __init__(self, records: List[Record] = []) -> None:
-        super().__init__(records)
+    def __init__(self) -> None:
+        super().__init__()
         self.con = None
         # self.db_error = (duckdb.ProgrammingError, duckdb.DataError, duckdb.IOException,duckdb.PermissionException)
     
@@ -353,8 +353,8 @@ class DuckDBRunner(Runner):
         return 
     
 class CockroachDBRunner(Runner):
-    def __init__(self, records: List[Record] = []) -> None:
-        super().__init__(records)
+    def __init__(self) -> None:
+        super().__init__()
         self.con = None
         # self.db_error(psycopg2.ProgrammingError)
     
@@ -398,8 +398,8 @@ class CockroachDBRunner(Runner):
         
         
 class MySQLRunner(Runner):
-    def __init__(self, records: List[Record] = []) -> None:
-        super().__init__(records)
+    def __init__(self) -> None:
+        super().__init__()
         self.cur = None
     
     def set_db(self, db_name):

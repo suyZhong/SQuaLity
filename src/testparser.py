@@ -25,7 +25,7 @@ class Parser:
         pass
 
     def testfile_dialect_handler(self,*args, **kwargs):
-        pass
+        return Control(action=RunnerAction.halt, id=self.record_id)
         
     def parse_file_by_lines(self):
         for line in self.test_content:
