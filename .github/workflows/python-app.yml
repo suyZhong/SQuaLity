@@ -36,4 +36,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run a demo
       run: |
-        ./demo.sh
+        mkdir logs -p
+        mkdir output -p
+        ./main.py --dbms duckdb -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f output/temp.db --log DEBUG
