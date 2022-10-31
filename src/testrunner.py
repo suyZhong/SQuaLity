@@ -36,7 +36,7 @@ class Runner():
     
     def set_db(self, db_name:str):
         if not db_name.startswith(":memory:"):
-            os.system('rm %s' % db_name)
+            os.system('rm -f %s' % db_name)
         self.db = db_name
     
     def remove_db(self, db_name:str):
