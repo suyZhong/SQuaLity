@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 from typing import List
 import pandas as pd
-from .utils import Statement, Record, myDebug
+from .utils import Statement, Record, my_debug
 
 
 class BugDumper():
@@ -109,17 +109,17 @@ class BugDumper():
             [self.bugs_dataframe, pd.DataFrame([self.bugs_single_row])], ignore_index=True)
 
     def output_single_state(self, logs: List[Statement], record: Record):
-        myDebug("Find a potential bug! Let's see the log and record.")
+        my_debug("Find a potential bug! Let's see the log and record.")
         for log in logs:
-            myDebug(log.sql)
-        myDebug(record.sql)
+            my_debug(log.sql)
+        my_debug(record.sql)
 
     def print_state(self):
         print(self.bugs_dataframe)
         print(self.logs_dataframe)
 
     def dump_to_csv(self, dbname='demo', mode='a'):
-        myDebug("Dump the bugs as a Dataframe to a csv %s" % dbname)
+        my_debug("Dump the bugs as a Dataframe to a csv %s" % dbname)
         self.bugs_dataframe.to_csv(
             "output/%s_results.csv" % dbname, mode=mode, header=False)
         self.logs_dataframe.to_csv("output/%s_logs.csv" %

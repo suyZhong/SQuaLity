@@ -1,4 +1,5 @@
 import os
+import sys
 from .src import testparser
 
 
@@ -17,12 +18,12 @@ def find_tests(db_name: str):
     elif db_name == "sqlite":
         test_suite_dir += ''
     else:
-        assert ('Not supported db')
+        sys.exit("test suite not supported yet")
 
     tests_files = []
     print("walk in " + test_suite_dir)
     g = os.walk(test_suite_dir)
-    for path, dir_list, file_list in g:
+    for path, _, file_list in g:
         tests_files += [os.path.join(path, file_name)
                         for file_name in file_list]
     return tests_files

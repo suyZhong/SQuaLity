@@ -218,7 +218,7 @@ class Runner():
         """
         return hashlib.md5(results.encode(encoding='utf-8')).hexdigest()
 
-    def _sort_result(self, results, sort_type=SortType.RowSort):
+    def _sort_result(self, results, sort_type=SortType.ROW_SORT):
         """sort the result (rows of the results)
 
         Args:
@@ -229,13 +229,13 @@ class Runner():
             str: A str of results
         """
         result_flat = []
-        if sort_type == SortType.RowSort:
+        if sort_type == SortType.ROW_SORT:
             results = [list(map(str, row)) for row in results]
             results.sort()
             for row in results:
                 for item in row:
                     result_flat.append(item+'\n')
-        elif sort_type == SortType.ValueSort:
+        elif sort_type == SortType.VALUE_SORT:
             for row in results:
                 for item in row:
                     result_flat.append(str(item)+'\n')
@@ -248,7 +248,7 @@ class Runner():
         return ''.join(result_flat)
 
     def handle_control(self, action: RunnerAction):
-        if action == RunnerAction.halt:
+        if action == RunnerAction.HALT:
             logging.warning("halt the rest of the test cases")
             self.allright = False
             raise StopRunnerException
@@ -293,7 +293,7 @@ class Runner():
 
         if result_string.strip() == record.result.strip():
             # print("True!")
-            myDebug("Query %s Success", record.sql)
+            my_debug("Query %s Success", record.sql)
             if self.dump_all:
                 self.bug_dumper.save_state(
                     self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)

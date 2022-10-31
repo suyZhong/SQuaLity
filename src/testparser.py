@@ -25,7 +25,7 @@ class Parser:
         pass
 
     def testfile_dialect_handler(self, *args, **kwargs):
-        return Control(action=RunnerAction.halt, id=self.record_id)
+        return Control(action=RunnerAction.HALT, id=self.record_id)
 
     def parse_file_by_lines(self):
         for line in self.test_content:
@@ -36,9 +36,9 @@ class Parser:
 
 
 class SLTParser(Parser):
-    sort_mode_dict = {'nosort': SortType.NoSort,
-                      'rowsort': SortType.RowSort,
-                      'valuesort': SortType.ValueSort}
+    sort_mode_dict = {'nosort': SortType.NO_SORT,
+                      'rowsort': SortType.ROW_SORT,
+                      'valuesort': SortType.VALUE_SORT}
 
     def __init__(self, filename='') -> None:
         super().__init__(filename)
@@ -66,7 +66,7 @@ class SLTParser(Parser):
             # A query record begins with a line of the following form:
             #       query <type-string> <sort-mode> <label>
             data_type = ''
-            sort_mode = SortType.NoSort
+            sort_mode = SortType.NO_SORT
             label = ''
             # pop out 'query'
             tokens.pop(0)
@@ -126,7 +126,7 @@ class SLTParser(Parser):
             self.hash_threshold = eval(tokens[1])
             return
         elif record_type == 'halt':
-            record = Control(action=RunnerAction.halt, id=self.record_id)
+            record = Control(action=RunnerAction.HALT, id=self.record_id)
             self.record_id += 1
         else:
             record = self.testfile_dialect_handler(
@@ -209,7 +209,7 @@ class DTParser(SLTParser):
         lines = kwargs['lines']
         if record_type in ('loop', 'require'):
             logging.warning("This script has not implement: %s", lines)
-            return Control(action=RunnerAction.halt)
+            return Control(action=RunnerAction.HALT)
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def parse_file(self):
