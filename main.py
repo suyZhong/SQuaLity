@@ -50,6 +50,8 @@ if __name__ == "__main__":
     parser.add_argument('--log', type=str, default="DEBUG", help="logging level")
     parser.add_argument("--max_files", type=int, default=0,
                         help="Max test files it run. Negative value means skipping the absolute number of test files")
+    parser.add_argument('--dump_all', action='store_true', help = "If added, it would dump every testcases to csv, besides error cases.")
+
 
     args = parser.parse_args()
     dbms_name = str.lower(args.dbms)
@@ -89,7 +91,7 @@ if __name__ == "__main__":
         r = testrunner.MySQLRunner()
     else:
         exit("Not implement yet")
-    r.init_dumper(dump_all=True)
+    r.init_dumper(dump_all=args.dump_all)
 
     # set the parser
     if suite_name == 'sqlite':
