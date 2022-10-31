@@ -18,15 +18,15 @@ class Parser:
         self.filename = filename
 
     def get_file_content(self):
-        with open(self.filename, 'r') as f:
+        with open(self.filename, 'r', encoding='utf-8') as f:
             self.test_content = f.read()
 
     def parse_file(self):
         pass
 
-    def testfile_dialect_handler(self,*args, **kwargs):
+    def testfile_dialect_handler(self, *args, **kwargs):
         return Control(action=RunnerAction.halt, id=self.record_id)
-        
+
     def parse_file_by_lines(self):
         for line in self.test_content:
             self.parse_line(line)
@@ -36,15 +36,15 @@ class Parser:
 
 
 class SLTParser(Parser):
-    sort_mode_dict = {'nosort': SortType.NoSort, 
-                     'rowsort': SortType.RowSort,
-                     'valuesort': SortType.ValueSort}
-    
+    sort_mode_dict = {'nosort': SortType.NoSort,
+                      'rowsort': SortType.RowSort,
+                      'valuesort': SortType.ValueSort}
+
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.scripts = ""
         self.dbms_set = DBMS_Set
-    
+
     def _parse_script_lines(self, lines: list):
         # Now the first line are exact command
         line_num = len(lines)
@@ -52,14 +52,15 @@ class SLTParser(Parser):
             return
         tokens = lines[0].split()
         record_type = tokens[0]
-        r = Statement(id=self.record_id)
+        record = Statement(id=self.record_id)
 
         if record_type == 'statement':
             # assert (line_num <= 2), 'statement too long: ' + '\n'.join(lines)
             status = (tokens[1] == 'ok')
             # Only a single SQL command is allowed per statement
             # r = Statement(sql=lines[1], status=status)
-            r = Statement(sql="".join(lines[1:]),result=str(status), status=status, id=self.record_id)
+            record = Statement(sql="".join(lines[1:]), result=str(
+                status), status=status, id=self.record_id)
             self.record_id += 1
         elif record_type == 'query':
             # A query record begins with a line of the following form:
@@ -98,19 +99,18 @@ class SLTParser(Parser):
             if ind != line_num:
                 result = '\n'.join(lines[ind + 1:])
 
-            r = Query(sql=sql, result=result, data_type=data_type,
-                      sort=sort_mode, label=label, id= self.record_id)
+            record = Query(sql=sql, result=result, data_type=data_type,
+                      sort=sort_mode, label=label, id=self.record_id)
             self.record_id += 1
-            
 
         elif record_type == 'skipif':
             if tokens[1] in self.dbms_set:
                 self.dbms_set.remove(tokens[1])
             else:
                 pass
-            r = self._parse_script_lines(lines[1:])
-            if r:
-                r.set_execute_db(self.dbms_set)
+            record = self._parse_script_lines(lines[1:])
+            if record:
+                record.set_execute_db(self.dbms_set)
             # print(tmp_dbms_set)
         elif record_type == 'onlyif':
             if tokens[1] in DBMS_Set:
@@ -119,23 +119,24 @@ class SLTParser(Parser):
                 logging.debug(
                     "DBMS %s support is stll not implemented, skip this script", tokens[1])
                 return
-            r = self._parse_script_lines(lines[1:])
-            if r:
-                r.set_execute_db(tmp_dbms_set)
+            record = self._parse_script_lines(lines[1:])
+            if record:
+                record.set_execute_db(tmp_dbms_set)
         elif record_type == 'hash-threshold':
             self.hash_threshold = eval(tokens[1])
             return
         elif record_type == 'halt':
-            r = Control(action=RunnerAction.halt, id=self.record_id)
+            record = Control(action=RunnerAction.halt, id=self.record_id)
             self.record_id += 1
         else:
-            r = self.testfile_dialect_handler(lines = lines, record_type = record_type)
-            if r:
-                return r
+            record = self.testfile_dialect_handler(
+                lines=lines, record_type=record_type)
+            if record:
+                return record
             logging.warning("This script has not implement: %s", lines)
             return
-        return r
-    
+        return record
+
     def parse_script(self, script: str):
 
         # Lines of the test script that begin with the sharp
@@ -145,7 +146,6 @@ class SLTParser(Parser):
         r = self._parse_script_lines(lines)
         if r:
             self.records.append(r)
-        
 
     # Each record is separated from its neighbors by one or more blank line.
 
@@ -155,7 +155,7 @@ class SLTParser(Parser):
         # print(self.scripts)
         self.records = []
         self.record_id = 0
-        for i, script in enumerate(self.scripts):
+        for _, script in enumerate(self.scripts):
             self.parse_script(script.strip())
 
     # TODO Should implement a fucntion to find the location of the error
@@ -173,44 +173,44 @@ class SLTParser(Parser):
             print('result:', rec.result)
             print('support db:', rec.db)
             print('status', rec.status)
-            #For query
+            # For query
             # print('data_type: ',rec.data_type)
             # print('label:', rec.label)
             # print('sort:',rec.sort)
+
     def get_records(self):
         return self.records
-    
+
+
 class MYTParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.testfile = filename
         self.resultfile = filename.replace('/t/', '/r/')
-        
+
     def get_file_name(self, filename):
         self.testfile = filename
-        self.resultfile = filename.replace('/t/','/r/')
-    
+        self.resultfile = filename.replace('/t/', '/r/')
+
     def get_file_content(self):
-        with open(self.testfile, 'r') as f:
-            self.test_content = f.read()
-            
-        with open(self.resultfile ,'r') as f:
-            self.result_content = f.read()
-            
-    
+        with open(self.testfile, 'r', encoding='utf-8') as testfile:
+            self.test_content = testfile.read()
+
+        with open(self.resultfile, 'r', encoding='utf-8') as testfile:
+            self.result_content = testfile.read()
+
 
 class DTParser(SLTParser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
-    
+
     def testfile_dialect_handler(self, *args, **kwargs):
         record_type = kwargs['record_type']
         lines = kwargs['lines']
-        if record_type == 'loop' or record_type == 'require':
+        if record_type in ('loop', 'require'):
             logging.warning("This script has not implement: %s", lines)
             return Control(action=RunnerAction.halt)
         return super().testfile_dialect_handler(*args, **kwargs)
-    
+
     def parse_file(self):
-        
-        return super().parse_file()
+        pass
