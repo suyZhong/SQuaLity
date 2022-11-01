@@ -7,6 +7,10 @@ class SortType(Enum):
     ROW_SORT = 2
     VALUE_SORT = 3
 
+class RecordType(Enum):
+    STATEMENT = 1
+    QUERY = 2
+    CONTROL = 3
 
 class RunnerAction(Enum):
     HALT = 1

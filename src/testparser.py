@@ -126,7 +126,7 @@ class SLTParser(Parser):
             self.hash_threshold = eval(tokens[1])
             return
         elif record_type == 'halt':
-            record = Control(action=RunnerAction.HALT, id=self.record_id)
+            record = Control(action=RunnerAction.HALT, id=self.record_id, sql=record_type)
             self.record_id += 1
         else:
             record = self.testfile_dialect_handler(

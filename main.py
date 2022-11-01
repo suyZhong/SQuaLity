@@ -9,34 +9,8 @@ from datetime import datetime
 
 from src import testparser
 from src import testrunner
+from src import testcollector
 from src.utils import DBMS_Set
-
-
-def find_tests(test_suite: str):
-    test_suite = test_suite.lower()
-
-    test_suite_dir = test_suite + "_tests/"
-    if test_suite == "cockroach":
-        test_suite_dir += 'testdata/logic_test'
-    elif test_suite == "duckdb":
-        test_suite_dir += 'sql'
-    elif test_suite == "mysql":
-        test_suite_dir += 'r'
-    elif test_suite == "postgres":
-        test_suite_dir += 'regress/expected'
-    elif test_suite == "sqlite":
-        test_suite_dir += ''
-    else:
-        sys.exit("Test suite not support!")
-
-    tests_files = []
-    print("walk in " + test_suite_dir)
-    g = os.walk(test_suite_dir)
-    for path, _, file_list in g:
-        tests_files += [os.path.join(path, file_name)
-                        for file_name in file_list]
-    return tests_files
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -69,7 +43,7 @@ if __name__ == "__main__":
     if test_file:
         test_files = [test_file]
     else:
-        test_files = find_tests(suite_name)
+        test_files = testcollector.find_local_tests(suite_name)
     file_num = len(test_files)
     begin_time = datetime.now()
     log_file = "logs/" + dbms_name + '_' + suite_name + \
