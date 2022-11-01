@@ -6,7 +6,7 @@ from .utils import Statement, Record, my_debug
 
 
 class BugDumper():
-    """TODO Can we use perhaps pandas? Would it be easier?"""
+    """Dump things to csv"""
 
     def __init__(self, dbms_name, dump_all) -> None:
         self.conn = sqlite3.connect("database.db")

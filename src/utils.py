@@ -30,10 +30,10 @@ Running_Stats = ['total_sql',
 
 class Record:
 
-    def __init__(self, sql="", result="", db=DBMS_Set, **kwargs) -> None:
+    def __init__(self, sql="", result="", **kwargs) -> None:
         self.sql = sql
         self.result = result
-        self.db = db
+        self.db = DBMS_Set
         self.id = kwargs['id']
 
     def set_execute_db(self, db: set):
@@ -41,26 +41,26 @@ class Record:
 
 
 class Statement(Record):
-    def __init__(self, sql="", result="", db=DBMS_Set, status=True,
+    def __init__(self, sql="", result="", status=True,
                  affected_rows=0, **kwargs) -> None:
-        super().__init__(sql, result, db, **kwargs)
+        super().__init__(sql, result, **kwargs)
         self.status = status
         self.affected_rows = affected_rows
 
 
 class Query(Record):
-    def __init__(self, sql="", result="", db=DBMS_Set, data_type="I",
+    def __init__(self, sql="", result="", data_type="I",
                  sort=SortType.NO_SORT, label="", **kwargs) -> None:
-        super().__init__(sql=sql, result=result, db=db, **kwargs)
+        super().__init__(sql=sql, result=result, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label
 
 
 class Control(Record):
-    def __init__(self, sql="", result="", db=DBMS_Set,
+    def __init__(self, sql="", result="",
                  action=RunnerAction.HALT, **kwargs) -> None:
-        super().__init__(sql, result, db, **kwargs)
+        super().__init__(sql, result, **kwargs)
         self.action = action
 
 
