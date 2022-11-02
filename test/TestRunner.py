@@ -8,9 +8,6 @@ import logging
 
 
 def test_run_test(tmp_path, caplog):
-    logging.basicConfig(filename="logs/debug.log", encoding='utf-8',
-                        level=getattr(logging, "DEBUG"), filemode='w')
-
     testcase_path = "data/cornercase/"
     files = listdir(testcase_path)
 

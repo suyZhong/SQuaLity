@@ -153,7 +153,8 @@ class Runner():
                 results = self.execute_query(record.sql)
             except self.db_error as except_msg:
                 self.single_run_stats['failed_query_num'] += 1
-                logging.debug("Query %s execution error: %s", record.sql, except_msg)
+                logging.debug("Query %s execution error: %s",
+                              record.sql, except_msg)
                 self.commit()
                 self.bug_dumper.save_state(self.records_log, record, "Execution Failed: %s" % except_msg, (
                     datetime.now()-self.cur_time).microseconds, is_error=True)
@@ -162,7 +163,6 @@ class Runner():
                 self.single_run_stats['success_query_num'] += 1
             # print(results)
             self.handle_query_result(results, record)
-
 
     def not_allright(self):
         self.allright = False
@@ -300,7 +300,8 @@ class Runner():
         else:
             self.single_run_stats['wrong_query_num'] += 1
             logging.error(
-                "Query %s does not return expected result", record.sql)
+                "Query %s does not return expected result. \nExpected: %s\nActually: %s",
+                record.sql, record.result.strip(), result_string.strip())
             logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
                           record.result.strip(), result_string.strip(), results)
             self.allright = False
