@@ -3,12 +3,12 @@ import sys
 import pandas as pd
 from typing import List
 
-from .utils import Query, Record, Statement
+from .utils import Control, Query, Record, Statement
 
 
 class TestcaseCollector():
-    def __init__(self) -> None:
-        self.columns = ['INDEX', # testcase index
+    def __init__(self, base_path="data/") -> None:
+        self.columns = ['INDEX',  # testcase index
                         'TYPE',  # Enum Type: Statement, Query and Control
                         'SQL',  # SQL string
                         'STATUS',  # SQL execution status, 1 for Success, 2 for Failed
@@ -20,34 +20,39 @@ class TestcaseCollector():
         self.testcase_df = pd.DataFrame(columns=self.columns)
         self.testcase_name = ""
         self.record_row = {}.fromkeys(self.columns)
-        self.output_path = "data/demo.zip"
+        self.base_path = base_path
+        self.output_path = base_path + "demo.zip"
 
     def init_testcase_schema(self, testsuite_name: str, testcase_name: str):
         self.testcase_name = testcase_name
-        self.output_path = "data/{}/{}.zip".format(testsuite_name, testcase_name)
+        self.output_path = "{}{}/{}.zip".format(
+            self.base_path, testsuite_name, testcase_name)
 
     def save_records(self, records: List[Record]):
         self.testcase_df = pd.DataFrame(columns=self.columns)
         for record in records:
             record_type = type(record)
-            self.record_row = {}.fromkeys(self.columns) 
+            self.record_row = {}.fromkeys(self.columns)
             self.record_row['INDEX'] = record.id
             self.record_row['TYPE'] = record_type.__name__.upper()
             self.record_row['SQL'] = record.sql
-            self.record_row['DBMS'] = record.db
+            self.record_row['DBMS'] = ",".join(record.db)
             self.record_row['RESULT'] = record.result
             if record_type is Statement:
                 self.record_row['STATUS'] = str(record.status)
             elif record_type is Query:
                 self.record_row['DATA_TYPE'] = record.data_type
-                self.record_row['SORT_TYPE'] = record.sort
-                self.record_row['STATUS'] = str(True) # TODO if not str here would raise warnings
-            self.testcase_df = pd.concat(
-                [self.testcase_df, pd.DataFrame([self.record_row])], ignore_index = True)
-            
-    def dump_to_csv(self):
-        self.testcase_df.to_csv(self.output_path, mode= 'w', header=True)
+                self.record_row['SORT_TYPE'] = record.sort.value
+                # TODO if not str here would raise warnings
+                self.record_row['STATUS'] = str(True)
+            elif record_type is Control:
+                self.record_row['SQL'] = str(record.action.value)
 
+            self.testcase_df = pd.concat(
+                [self.testcase_df, pd.DataFrame([self.record_row])], ignore_index=True)
+
+    def dump_to_csv(self):
+        self.testcase_df.to_csv(self.output_path, mode='w', header=True)
 
 
 def find_local_tests(db_name: str):
