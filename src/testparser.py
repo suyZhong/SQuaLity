@@ -1,4 +1,5 @@
 from copy import copy
+import pandas as pd
 from .utils import *
 from typing import List
 
@@ -33,6 +34,31 @@ class Parser:
 
     def parse_line(self, line: str):
         pass
+
+    def get_records(self):
+        return self.records
+
+
+class CSVParser(Parser):
+    def __init__(self, filename='') -> None:
+        super().__init__(filename)
+
+    def parse_file(self):
+        testcases = pd.read_csv(self.filename,
+                                compression='zip', na_filter=False).fillna("")
+
+        self.records = []
+        for _, row in testcases.iterrows():
+            if row.TYPE == "STATEMENT":
+                record = Statement(sql=row.SQL, status=row.STATUS,
+                                   id=row.INDEX, result=str(row.RESULT))
+            elif row.TYPE == "QUERY":
+                record = Query(sql=row.SQL, result=row.RESULT, data_type=row.DATA_TYPE, sort=SortType(
+                    int(row.SORT_TYPE)), id=row.INDEX)
+            elif row.TYPE == "CONTROL":
+                record = Control(action=RunnerAction(int(row.SQL)))
+            record.set_execute_db(row.DBMS.split(','))
+            self.records.append(record)
 
 
 class SLTParser(Parser):
@@ -100,7 +126,7 @@ class SLTParser(Parser):
                 result = '\n'.join(lines[ind + 1:])
 
             record = Query(sql=sql, result=result, data_type=data_type,
-                      sort=sort_mode, label=label, id=self.record_id)
+                           sort=sort_mode, label=label, id=self.record_id)
             self.record_id += 1
 
         elif record_type == 'skipif':
@@ -126,7 +152,8 @@ class SLTParser(Parser):
             self.hash_threshold = eval(tokens[1])
             return
         elif record_type == 'halt':
-            record = Control(action=RunnerAction.HALT, id=self.record_id, sql=record_type)
+            record = Control(action=RunnerAction.HALT,
+                             id=self.record_id, sql=record_type)
             self.record_id += 1
         else:
             record = self.testfile_dialect_handler(
@@ -177,9 +204,6 @@ class SLTParser(Parser):
             # print('data_type: ',rec.data_type)
             # print('label:', rec.label)
             # print('sort:',rec.sort)
-
-    def get_records(self):
-        return self.records
 
 
 class MYTParser(Parser):
