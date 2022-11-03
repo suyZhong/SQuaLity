@@ -30,10 +30,10 @@ def test_run_test(tmp_path, caplog):
                 record = Control(action=RunnerAction(int(row.SQL)))
             record.set_execute_db(row.DBMS.split(','))
             records.append(record)
-    db_path = str(tmp_path) + "tempdb"
-    runner.set_db(db_path)
-    runner.get_records(records, 0, db_path)
-    runner.connect(db_path)
-    runner.run()
-    runner.dump()
+        db_path = str(tmp_path) + "tempdb"
+        runner.set_db(db_path)
+        runner.get_records(records, 0, testcase_path)
+        runner.connect(db_path)
+        runner.run()
+        runner.dump()
     # assert 0
