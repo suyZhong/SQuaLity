@@ -7,6 +7,10 @@ class SortType(Enum):
     ROW_SORT = 2
     VALUE_SORT = 3
 
+class ResultFormat(Enum):
+    VALUE_WISE = 1
+    ROW_WISE = 2
+
 class RecordType(Enum):
     STATEMENT = 1
     QUERY = 2
@@ -54,11 +58,15 @@ class Statement(Record):
 
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
-                 sort=SortType.NO_SORT, label="", **kwargs) -> None:
+                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, **kwargs) -> None:
         super().__init__(sql=sql, result=result, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label
+        self.res_format = res_format
+        
+    def set_resformat(self, res_format:ResultFormat):
+        self.res_format = res_format
 
 
 class Control(Record):

@@ -57,8 +57,9 @@ class CSVParser(Parser):
         super().__init__(filename)
 
     def get_file_content(self, compression=True):
-        self.test_content = pd.read_csv(self.filename, compression=compression, na_filter=False).fillna
-    
+        self.test_content = pd.read_csv(
+            self.filename, compression=compression, na_filter=False).fillna()
+
     def parse_file(self):
         self.records = []
         for _, row in self.test_content.iterrows():
@@ -275,7 +276,9 @@ class DTParser(SLTParser):
                     status), status=status, id=self.record_id))
                 self.record_id += 1
         elif record_type == 'query':
-            self.records.append(self.get_query(tokens=tokens, lines=lines))
+            record = self.get_query(tokens=tokens, lines=lines)
+            record.set_resformat(ResultFormat.ROW_WISE)
+            self.records.append(record)
             self.record_id += 1
         else:
             record = self.testfile_dialect_handler(
