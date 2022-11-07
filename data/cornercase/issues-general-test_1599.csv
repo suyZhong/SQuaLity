@@ -1,0 +1,22 @@
+,INDEX,TYPE,SQL,STATUS,RESULT,DBMS,DATA_TYPE,SORT_TYPE,RES_FORM
+0,0,STATEMENT,start transaction,True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+1,1,STATEMENT,"CREATE TABLE t1 (i INTEGER, j INTEGER)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+2,2,STATEMENT,"CREATE TABLE t2 (i INTEGER, j INTEGER, id INTEGER)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+3,3,STATEMENT,"INSERT INTO t1 VALUES (0, 0)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+4,4,STATEMENT,"INSERT INTO t1 VALUES (1, 1)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+5,5,STATEMENT,"INSERT INTO t1 VALUES (2, 2)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+6,6,STATEMENT,"INSERT INTO t2 VALUES (0, 0, 0)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+7,7,STATEMENT,"INSERT INTO t2 VALUES (1, 1, 1)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+8,8,STATEMENT,"INSERT INTO t2 VALUES (2, 2, 2)",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+9,9,STATEMENT,ALTER TABLE t1 ADD COLUMN ref INTEGER,True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+10,10,QUERY,select * from t1,True,"0	0	NULL
+1	1	NULL
+2	2	NULL","sqlite,postgresql,mysql,cockroachdb,duckdb",III,1,2
+11,11,STATEMENT,"UPDATE ""t1"" SET ""ref"" = (	SELECT ""id""	FROM ""t2""	WHERE ""t2"".""i"" == ""t1"".""i"" AND ""t2"".""j"" == ""t1"".""j"")",True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+12,12,QUERY,select * from t1,True,"0	0	0
+1	1	1
+2	2	2","sqlite,postgresql,mysql,cockroachdb,duckdb",III,1,2
+13,13,STATEMENT,commit,True,True,"sqlite,postgresql,mysql,cockroachdb,duckdb",,,
+14,14,QUERY,select * from t1,True,"0	0	0
+1	1	1
+2	2	2","sqlite,postgresql,mysql,cockroachdb,duckdb",III,1,2
