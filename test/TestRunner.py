@@ -37,4 +37,4 @@ def test_run_test(tmp_path, caplog):
         runner.connect(db_path)
         runner.run()
         runner.dump()
-    assert 0
+    # assert 0
