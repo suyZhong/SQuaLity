@@ -28,8 +28,12 @@ class Parser:
         self.filename = filename
 
     def get_file_content(self):
-        with open(self.filename, 'r', encoding='utf-8') as f:
-            self.test_content = f.read()
+        try:
+            with open(self.filename, 'r', encoding='utf-8') as f:
+                self.test_content = f.read()
+        except UnicodeDecodeError:
+            with open(self.filename, 'r', encoding='windows-1252') as f:
+                self.test_content = f.read()
 
     def parse_file(self):
         pass
