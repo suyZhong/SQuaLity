@@ -122,7 +122,7 @@ class SLTParser(Parser):
         record = Query(sql=sql, result=result, data_type=data_type,
                        sort=sort_mode, label=label, id=self.record_id)
         return record
-    
+
     def _parse_script_lines(self, lines: list):
         # Now the first line are exact command
         line_num = len(lines)
@@ -174,6 +174,7 @@ class SLTParser(Parser):
             record = self.testfile_dialect_handler(
                 lines=lines, record_type=record_type, id=self.record_id)
             if record:
+                self.record_id += 1
                 return record
             logging.warning("This script has not implement: %s", lines)
             return
@@ -246,8 +247,36 @@ class DTParser(SLTParser):
         lines = kwargs['lines']
         if record_type in ('loop', 'require'):
             logging.warning("This script has not implement: %s", lines)
-            return Control(action=RunnerAction.HALT)
+            return Control(action=RunnerAction.HALT, id=self.record_id)
         return super().testfile_dialect_handler(*args, **kwargs)
 
-    def parse_file(self):
-        pass
+    def parse_script(self, script: str):
+        script = strip_comment_lines(script)
+        if script:
+            lines = script.split('\n')
+        else:
+            return
+        print(self.filename, script)
+        self.dbms_set = copy(DBMS_Set)
+
+        tokens = lines[0].split()
+        record_type = tokens[0]
+        record = Statement(id=self.record_id)
+
+        if record_type == 'statement':
+            status = (tokens[1] == 'ok')
+            statements = ("".join([strip_comment_suffix(line)
+                          for line in lines[1:]])).split(';')
+            for stmt in statements:
+                self.records.append(Statement(sql=stmt, result=str(
+                    status), status=status, id=self.record_id))
+                self.record_id += 1
+        elif record_type == 'query':
+            self.records.append(self.get_query(tokens=tokens, lines=lines))
+            self.record_id += 1
+        else:
+            record = self.testfile_dialect_handler(
+                lines=lines, record_type=record_type, id=self.record_id)
+            if record:
+                self.records.append(record)
+                self.record_id += 1
