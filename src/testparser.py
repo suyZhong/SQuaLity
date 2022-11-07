@@ -56,12 +56,12 @@ class CSVParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
 
+    def get_file_content(self, compression=True):
+        self.test_content = pd.read_csv(self.filename, compression=compression, na_filter=False).fillna
+    
     def parse_file(self):
-        testcases = pd.read_csv(self.filename,
-                                compression='zip', na_filter=False).fillna("")
-
         self.records = []
-        for _, row in testcases.iterrows():
+        for _, row in self.test_content.iterrows():
             if row.TYPE == "STATEMENT":
                 record = Statement(sql=row.SQL, status=row.STATUS,
                                    id=row.INDEX, result=str(row.RESULT))
@@ -266,8 +266,11 @@ class DTParser(SLTParser):
         if record_type == 'statement':
             status = (tokens[1] == 'ok')
             statements = ("".join([strip_comment_suffix(line)
-                          for line in lines[1:]])).split(';')
+                          for line in lines[1:]])).strip().split(';')
+            statements = list(filter(None, statements))
             for stmt in statements:
+                if stmt.split()[0].upper() == 'PRAGMA':
+                    continue
                 self.records.append(Statement(sql=stmt, result=str(
                     status), status=status, id=self.record_id))
                 self.record_id += 1
