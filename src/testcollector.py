@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import pandas as pd
 from typing import List
 
@@ -23,10 +24,12 @@ class TestcaseCollector():
         self.base_path = base_path
         self.output_path = base_path + "demo.zip"
 
-    def init_testcase_schema(self, testsuite_name: str, testcase_name: str):
+    def init_testcase_schema(self, testsuite_name: str, testcase_name: str, compression: bool = True):
         self.testcase_name = testcase_name
-        self.output_path = "{}{}/{}.zip".format(
+        self.output_path = "{}{}/{}".format(
             self.base_path, testsuite_name, testcase_name)
+        if compression:
+            self.output_path += ".zip"
 
     def save_records(self, records: List[Record]):
         self.testcase_df = pd.DataFrame(columns=self.columns)
@@ -62,7 +65,7 @@ def find_local_tests(db_name: str):
     if db_name == "cockroach":
         test_suite_dir += 'testdata/logic_test'
     elif db_name == "duckdb":
-        test_suite_dir += 'sql'
+        return find_local_duckdb_test()
     elif db_name == "mysql":
         test_suite_dir += 'r'
     elif db_name == "postgres":
@@ -78,4 +81,16 @@ def find_local_tests(db_name: str):
     for path, _, file_list in g:
         tests_files += [os.path.join(path, file_name)
                         for file_name in file_list]
+    return tests_files
+
+
+def find_local_duckdb_test():
+    test_suite_dir = 'duckdb_tests/'
+    duckdb_test_regex = re.compile(".*\.test")
+    tests_files = []
+    
+    g = os.walk(test_suite_dir)
+    for path, _, file_list in g:
+        tests_files += [os.path.join(path, file_name)
+                        for file_name in file_list if re.match(duckdb_test_regex,file_name)]
     return tests_files
