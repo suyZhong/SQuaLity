@@ -277,6 +277,10 @@ class DTParser(SLTParser):
                 self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
+            record.result = re.sub(r'true(\t|\n)', r'True\1', record.result)
+            record.result = re.sub(r'false(\t|\n)', r'False\1', record.result)
+            if record.result == 'true' or record.result == 'false':
+                record.result = record.result.capitalize()
             record.set_resformat(ResultFormat.ROW_WISE)
             self.records.append(record)
             self.record_id += 1

@@ -303,7 +303,7 @@ class Runner():
                         " values hashing to " + result_string
                 cmp_flag = result_string.strip() == record.result.strip()
             elif record.res_format == ResultFormat.ROW_WISE:
-                expected_result_list = record.result.strip().split('\n')
+                expected_result_list = record.result.strip().split('\n') if record.result else []
                 expected_result_list.sort()
                 actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
                                    for row in results]
