@@ -17,6 +17,7 @@ class TestcaseCollector():
                         'DBMS',  # TODO not sure if we need to split it in different schemas/tables
                         'DATA_TYPE',  # Query only, store the require result type
                         'SORT_TYPE',  # Query only, store the required sort methods
+                        'LABEL',      # Query only, store the result label
                         'RES_FORM',   # Query only, store the result format
                         ]
         self.testcase_df = pd.DataFrame(columns=self.columns)
@@ -50,6 +51,7 @@ class TestcaseCollector():
                 # TODO if not str here would raise warnings
                 self.record_row['STATUS'] = str(True)
                 self.record_row['RES_FORM'] = record.res_format.value
+                self.record_row['LABEL'] = record.label
             elif record_type is Control:
                 self.record_row['SQL'] = str(record.action.value)
 

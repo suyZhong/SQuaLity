@@ -36,6 +36,7 @@ class Runner():
         self.end_time = datetime.now()
         self.testfile_index = 0
         self.testfile_path = ""
+        self.labels = {}
 
     def init_dumper(self, dump_all=False):
         self.dump_all = dump_all
@@ -64,6 +65,7 @@ class Runner():
         self.records_log = []
         self.exec_time = datetime.now()
         self.bug_dumper.reset_schema()
+        self.labels = {}
         for record in self.records:
             self.cur_time = datetime.now()
             # if (self.cur_time - self.exec_time).seconds > self.MAX_RUNTIME:
@@ -273,36 +275,43 @@ class Runner():
     def handle_query_result(self, results: list, record: Query):
         result_string = ""
         cmp_flag = False
-        if record.res_format == ResultFormat.VALUE_WISE:
-            # get result length
-            # myDebug(results)
-            if results:
-                result_len = len(results) * len(results[0])
-                # Format the result by the query command para
-                results_fmt = self._format_results(
-                    results=results, datatype=record.data_type)
-                # sort result and output flat list
-                # myDebug(results_fmt)
-                result_string = self._sort_result(
-                    results_fmt, sort_type=record.sort)
+        if record.label != '':
+            result_string = self._hash_results(str(results))
+            if record.label in self.labels:
+                cmp_flag = result_string == self.labels[record.label]
             else:
-                result_len = 0
-
-            if result_len > self.hash_threshold:
-                result_string = self._hash_results(result_string)
-                result_string = str(result_len) + \
-                    " values hashing to " + result_string
-            cmp_flag = result_string.strip() == record.result.strip()
-        elif record.res_format == ResultFormat.ROW_WISE:
-            expected_result_list = record.result.strip().split('\n')
-            expected_result_list.sort()
-            actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
-                               for row in results]
-            actually_result_list.sort()
-            cmp_flag = expected_result_list == actually_result_list
-            result_string = '\n'.join(actually_result_list)
+                self.labels[record.label] = result_string
+                
         else:
-            logging.warning("Error record result format!")
+            if record.res_format == ResultFormat.VALUE_WISE:
+                # get result length
+                # myDebug(results)
+                if results:
+                    result_len = len(results) * len(results[0])
+                    # Format the result by the query command para
+                    results_fmt = self._format_results(
+                        results=results, datatype=record.data_type)
+                    # sort result and output flat list
+                    # myDebug(results_fmt)
+                    result_string = self._sort_result(
+                        results_fmt, sort_type=record.sort)
+                else:
+                    result_len = 0
+                if result_len > self.hash_threshold:
+                    result_string = self._hash_results(result_string)
+                    result_string = str(result_len) + \
+                        " values hashing to " + result_string
+                cmp_flag = result_string.strip() == record.result.strip()
+            elif record.res_format == ResultFormat.ROW_WISE:
+                expected_result_list = record.result.strip().split('\n')
+                expected_result_list.sort()
+                actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
+                                   for row in results]
+                actually_result_list.sort()
+                cmp_flag = expected_result_list == actually_result_list
+                result_string = '\n'.join(actually_result_list)
+            else:
+                logging.warning("Error record result format!")
 
 
         if cmp_flag:
@@ -311,6 +320,13 @@ class Runner():
             if self.dump_all:
                 self.bug_dumper.save_state(
                     self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
+        elif record.label != '':
+            self.single_run_stats['wrong_query_num'] += 1
+            logging.error(
+                "Query %s does not return expected result. The Expected result is not equal to %s's result", record.label)
+            self.allright = False
+            self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now(
+            )-self.cur_time).microseconds, is_error=True)
         else:
             self.single_run_stats['wrong_query_num'] += 1
             logging.error(
