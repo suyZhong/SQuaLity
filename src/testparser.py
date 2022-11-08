@@ -68,7 +68,7 @@ class CSVParser(Parser):
                                    id=row.INDEX, result=str(row.RESULT))
             elif row.TYPE == "QUERY":
                 record = Query(sql=row.SQL, result=row.RESULT, data_type=row.DATA_TYPE, sort=SortType(
-                    int(row.SORT_TYPE)), id=row.INDEX)
+                    int(row.SORT_TYPE)), id=row.INDEX, label=row.LABEL)
             elif row.TYPE == "CONTROL":
                 record = Control(action=RunnerAction(int(row.SQL)))
             record.set_execute_db(row.DBMS.split(','))
@@ -267,13 +267,13 @@ class DTParser(SLTParser):
         if record_type == 'statement':
             status = (tokens[1] == 'ok')
             statements = ("".join([strip_comment_suffix(line)
-                          for line in lines[1:]])).strip().split(';')
+                          for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
+                record = Statement(sql=stmt, result=str(status), status=status, id=self.record_id)
                 if stmt.split()[0].upper() == 'PRAGMA':
-                    continue
-                self.records.append(Statement(sql=stmt, result=str(
-                    status), status=status, id=self.record_id))
+                    record.set_execute_db('duckdb')
+                self.records.append(record)
                 self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
