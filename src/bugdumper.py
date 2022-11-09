@@ -9,8 +9,8 @@ class BugDumper():
     """Dump things to csv"""
 
     def __init__(self, dbms_name, dump_all) -> None:
-        self.conn = sqlite3.connect("database.db")
-        self.cur = self.conn.cursor()
+        # self.conn = sqlite3.connect("database.db")
+        # self.cur = self.conn.cursor()
         self.output = "output/demo.csv"
         self.tables = ['DBMS_BUGS', 'BUG_LOGS', 'BUG_TEST_CASES']
         self.views = ['DBMS_BUGS_STATUS', 'ORACLES_AGGREGATED', 'TAGS_AGGREGATED',

@@ -251,13 +251,20 @@ class DTParser(SLTParser):
             return Control(action=RunnerAction.HALT, id=self.record_id)
         return super().testfile_dialect_handler(*args, **kwargs)
 
+    def get_file_content(self):
+        if 'sqlite' in self.filename:
+            self.records = []
+            self.test_content = ""
+            return
+        return super().get_file_content()
+
     def parse_script(self, script: str):
         script = strip_comment_lines(script)
         if script:
             lines = script.split('\n')
         else:
             return
-        print(self.filename, script)
+        # print(self.filename, script)
         self.dbms_set = copy(DBMS_Set)
 
         tokens = lines[0].split()

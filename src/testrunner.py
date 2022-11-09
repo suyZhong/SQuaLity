@@ -323,7 +323,7 @@ class Runner():
         elif record.label != '':
             self.single_run_stats['wrong_query_num'] += 1
             logging.error(
-                "Query %s does not return expected result. The Expected result is not equal to %s's result", record.label)
+                "Query %s does not return expected result. The Expected result is not equal to %s's result", record.sql, record.label)
             self.allright = False
             self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now(
             )-self.cur_time).microseconds, is_error=True)
