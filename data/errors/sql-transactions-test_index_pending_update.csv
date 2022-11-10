@@ -1,0 +1,10 @@
+,INDEX,TYPE,SQL,STATUS,RESULT,DBMS,DATA_TYPE,SORT_TYPE,LABEL,RES_FORM
+0,0,STATEMENT,CREATE TABLE integers(i INTEGER),True,True,"mysql,postgresql,sqlite,cockroachdb,duckdb",,,,
+1,1,STATEMENT,"INSERT INTO integers VALUES (1), (2), (3)",True,True,"mysql,postgresql,sqlite,cockroachdb,duckdb",,,,
+2,2,STATEMENT,BEGIN TRANSACTION,True,True,"mysql,postgresql,sqlite,cockroachdb,duckdb",,,,
+3,3,STATEMENT,UPDATE integers SET i=4 WHERE i=1,True,True,"mysql,postgresql,sqlite,cockroachdb,duckdb",,,,
+4,4,STATEMENT,CREATE INDEX i_index ON integers using art(i),False,False,"mysql,postgresql,sqlite,cockroachdb,duckdb",,,,
+5,5,STATEMENT,COMMIT,True,True,"mysql,postgresql,sqlite,cockroachdb,duckdb",,,,
+6,6,STATEMENT,CREATE INDEX i_index ON integers using art(i),True,True,"mysql,postgresql,sqlite,cockroachdb,duckdb",,,,
+7,7,QUERY,SELECT COUNT(*) FROM integers WHERE i=4,True,1,"mysql,postgresql,sqlite,cockroachdb,duckdb",I,1,,2
+8,8,QUERY,SELECT COUNT(*) FROM integers WHERE i=4,True,1,"mysql,postgresql,sqlite,cockroachdb,duckdb",I,1,,2
