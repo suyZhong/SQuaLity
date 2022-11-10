@@ -15,7 +15,7 @@ def strip_comment_suffix(code: str):
 
 class Parser:
     def __init__(self, filename='') -> None:
-        self.filename = filename
+        self.filename:str = filename
         self.test_content = ""
         self.result_content = ""
         self.hash_threshold = 8
@@ -55,10 +55,20 @@ class Parser:
 class CSVParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
+        self.compression = None
 
-    def get_file_content(self, compression=True):
-        self.test_content = pd.read_csv(
-            self.filename, compression=compression, na_filter=False).fillna()
+    def get_file_name(self, filename):
+        self.compression = 'zip' if filename.endswith('.zip') else None
+        self.filename = filename
+    
+    def get_file_content(self):
+        try:
+            self.test_content = pd.read_csv(
+                self.filename, compression=self.compression, na_filter=False).fillna('')
+        except FileNotFoundError:
+            self.test_content = pd.DataFrame([])
+            logging.warning("Test file not find or not in the correct form!")
+            
 
     def parse_file(self):
         self.records = []

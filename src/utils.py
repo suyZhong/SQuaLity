@@ -25,6 +25,7 @@ class StopRunnerException(Exception):
 
 
 DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb'])
+Suite_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb', 'squality'])
 
 Running_Stats = ['total_sql',
                  'failed_statement_num',

@@ -277,6 +277,7 @@ class Runner():
         cmp_flag = False
         if record.label != '':
             result_string = self._hash_results(str(results))
+            cmp_flag = True
             if record.label in self.labels:
                 cmp_flag = result_string == self.labels[record.label]
             else:

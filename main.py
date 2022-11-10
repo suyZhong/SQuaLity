@@ -10,13 +10,13 @@ from datetime import datetime
 from src import testparser
 from src import testrunner
 from src import testcollector
-from src.utils import DBMS_Set
+from src.utils import DBMS_Set, Suite_Set
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--dbms", choices=DBMS_Set, default='duckdb',
                         type=str, help="Enter the DBMS name")
-    parser.add_argument('-s', "--suite_name", type=str, choices=DBMS_Set,
+    parser.add_argument('-s', "--suite_name", type=str, choices=Suite_Set,
                         default="sqlite", help="Enter the dbms test suites")
     parser.add_argument('-t', '--test_file', type=str,
                         default="", help="test a specific file")
@@ -77,6 +77,8 @@ if __name__ == "__main__":
         p = testparser.SLTParser()
     elif suite_name == 'duckdb':
         p = testparser.DTParser()
+    elif suite_name == 'squality':
+        p = testparser.CSVParser()
     else:
         sys.exit("Not implement yet")
 
