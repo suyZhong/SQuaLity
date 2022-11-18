@@ -1,5 +1,6 @@
 from enum import Enum
 import logging
+import hashlib
 
 
 class SortType(Enum):
@@ -79,3 +80,15 @@ class Control(Record):
 
 def my_debug(mystr: str, *args):
     logging.debug(mystr, *args)
+
+
+def hash_results(results: str):
+    """hash the result string
+
+        Args:
+            results (str): a string of results
+
+        Returns:
+            _type_: md5 hash value string
+        """
+    return hashlib.md5(results.encode(encoding='utf-8')).hexdigest()

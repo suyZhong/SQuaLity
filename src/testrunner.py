@@ -209,17 +209,6 @@ class Runner():
                 logging.warning("Datatype not support")
         return tmp_results.values.tolist()
 
-    def _hash_results(self, results: str):
-        """hash the result string
-
-        Args:
-            results (str): a string of results
-
-        Returns:
-            _type_: hash value string
-        """
-        return hashlib.md5(results.encode(encoding='utf-8')).hexdigest()
-
     def _sort_result(self, results, sort_type=SortType.ROW_SORT):
         """sort the result (rows of the results)
 
@@ -276,7 +265,7 @@ class Runner():
         result_string = ""
         cmp_flag = False
         if record.label != '':
-            result_string = self._hash_results(str(results))
+            result_string = hash_results(str(results))
             cmp_flag = True
             if record.label in self.labels:
                 cmp_flag = result_string == self.labels[record.label]
@@ -299,7 +288,7 @@ class Runner():
                 else:
                     result_len = 0
                 if result_len > self.hash_threshold:
-                    result_string = self._hash_results(result_string)
+                    result_string = hash_results(result_string)
                     result_string = str(result_len) + \
                         " values hashing to " + result_string
                 cmp_flag = result_string.strip() == record.result.strip()
