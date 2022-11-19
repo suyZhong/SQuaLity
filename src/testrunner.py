@@ -32,6 +32,7 @@ class Runner():
         self.exec_time = 0
         self.dump_all = False
         self.bug_dumper = None
+        self.result_helper = None
         self.cur_time = datetime.now()
         self.end_time = datetime.now()
         self.testfile_index = 0
@@ -195,38 +196,44 @@ class Runner():
     def handle_query_result(self, results: list, record: Query):
         result_string = ""
         cmp_flag = False
+        helper = ResultHelper(results, record)
         if record.label != '':
-            result_string = hash_results(str(results))
+            result_string = helper.hash_results(str(results))
             cmp_flag = True
             if record.label in self.labels:
                 cmp_flag = result_string == self.labels[record.label]
             else:
                 self.labels[record.label] = result_string
-                
+
         else:
             if record.res_format == ResultFormat.VALUE_WISE:
-                cmp_flag, result_string = value_wise_compare(results, record, self.hash_threshold)
+                cmp_flag, result_string = helper.value_wise_compare(
+                    results, record, self.hash_threshold)
             elif record.sort != SortType.NO_SORT:
                 hash_threshold = record.res_format == ResultFormat.HASH
-                cmp_flag, result_string = value_wise_compare(results, record, hash_threshold)
+                cmp_flag, result_string = helper.value_wise_compare(
+                    results, record, hash_threshold)
             # Currently it is only for DuckDB records
-            elif record.res_format == ResultFormat.ROW_WISE: 
+            elif record.res_format == ResultFormat.ROW_WISE:
                 expected_result_list = record.result.strip().split('\n') if record.result else []
                 expected_result_list.sort()
                 actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
-                                   for row in results]
+                                        for row in results]
                 actually_result_list.sort()
                 cmp_flag = expected_result_list == actually_result_list
-                
+
                 # ------------------------------------------------------------
                 # Below things are to make more checking for DuckDB test cases
                 # ------------------------------------------------------------
-                
+
                 # DuckDB doesn't very strict to the data type. Sometimes need to cast bool 'True' to int '1'
                 if not cmp_flag:
-                    actually_result_list = cast_result_list(actually_result_list, 'True', '1')
-                    actually_result_list = cast_result_list(actually_result_list, 'False', '0')
-                    actually_result_list = cast_result_list(actually_result_list, 'None', 'NULL')
+                    actually_result_list = helper.cast_result_list(
+                        actually_result_list, 'True', '1')
+                    actually_result_list = helper.cast_result_list(
+                        actually_result_list, 'False', '0')
+                    actually_result_list = helper.cast_result_list(
+                        actually_result_list, 'None', 'NULL')
                     actually_result_list.sort()
                     cmp_flag = expected_result_list == actually_result_list
                 # Because DuckDB has a mixture of row wise and value wise, without specification
@@ -240,12 +247,12 @@ class Runner():
                         cmp_flag = record.result.strip() == result_string
                     # result_string = '\n'.join(actually_result_list)
             elif record.res_format == ResultFormat.HASH:
-                result_string = '\n'.join(['\n'.join([str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'
-                result_string = hash_results(result_string)
+                result_string = '\n'.join(['\n'.join(
+                    [str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'
+                result_string = helper.hash_results(result_string)
                 # my_debug(result_string)
             else:
                 logging.warning("Error record result format!")
-
 
         if cmp_flag:
             # print("True!")

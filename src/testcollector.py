@@ -92,11 +92,11 @@ def find_local_duckdb_test():
     test_suite_dir = 'duckdb_tests/'
     duckdb_test_regex = re.compile(".*\.test(_slow)?$")
     tests_files = []
-    
+
     g = os.walk(test_suite_dir)
     for path, _, file_list in g:
         if path.find('csv') > 0:
             continue
         tests_files += [os.path.join(path, file_name)
-                        for file_name in file_list if re.match(duckdb_test_regex,file_name)]
+                        for file_name in file_list if re.match(duckdb_test_regex, file_name)]
     return tests_files

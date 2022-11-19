@@ -15,7 +15,7 @@ def strip_comment_suffix(code: str):
 
 class Parser:
     def __init__(self, filename='') -> None:
-        self.filename:str = filename
+        self.filename: str = filename
         self.test_content = ""
         self.result_content = ""
         self.hash_threshold = 8
@@ -60,7 +60,7 @@ class CSVParser(Parser):
     def get_file_name(self, filename):
         self.compression = 'zip' if filename.endswith('.zip') else None
         self.filename = filename
-    
+
     def get_file_content(self):
         try:
             self.test_content = pd.read_csv(
@@ -68,7 +68,6 @@ class CSVParser(Parser):
         except FileNotFoundError:
             self.test_content = pd.DataFrame([])
             logging.warning("Test file not find or not in the correct form!")
-            
 
     def parse_file(self):
         self.records = []
@@ -287,14 +286,15 @@ class DTParser(SLTParser):
                           for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
-                record = Statement(sql=stmt, result=str(status), status=status, id=self.record_id)
+                record = Statement(sql=stmt, result=str(
+                    status), status=status, id=self.record_id)
                 if stmt.split()[0].upper() == 'PRAGMA':
                     record.set_execute_db('duckdb')
                 self.records.append(record)
                 self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
-            
+
             # In DuckDB implementation they do like this. A dirty way.
             # https://github.com/duckdb/duckdb/blob/master/test/sqlite/result_helper.cpp#L391
             if record.result.find("values hashing to") > 0:
@@ -303,8 +303,10 @@ class DTParser(SLTParser):
                 self.records.append(record)
                 self.record_id += 1
             else:
-                record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
-                record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
+                record.result = re.sub(
+                    r'true(\t|\n|$)', r'True\1', record.result)
+                record.result = re.sub(
+                    r'false(\t|\n|$)', r'False\1', record.result)
                 # if record.result == 'true' or record.result == 'false':
                 #     record.result = record.result.capitalize()
                 record.set_resformat(ResultFormat.ROW_WISE)
