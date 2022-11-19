@@ -1,6 +1,7 @@
 from enum import Enum
 import logging
 import hashlib
+import pandas as pd
 
 
 class SortType(Enum):
@@ -11,6 +12,7 @@ class SortType(Enum):
 class ResultFormat(Enum):
     VALUE_WISE = 1
     ROW_WISE = 2
+    HASH = 3
 
 class RecordType(Enum):
     STATEMENT = 1
@@ -92,3 +94,95 @@ def hash_results(results: str):
             _type_: md5 hash value string
         """
     return hashlib.md5(results.encode(encoding='utf-8')).hexdigest()
+
+def int_format(item):
+    try:
+        item = int(item)
+    except ValueError:
+        if pd.isna(item):
+            return "NULL"
+        item = 0
+    except TypeError:  # when the element is None
+        return "NULL"
+    return "%d" % item
+
+def float_format(item):
+    if pd.isna(item):
+        return "NULL"
+    try:
+        item = float(item)
+    except ValueError:  # When the element is long string
+        item = 0.0
+    except TypeError:  # when the element is None
+        return "NULL"
+    return "%.3f" % item
+
+def text_format(item):
+    if pd.isna(item):
+        return 'NULL'
+    return str(item)
+
+
+def format_results(results, datatype: str):
+    cols = list(datatype)
+    tmp_results = pd.DataFrame(results)
+    # tmp_results = tmp_results.fillna('NULL')
+    for i, col in enumerate(cols):
+        if col == "I":
+            tmp_results[i] = tmp_results[i].apply(int_format)
+        elif col == "R":
+            tmp_results[i] = tmp_results[i].apply(float_format)
+        elif col == "T":
+            tmp_results[i] = tmp_results[i].apply(text_format)
+        else:
+            logging.warning("Datatype not support")
+    return tmp_results.values.tolist()
+
+def sort_result(results, sort_type=SortType.ROW_SORT):
+    """sort the result (rows of the results)
+    Args:
+        results (A list, each item is a tuple)): results list
+        sort_type (sort type, optional): . Defaults to SortType.RowSort.
+    Returns:
+        str: A str of results
+    """
+    result_flat = []
+    if sort_type == SortType.ROW_SORT:
+        results = [list(map(str, row)) for row in results]
+        results.sort()
+        for row in results:
+            for item in row:
+                result_flat.append(item+'\n')
+    elif sort_type == SortType.VALUE_SORT:
+        for row in results:
+            for item in row:
+                result_flat.append(str(item)+'\n')
+        result_flat.sort()
+    else:
+        for row in results:
+            for item in row:
+                result_flat.append(str(item)+'\n')
+    # myDebug(result_flat)
+    return ''.join(result_flat)
+
+def value_wise_compare(results, record, hash_threshold):
+    if results:
+        result_len = len(results) * len(results[0])
+        # Format the result by the query command para
+        results_fmt = format_results(
+            results=results, datatype=record.data_type)
+        # sort result and output flat list
+        # myDebug(results_fmt)
+        result_string = sort_result(
+            results_fmt, sort_type=record.sort)
+    else:
+        result_len = 0
+    if hash_threshold and result_len > hash_threshold:
+        result_string = hash_results(result_string)
+        result_string = str(result_len) + \
+            " values hashing to " + result_string
+    cmp_flag = result_string.strip() == record.result.strip()
+    return cmp_flag, result_string
+
+def cast_result_list(results:str, old, new):
+    return [row.replace(old, new) for row in results]

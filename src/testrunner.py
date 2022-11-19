@@ -169,75 +169,6 @@ class Runner():
     def not_allright(self):
         self.allright = False
 
-    def int_format(self, item):
-        try:
-            item = int(item)
-        except ValueError:
-            if pd.isna(item):
-                return "NULL"
-            item = 0
-        except TypeError:  # when the element is None
-            return "NULL"
-        return "%d" % item
-
-    def float_format(self, item):
-        if pd.isna(item):
-            return "NULL"
-        try:
-            item = float(item)
-        except ValueError:  # When the element is long string
-            item = 0.0
-        except TypeError:  # when the element is None
-            return "NULL"
-        return "%.3f" % item
-
-    def text_format(self, item):
-        return str(item)
-
-    def _format_results(self, results, datatype: str):
-        cols = list(datatype)
-        tmp_results = pd.DataFrame(results)
-        # tmp_results = tmp_results.fillna('NULL')
-        for i, col in enumerate(cols):
-            if col == "I":
-                tmp_results[i] = tmp_results[i].apply(self.int_format)
-            elif col == "R":
-                tmp_results[i] = tmp_results[i].apply(self.float_format)
-            elif col == "T":
-                tmp_results[i] = tmp_results[i].apply(self.text_format)
-            else:
-                logging.warning("Datatype not support")
-        return tmp_results.values.tolist()
-
-    def _sort_result(self, results, sort_type=SortType.ROW_SORT):
-        """sort the result (rows of the results)
-
-        Args:
-            results (A list, each item is a tuple)): results list
-            sort_type (sort type, optional): . Defaults to SortType.RowSort.
-
-        Returns:
-            str: A str of results
-        """
-        result_flat = []
-        if sort_type == SortType.ROW_SORT:
-            results = [list(map(str, row)) for row in results]
-            results.sort()
-            for row in results:
-                for item in row:
-                    result_flat.append(item+'\n')
-        elif sort_type == SortType.VALUE_SORT:
-            for row in results:
-                for item in row:
-                    result_flat.append(str(item)+'\n')
-            result_flat.sort()
-        else:
-            for row in results:
-                for item in row:
-                    result_flat.append(str(item)+'\n')
-        # myDebug(result_flat)
-        return ''.join(result_flat)
-
     def handle_control(self, action: RunnerAction):
         if action == RunnerAction.HALT:
             logging.warning("halt the rest of the test cases")
@@ -274,32 +205,44 @@ class Runner():
                 
         else:
             if record.res_format == ResultFormat.VALUE_WISE:
-                # get result length
-                # myDebug(results)
-                if results:
-                    result_len = len(results) * len(results[0])
-                    # Format the result by the query command para
-                    results_fmt = self._format_results(
-                        results=results, datatype=record.data_type)
-                    # sort result and output flat list
-                    # myDebug(results_fmt)
-                    result_string = self._sort_result(
-                        results_fmt, sort_type=record.sort)
-                else:
-                    result_len = 0
-                if result_len > self.hash_threshold:
-                    result_string = hash_results(result_string)
-                    result_string = str(result_len) + \
-                        " values hashing to " + result_string
-                cmp_flag = result_string.strip() == record.result.strip()
-            elif record.res_format == ResultFormat.ROW_WISE:
+                cmp_flag, result_string = value_wise_compare(results, record, self.hash_threshold)
+            elif record.sort != SortType.NO_SORT:
+                hash_threshold = record.res_format == ResultFormat.HASH
+                cmp_flag, result_string = value_wise_compare(results, record, hash_threshold)
+            # Currently it is only for DuckDB records
+            elif record.res_format == ResultFormat.ROW_WISE: 
                 expected_result_list = record.result.strip().split('\n') if record.result else []
                 expected_result_list.sort()
                 actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
                                    for row in results]
                 actually_result_list.sort()
                 cmp_flag = expected_result_list == actually_result_list
-                result_string = '\n'.join(actually_result_list)
+                
+                # ------------------------------------------------------------
+                # Below things are to make more checking for DuckDB test cases
+                # ------------------------------------------------------------
+                
+                # DuckDB doesn't very strict to the data type. Sometimes need to cast bool 'True' to int '1'
+                if not cmp_flag:
+                    actually_result_list = cast_result_list(actually_result_list, 'True', '1')
+                    actually_result_list = cast_result_list(actually_result_list, 'False', '0')
+                    actually_result_list = cast_result_list(actually_result_list, 'None', 'NULL')
+                    actually_result_list.sort()
+                    cmp_flag = expected_result_list == actually_result_list
+                # Because DuckDB has a mixture of row wise and value wise, without specification
+                if not cmp_flag:
+                    result_string = '\n'.join(['\n'.join(
+                        [str(item) if item != None else 'NULL' for item in row]) for row in results])
+                    cmp_flag = record.result.strip() == result_string
+                    if not cmp_flag:
+                        result_string = result_string.replace('True', '1')
+                        result_string = result_string.replace('False', '0')
+                        cmp_flag = record.result.strip() == result_string
+                    # result_string = '\n'.join(actually_result_list)
+            elif record.res_format == ResultFormat.HASH:
+                result_string = '\n'.join(['\n'.join([str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'
+                result_string = hash_results(result_string)
+                # my_debug(result_string)
             else:
                 logging.warning("Error record result format!")
 

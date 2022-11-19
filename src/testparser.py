@@ -294,13 +294,22 @@ class DTParser(SLTParser):
                 self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
-            record.result = re.sub(r'true(\t|\n)', r'True\1', record.result)
-            record.result = re.sub(r'false(\t|\n)', r'False\1', record.result)
-            if record.result == 'true' or record.result == 'false':
-                record.result = record.result.capitalize()
-            record.set_resformat(ResultFormat.ROW_WISE)
-            self.records.append(record)
-            self.record_id += 1
+            
+            # In DuckDB implementation they do like this. A dirty way.
+            # https://github.com/duckdb/duckdb/blob/master/test/sqlite/result_helper.cpp#L391
+            if record.result.find("values hashing to") > 0:
+                record.set_resformat(ResultFormat.HASH)
+                my_debug("hash")
+                self.records.append(record)
+                self.record_id += 1
+            else:
+                record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
+                record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
+                # if record.result == 'true' or record.result == 'false':
+                #     record.result = record.result.capitalize()
+                record.set_resformat(ResultFormat.ROW_WISE)
+                self.records.append(record)
+                self.record_id += 1
         else:
             record = self.testfile_dialect_handler(
                 lines=lines, record_type=record_type, id=self.record_id)
