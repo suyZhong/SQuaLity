@@ -67,7 +67,7 @@ def find_local_tests(db_name: str):
 
     test_suite_dir = db_name + "_tests/"
     if db_name == "cockroach":
-        test_suite_dir += 'testdata/logic_test'
+        test_suite_dir += 'logic_test'
     elif db_name == "duckdb":
         return find_local_duckdb_test()
     elif db_name == "mysql":

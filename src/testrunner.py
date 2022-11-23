@@ -1,13 +1,11 @@
 import os
 import sqlite3
 import psycopg2
-import hashlib
 import logging
 import mysql.connector
 from typing import List
 from datetime import datetime
-
-import pandas as pd
+from copy import copy
 
 import duckdb
 from .utils import *
@@ -210,42 +208,55 @@ class Runner():
                 cmp_flag, result_string = helper.value_wise_compare(
                     results, record, self.hash_threshold)
             elif record.sort != SortType.NO_SORT:
+                # If it has sort type, then it must be value wise
                 hash_threshold = record.res_format == ResultFormat.HASH
                 cmp_flag, result_string = helper.value_wise_compare(
                     results, record, hash_threshold)
             # Currently it is only for DuckDB records
             elif record.res_format == ResultFormat.ROW_WISE:
                 expected_result_list = record.result.strip().split('\n') if record.result else []
-                expected_result_list.sort()
-                actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
-                                        for row in results]
-                actually_result_list.sort()
-                cmp_flag = expected_result_list == actually_result_list
-
-                # ------------------------------------------------------------
-                # Below things are to make more checking for DuckDB test cases
-                # ------------------------------------------------------------
-
-                # DuckDB doesn't very strict to the data type. Sometimes need to cast bool 'True' to int '1'
-                if not cmp_flag:
-                    actually_result_list = helper.cast_result_list(
-                        actually_result_list, 'True', '1')
-                    actually_result_list = helper.cast_result_list(
-                        actually_result_list, 'False', '0')
-                    actually_result_list = helper.cast_result_list(
-                        actually_result_list, 'None', 'NULL')
-                    actually_result_list.sort()
-                    cmp_flag = expected_result_list == actually_result_list
-                # Because DuckDB has a mixture of row wise and value wise, without specification
-                if not cmp_flag:
-                    result_string = '\n'.join(['\n'.join(
-                        [str(item) if item != None else 'NULL' for item in row]) for row in results])
-                    cmp_flag = record.result.strip() == result_string
+                # expected_result_list.sort()
+                NULL = None
+                actually_result_list = copy(results)
+                my_debug(actually_result_list)
+                # actually_result_list.sort()
+                for i, row in enumerate(expected_result_list):
+                    items = row.split('\t')
+                    for j, item in enumerate(items):
+                        my_debug("e: %s, a: %s",item, actually_result_list[i][j])
+                        cmp_flag = eval(item) == actually_result_list[i][j]
                     if not cmp_flag:
-                        result_string = result_string.replace('True', '1')
-                        result_string = result_string.replace('False', '0')
-                        cmp_flag = record.result.strip() == result_string
-                    # result_string = '\n'.join(actually_result_list)
+                        break
+                result_string = '\n'.join(actually_result_list)
+                # actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
+                #                         for row in results]
+                # actually_result_list.sort()
+                # cmp_flag = expected_result_list == actually_result_list
+
+                # # ------------------------------------------------------------
+                # # Below things are to make more checking for DuckDB test cases
+                # # ------------------------------------------------------------
+
+                # # DuckDB doesn't very strict to the data type. Sometimes need to cast bool 'True' to int '1'
+                # if not cmp_flag:
+                #     actually_result_list = helper.cast_result_list(
+                #         actually_result_list, 'True', '1')
+                #     actually_result_list = helper.cast_result_list(
+                #         actually_result_list, 'False', '0')
+                #     actually_result_list = helper.cast_result_list(
+                #         actually_result_list, 'None', 'NULL')
+                #     actually_result_list.sort()
+                #     cmp_flag = expected_result_list == actually_result_list
+                # # Because DuckDB has a mixture of row wise and value wise, without specification
+                # if not cmp_flag:
+                #     result_string = '\n'.join(['\n'.join(
+                #         [str(item) if item != None else 'NULL' for item in row]) for row in results])
+                #     cmp_flag = record.result.strip() == result_string
+                #     if not cmp_flag:
+                #         result_string = result_string.replace('True', '1')
+                #         result_string = result_string.replace('False', '0')
+                #         cmp_flag = record.result.strip() == result_string
+                #     # result_string = '\n'.join(actually_result_list)
             elif record.res_format == ResultFormat.HASH:
                 result_string = '\n'.join(['\n'.join(
                     [str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'

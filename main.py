@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     skip_index = [627, 894]
     for i, test_file in enumerate(test_files):
-        db_name = args.db_name + str(i)
+        db_name = args.db_name
         single_begin_time = datetime.now()
         if i in skip_index:
             continue

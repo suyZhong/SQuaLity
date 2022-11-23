@@ -286,14 +286,17 @@ class DTParser(SLTParser):
                           for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
-                record = Statement(sql=stmt, result=str(
+                record = Statement(sql=stmt.rstrip(';'), result=str(
                     status), status=status, id=self.record_id)
                 if stmt.split()[0].upper() == 'PRAGMA':
-                    record.set_execute_db('duckdb')
+                    record.set_execute_db({'duckdb'})
                 self.records.append(record)
                 self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
+            
+            if record.sql.split()[0].upper() == 'EXPLAIN':
+                record.set_execute_db(set())
 
             # In DuckDB implementation they do like this. A dirty way.
             # https://github.com/duckdb/duckdb/blob/master/test/sqlite/result_helper.cpp#L391
