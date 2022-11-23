@@ -318,3 +318,55 @@ class DTParser(SLTParser):
             if record:
                 self.records.append(record)
                 self.record_id += 1
+
+
+class CDBTParser(SLTParser):
+    def __init__(self, filename='') -> None:
+        super().__init__(filename)
+
+    def testfile_dialect_handler(self, *args, **kwargs):
+        record_type = kwargs['record_type']
+        lines = kwargs['lines']
+        if record_type in ('loop', 'require', 'user', ):
+            logging.warning("This script has not implement: %s", lines)
+            return Control(action=RunnerAction.HALT, id=self.record_id)
+        return super().testfile_dialect_handler(*args, **kwargs)
+
+    def get_query(self, tokens, lines):
+        
+        return super().get_query(tokens, lines)
+
+    def parse_script(self, script: str):
+        script = strip_comment_lines(script)
+        if script:
+            lines = script.split('\n')
+        else:
+            return
+        self.dbms_set = set(['cockroach'])
+
+        tokens = lines[0].split()
+        record_type = tokens[0]
+        record = Statement(id=self.record_id)
+
+        if record_type == 'statement':
+            status = (tokens[1] == 'ok')
+            statements = ("".join([strip_comment_suffix(line)
+                          for line in lines[1:]])).strip().split(';\n')
+            statements = list(filter(None, statements))
+            for stmt in statements:
+                record = Statement(sql=stmt, result=" ".join(
+                    tokens[2:]), status=status, id=self.record_id)
+                self.records.append(record)
+                self.record_id += 1
+        elif record_type == 'query':
+            record = self.get_query(tokens=tokens, lines=lines)
+
+            record.set_resformat(ResultFormat.ROW_WISE)
+            self.records.append(record)
+            self.record_id += 1
+        else:
+            record = self.testfile_dialect_handler(
+                lines=lines, record_type=record_type, id=self.record_id)
+            if record:
+                self.records.append(record)
+                self.record_id += 1
