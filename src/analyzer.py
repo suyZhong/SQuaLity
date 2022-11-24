@@ -23,7 +23,7 @@ class TestCaseAnalyzer():
             df = pd.DataFrame(columns=TestCaseColumns)
         return df
 
-    def find_testcase(self, dir_name: str = "", file_name: str = ""):
+    def load_testcases(self, dir_name: str = "", file_name: str = ""):
         if file_name != "":
             self.test_cases = self.read_testcase(file_name)
         elif dir_name != "":
@@ -49,15 +49,24 @@ class TestCaseAnalyzer():
     def get_results(self, length: int = 10, rand: bool = False):
         return self.get_data('RESULT', length=length, rand=rand)
 
-    def get_data(self, column=[], length: int = 10, rand: bool = False):
+    def get_data(self, column=[], length: int = -1, rand: bool = False):
         if type(column) is str:
             column = [column]
         column = [col.upper() for col in column]
         cols = set(column)
         assert cols.issubset(self.attributes)
-        if length > self.test_num:
-            logging.warning("Too long.")
-            return
+        if length > self.test_num or length < 0:
+            length = self.test_num
 
         ind = random.randint(0, self.test_num - length) if rand else 0
         return self.test_cases[column].loc[ind: ind + length]
+    
+    def get_statements(self, length:int = -1, rand: bool = False):
+        df = self.get_data(['TYPE','SQL'])
+        statements = df[df['TYPE'] == 'STATEMENT']
+        return statements
+    
+    def get_queries(self, length: int = -1, rand: bool = False):
+        df = self.get_data(['TYPE', 'SQL'])
+        queries = df[df['TYPE'] == 'QUERY']
+        return queries
