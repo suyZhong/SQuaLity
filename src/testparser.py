@@ -306,10 +306,21 @@ class DTParser(SLTParser):
                 self.records.append(record)
                 self.record_id += 1
             else:
+                # If DuckDB make the result value wise, convert it to row wise
+                cols = len(record.data_type)
+                if cols > 1:
+                    result_lines = record.result.split('\n')
+                    if result_lines[0].find('\t') < 0:
+                        # change the value wise into row wise
+                        # First split the result_lines into cols chunks
+                        # Then join them together by "\t" and then by "\n"
+                        record.result = '\n'.join(['\t'.join(row) for row in [result_lines[i:i+cols] for i in range(0, len(result_lines), cols)]] )
+
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
                 record.result = re.sub(
                     r'false(\t|\n|$)', r'False\1', record.result)
+                # record.result = record.result.replace('(empty)', '')
                 # if record.result == 'true' or record.result == 'false':
                 #     record.result = record.result.capitalize()
                 record.set_resformat(ResultFormat.ROW_WISE)
