@@ -4,22 +4,12 @@ import re
 import pandas as pd
 from typing import List
 
-from .utils import Control, Query, Record, Statement
+from .utils import Control, Query, Record, Statement, TestCaseColumns
 
 
 class TestcaseCollector():
     def __init__(self, base_path="data/") -> None:
-        self.columns = ['INDEX',  # testcase index
-                        'TYPE',  # Enum Type: Statement, Query and Control
-                        'SQL',  # SQL string
-                        'STATUS',  # SQL execution status, 1 for Success, 2 for Failed
-                        'RESULT',  # SQL execution result. For Statement it's error msg if fail
-                        'DBMS',  # TODO not sure if we need to split it in different schemas/tables
-                        'DATA_TYPE',  # Query only, store the require result type
-                        'SORT_TYPE',  # Query only, store the required sort methods
-                        'LABEL',      # Query only, store the result label
-                        'RES_FORM',   # Query only, store the result format
-                        ]
+        self.columns = TestCaseColumns
         self.testcase_df = pd.DataFrame(columns=self.columns)
         self.testcase_name = ""
         self.record_row = {}.fromkeys(self.columns)

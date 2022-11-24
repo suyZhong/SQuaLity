@@ -44,6 +44,18 @@ Running_Stats = ['total_sql',
                  'query_num']
 
 
+TestCaseColumns = ['INDEX',  # testcase index
+                   'TYPE',  # Enum Type: Statement, Query and Control
+                   'SQL',  # SQL string
+                   'STATUS',  # SQL execution status, 1 for Success, 2 for Failed
+                   'RESULT',  # SQL execution result. For Statement it's error msg if fail
+                   'DBMS',  # TODO not sure if we need to split it in different schemas/tables
+                   'DATA_TYPE',  # Query only, store the require result type
+                   'SORT_TYPE',  # Query only, store the required sort methods
+                   'LABEL',      # Query only, store the result label
+                   'RES_FORM',   # Query only, store the result format
+                   ]
+
 class Record:
 
     def __init__(self, sql="", result="", **kwargs) -> None:
