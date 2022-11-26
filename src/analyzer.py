@@ -10,7 +10,6 @@ class TestCaseAnalyzer():
         self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = 0
         self.attributes = set(TestCaseColumns)
-        pass
 
     def read_testcase(self, test_file: str):
         compression = 'zip' if test_file.endswith('.zip') else None

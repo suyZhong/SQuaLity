@@ -4,11 +4,11 @@ import re
 import pandas as pd
 from typing import List
 
-from .utils import Control, Query, Record, Statement, TestCaseColumns
+from .utils import Control, Query, Record, Statement, TestCaseColumns, OUTPUT_PATH
 
 
 class TestcaseCollector():
-    def __init__(self, base_path="data/") -> None:
+    def __init__(self, base_path=OUTPUT_PATH['testcase_dir']) -> None:
         self.columns = TestCaseColumns
         self.testcase_df = pd.DataFrame(columns=self.columns)
         self.testcase_name = ""
@@ -33,6 +33,7 @@ class TestcaseCollector():
             self.record_row['SQL'] = record.sql
             self.record_row['DBMS'] = ",".join(record.db)
             self.record_row['RESULT'] = record.result
+            self.record_row['SUITE'] = record.suite
             if record_type is Statement:
                 self.record_row['STATUS'] = str(record.status)
             elif record_type is Query:

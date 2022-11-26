@@ -287,13 +287,14 @@ class DTParser(SLTParser):
             statements = list(filter(None, statements))
             for stmt in statements:
                 record = Statement(sql=stmt.rstrip(';'), result=str(
-                    status), status=status, id=self.record_id)
+                    status), status=status, id=self.record_id, suite='duckdb')
                 if stmt.split()[0].upper() == 'PRAGMA':
                     record.set_execute_db({'duckdb'})
                 self.records.append(record)
                 self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
+            record.suite = 'duckdb'
             
             if record.sql.split()[0].upper() == 'EXPLAIN':
                 record.set_execute_db(set())
@@ -330,6 +331,7 @@ class DTParser(SLTParser):
             record = self.testfile_dialect_handler(
                 lines=lines, record_type=record_type, id=self.record_id)
             if record:
+                record.suite = 'duckdb'
                 self.records.append(record)
                 self.record_id += 1
 

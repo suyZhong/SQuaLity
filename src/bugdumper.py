@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 from typing import List
 import pandas as pd
-from .utils import Statement, Record, my_debug
+from .utils import Statement, Record, my_debug, OUTPUT_PATH
 
 
 class BugDumper():
@@ -11,7 +11,6 @@ class BugDumper():
     def __init__(self, dbms_name, dump_all) -> None:
         # self.conn = sqlite3.connect("database.db")
         # self.cur = self.conn.cursor()
-        self.output = "output/demo.csv"
         self.tables = ['DBMS_BUGS', 'BUG_LOGS', 'BUG_TEST_CASES']
         self.views = ['DBMS_BUGS_STATUS', 'ORACLES_AGGREGATED', 'TAGS_AGGREGATED',
                       'DBMS_BUGS_TRUE_POSITIVES', 'BUG_TEST_CASES_NO_FP',
@@ -30,7 +29,7 @@ class BugDumper():
 
     def init_bugs_schema(self):
         # The basic bugs schema
-        self.bugs_columns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH',
+        self.bugs_columns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
                              'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT',
                              'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'LOGS_INDEX']
         self.bugs_single_row = {}.fromkeys(self.bugs_columns)
@@ -43,9 +42,9 @@ class BugDumper():
         self.logs_dataframe = pd.DataFrame(columns=self.logs_columns)
 
         self.bugs_dataframe.to_csv(
-            "output/{}_results.csv".format(self.dbms_name), mode="w", header=True)
+            OUTPUT_PATH['execution_result'].format(self.dbms_name), mode="w", header=True)
         self.logs_dataframe.to_csv(
-            "output/{}_logs.csv".format(self.dbms_name), mode="w", header=True, index=False)
+            OUTPUT_PATH['execution_log'].format(self.dbms_name), mode="w", header=True, index=False)
 
     def get_testfile_data(self, **kwargs):
         self.testfile_path = kwargs['testfile_path']
@@ -93,6 +92,7 @@ class BugDumper():
         self.bugs_single_row['DBMS_NAME'] = self.dbms_name
         self.bugs_single_row['TESTFILE_INDEX'] = self.testfile_index
         self.bugs_single_row['TESTFILE_PATH'] = self.testfile_path
+        self.bugs_single_row['ORIGINAL_SUITE'] = record.suite
         self.bugs_single_row['TESTCASE_INDEX'] = record.id
         self.bugs_single_row['SQL'] = record.sql
         self.bugs_single_row['CASE_TYPE'] = type(record).__name__
@@ -119,8 +119,8 @@ class BugDumper():
         print(self.logs_dataframe)
 
     def dump_to_csv(self, dbname='demo', mode='a'):
-        my_debug("Dump the bugs as a Dataframe to a csv %s" % dbname)
+        my_debug("Dump the bugs as a Dataframe to a csv {}".format(dbname))
         self.bugs_dataframe.to_csv(
-            "output/%s_results.csv" % dbname, mode=mode, header=False)
-        self.logs_dataframe.to_csv("output/%s_logs.csv" %
-                                   dbname, mode=mode, header=False, index=False)
+            OUTPUT_PATH['execution_result'].format(dbname), mode=mode, header=False)
+        self.logs_dataframe.to_csv(
+            OUTPUT_PATH['execution_log'].format(dbname), mode=mode, header=False, index=False)

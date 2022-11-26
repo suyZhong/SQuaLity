@@ -47,22 +47,31 @@ Running_Stats = ['total_sql',
 TestCaseColumns = ['INDEX',  # testcase index
                    'TYPE',  # Enum Type: Statement, Query and Control
                    'SQL',  # SQL string
-                   'STATUS',  # SQL execution status, 1 for Success, 2 for Failed
+                   'STATUS',  # Expected SQL execution status, 1 for Success, 2 for Failed
                    'RESULT',  # SQL execution result. For Statement it's error msg if fail
-                   'DBMS',  # TODO not sure if we need to split it in different schemas/tables
+                   'DBMS',  # The dbms that can execute this test case
+                   'SUITE', # The suite that original test case came from
                    'DATA_TYPE',  # Query only, store the require result type
                    'SORT_TYPE',  # Query only, store the required sort methods
                    'LABEL',      # Query only, store the result label
                    'RES_FORM',   # Query only, store the result format
                    ]
 
+OUTPUT_PATH = {
+    'testcase_dir': 'data/',
+    'execution_result': 'output/{}_results.csv', # means execution db engine
+    'execution_log': 'output/{}_logs.csv'
+}
+
+
 class Record:
 
-    def __init__(self, sql="", result="", **kwargs) -> None:
+    def __init__(self, sql="", result="", suite="", **kwargs) -> None:
         self.sql = sql
         self.result = result
         self.db = DBMS_Set
         self.id = kwargs['id']
+        self.suite = suite
 
     def set_execute_db(self, db: set):
         self.db = db
