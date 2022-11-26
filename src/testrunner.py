@@ -220,14 +220,14 @@ class Runner():
                 NULL = None
                 actually_result_list = copy(results)
                 # actually_result_list.sort()
-                # my_debug("%s, %s", actually_result_list, expected_result_list)
+                my_debug("%s, %s", actually_result_list, expected_result_list)
                 if len(expected_result_list) == len(actually_result_list) == 0:
                     cmp_flag = True
                 elif len(expected_result_list) != len(actually_result_list):
                     cmp_flag = False
                 else:
                     for i, row in enumerate(expected_result_list):
-                        items = row.split('\t')
+                        items = row.strip().split('\t')
                         for j, item in enumerate(items):
                             # direct comparison
                             rvalue = actually_result_list[i][j]
@@ -241,11 +241,11 @@ class Runner():
                             if not cmp_flag:
                                 try:
                                     lvalue = eval(item)
-                                except (TypeError, SyntaxError):
+                                except (TypeError, SyntaxError, NameError):
                                     continue
                                 cmp_flag = lvalue == rvalue or cmp_flag
                                 # if numeric (No, even data type is I, still would have float type
-                                if type(lvalue) is float:
+                                if type(lvalue) is float and type(rvalue) is float:
                                     cmp_flag = math.isclose(lvalue, rvalue) or cmp_flag
                         if not cmp_flag:
                             break
