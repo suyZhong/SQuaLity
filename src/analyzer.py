@@ -2,7 +2,7 @@ import os
 import logging
 import random
 import pandas as pd
-from .utils import TestCaseColumns
+from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH
 
 
 class TestCaseAnalyzer():
@@ -56,16 +56,51 @@ class TestCaseAnalyzer():
         assert cols.issubset(self.attributes)
         if length > self.test_num or length < 0:
             length = self.test_num
+            return self.test_cases[column]
 
         ind = random.randint(0, self.test_num - length) if rand else 0
         return self.test_cases[column].loc[ind: ind + length]
-    
-    def get_statements(self, length:int = -1, rand: bool = False):
-        df = self.get_data(['TYPE','SQL'])
+
+    def get_statements(self, length: int = -1, rand: bool = False):
+        df = self.get_data(['TYPE', 'SQL'])
         statements = df[df['TYPE'] == 'STATEMENT']
         return statements
-    
+
     def get_queries(self, length: int = -1, rand: bool = False):
         df = self.get_data(['TYPE', 'SQL'])
         queries = df[df['TYPE'] == 'QUERY']
         return queries
+
+
+class TestResultAnalyzer():
+    def __init__(self) -> None:
+        self.results = pd.DataFrame(columns=ResultColumns)
+        self.logs = pd.DataFrame([])
+        self.attributes = set(ResultColumns)
+        self.result_num = 0
+
+    def load_results(self, dbms: str):
+        self.results = pd.read_csv(
+            OUTPUT_PATH['execution_result'].format(dbms))
+        self.logs = pd.read_csv(OUTPUT_PATH['execution_log'].format(dbms))
+        self.result_num = len(self.results)
+
+    def get_result_cols(self, df:pd.DataFrame = None ,column=[], length: int = -1, rand: bool = False):
+        if df is not None:
+            result_df = df
+        else:
+            result_df = self.results
+        if type(column) is str:
+            column = [column]
+        column = [col.upper() for col in column]
+        cols = set(column)
+        assert cols.issubset(self.attributes)
+        if length > self.result_num or length < 0:
+            length = self.result_num
+            return result_df[column]
+
+        ind = random.randint(0, self.result_num - length) if rand else 0
+        return self.results[column].loc[ind: ind + length]
+
+    def get_error_rows(self):
+        return self.results.loc[self.results.IS_ERROR == True]

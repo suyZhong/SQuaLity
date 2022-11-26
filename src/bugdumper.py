@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 from typing import List
 import pandas as pd
-from .utils import Statement, Record, my_debug, OUTPUT_PATH
+from .utils import Statement, Record, my_debug, OUTPUT_PATH, ResultColumns
 
 
 class BugDumper():
@@ -29,9 +29,7 @@ class BugDumper():
 
     def init_bugs_schema(self):
         # The basic bugs schema
-        self.bugs_columns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
-                             'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT',
-                             'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'LOGS_INDEX']
+        self.bugs_columns = ResultColumns
         self.bugs_single_row = {}.fromkeys(self.bugs_columns)
         self.bugs_dataframe = pd.DataFrame(columns=self.bugs_columns)
 

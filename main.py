@@ -83,7 +83,7 @@ if __name__ == "__main__":
     else:
         sys.exit("Not implement yet")
 
-    skip_index = [627, 894]
+    skip_index = []
     for i, test_file in enumerate(test_files):
         db_name = args.db_name
         single_begin_time = datetime.now()
