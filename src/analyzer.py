@@ -2,6 +2,7 @@ import os
 import logging
 import random
 import pandas as pd
+from tqdm import tqdm
 from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH
 
 
@@ -36,7 +37,7 @@ class TestCaseAnalyzer():
             for path, _, file_list in g:
                 test_files += [os.path.join(path, file) for file in file_list]
 
-            for test_file in test_files:
+            for test_file in tqdm(test_files):
                 df = self.read_testcase(test_file)
                 all_test = pd.concat([all_test, df], ignore_index=True)
             self.test_cases = all_test
