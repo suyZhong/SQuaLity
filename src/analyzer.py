@@ -62,12 +62,12 @@ class TestCaseAnalyzer():
         return self.test_cases[column].loc[ind: ind + length]
 
     def get_statements(self, length: int = -1, rand: bool = False):
-        df = self.get_data(['TYPE', 'SQL'])
+        df = self.get_data(self.attributes)
         statements = df[df['TYPE'] == 'STATEMENT']
         return statements
 
     def get_queries(self, length: int = -1, rand: bool = False):
-        df = self.get_data(['TYPE', 'SQL'])
+        df = self.get_data(self.attributes)
         queries = df[df['TYPE'] == 'QUERY']
         return queries
 

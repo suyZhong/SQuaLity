@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import argparse
 from src import testparser
@@ -24,7 +26,10 @@ def extract(dbms_name:str, parser:testparser.Parser, compression:bool = True):
         
         collector.init_testcase_schema(dbms_name, testcase_name, compression)
         collector.save_records(records)
-        collector.dump_to_csv()
+        try:
+            collector.dump_to_csv()
+        except Exception:
+            pass
         # exit(0)
 
 if __name__ == "__main__":
