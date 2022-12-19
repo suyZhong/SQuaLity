@@ -391,8 +391,8 @@ class CockroachDBRunner(Runner):
         self.commit()
         self.close()
 
-    def connect(self, file_name):
-        logging.info("connect to db %s", file_name)
+    def connect(self, db_name):
+        logging.info("connect to db %s", db_name)
 
         self.con = psycopg2.connect(dsn=self.db)
         self.cur = self.con.cursor()
@@ -457,3 +457,29 @@ class MySQLRunner(Runner):
 
     def commit(self):
         self.con.commit()
+
+
+class PostgreSQLRunner(CockroachDBRunner):
+    def __init__(self) -> None:
+        super().__init__()
+        
+    def set_db(self, db_name):
+        self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
+        self.connect("postgres")
+        self.con.autocommit = True
+
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+        self.execute_stmt("CREATE DATABASE %s" % db_name)
+        self.commit()
+        self.close()
+        dsn = "postgresql://postgres:root@localhost:5432/%s?sslmode=disable" % db_name
+        self.db = dsn
+        
+    def remove_db(self, db_name):
+        self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
+        self.connect("postgres")
+        self.con.autocommit = True
+
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+        self.commit()
+        self.close()

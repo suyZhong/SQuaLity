@@ -69,6 +69,8 @@ if __name__ == "__main__":
         r = testrunner.CockroachDBRunner()
     elif dbms_name == 'mysql':
         r = testrunner.MySQLRunner()
+    elif dbms_name == 'postgresql':
+        r = testrunner.PostgreSQLRunner()
     else:
         sys.exit("Not implement yet")
     r.init_dumper(dump_all=args.dump_all)
