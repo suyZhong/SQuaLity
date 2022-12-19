@@ -199,6 +199,7 @@ class ResultHelper():
         return ''.join(result_flat)
 
     def value_wise_compare(self, results, record, hash_threshold):
+        result_string = ""
         if results:
             result_len = len(results) * len(results[0])
             # Format the result by the query command para
