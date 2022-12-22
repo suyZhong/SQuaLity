@@ -234,11 +234,14 @@ class MYTParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.testfile = filename
-        self.resultfile = filename.replace('/t/', '/r/')
+        self.resultfile = filename.replace(
+            '/t/', '/r/').replace('.test', '.result')
+        self.delimiter = ';'
 
     def get_file_name(self, filename):
         self.testfile = filename
-        self.resultfile = filename.replace('/t/', '/r/')
+        self.resultfile = filename.replace(
+            '/t/', '/r/').replace('.test', '.result')
 
     def get_file_content(self):
         with open(self.testfile, 'r', encoding='utf-8') as testfile:
@@ -246,6 +249,36 @@ class MYTParser(Parser):
 
         with open(self.resultfile, 'r', encoding='utf-8') as testfile:
             self.result_content = testfile.read()
+
+    def parse_file(self):
+        self.scripts = [script.strip() for script in self.test_content.strip().split(
+            '\n') if script != '']
+        record_id = 0
+        command = ""
+        for script in self.scripts:
+            if script.startswith('#'):
+                continue
+            if script.startswith('--'):
+                tokens = script.split()
+                action = RunnerAction[tokens[0][2:].upper()]
+                self.records.append(Control(sql=' '.join(
+                    tokens[1:]), action=action, id=record_id))
+                record_id += 1
+            else:
+                command += script + " "
+                if script.endswith(self.delimiter):
+                    self.records.append(Record(sql=command, id=record_id))
+                    command = ""
+                    record_id += 1
+
+    def debug(self):
+        my_debug(self.test_content)
+        my_debug(self.result_content)
+        for record in self.records:
+            my_debug(type(record))
+            my_debug(record.sql)
+            my_debug(record.result)
+        print(self.test_content)
 
 
 class DTParser(SLTParser):
@@ -295,7 +328,7 @@ class DTParser(SLTParser):
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
             record.suite = 'duckdb'
-            
+
             if record.sql.split()[0].upper() == 'EXPLAIN':
                 record.set_execute_db(set())
 
@@ -315,7 +348,8 @@ class DTParser(SLTParser):
                         # change the value wise into row wise
                         # First split the result_lines into cols chunks
                         # Then join them together by "\t" and then by "\n"
-                        record.result = '\n'.join(['\t'.join(row) for row in [result_lines[i:i+cols] for i in range(0, len(result_lines), cols)]] )
+                        record.result = '\n'.join(['\t'.join(row) for row in [
+                                                  result_lines[i:i+cols] for i in range(0, len(result_lines), cols)]])
 
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
@@ -349,7 +383,7 @@ class CDBTParser(SLTParser):
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def get_query(self, tokens, lines):
-        
+
         return super().get_query(tokens, lines)
 
     def parse_script(self, script: str):

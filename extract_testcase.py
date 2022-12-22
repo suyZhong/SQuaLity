@@ -52,3 +52,8 @@ if __name__ == "__main__":
     if suite == 'cockroach' or suite == 'all':
         cdbt_parser = testparser.CDBTParser()
         extract('cockroach', cdbt_parser, compression=False)
+        
+    # Extract MySQL test
+    if suite == 'mysql' or suite == 'all':
+        mysql_parser = testparser.MYTParser()
+        extract('mysql', mysql_parser)

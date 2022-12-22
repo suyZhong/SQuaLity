@@ -24,6 +24,10 @@ class RecordType(Enum):
 
 class RunnerAction(Enum):
     HALT = 1
+    ECHO = 2
+    SOURCE = 3
+    ENABLE_INFO = 4
+    DISABLE_INFO = 5
 
 
 class StopRunnerException(Exception):
