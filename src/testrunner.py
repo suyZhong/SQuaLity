@@ -196,7 +196,8 @@ class Runner():
         result_string = ""
         cmp_flag = False
         helper = ResultHelper(results, record)
-        if record.label != '':
+        if record.label != '' and record.result == '':
+            # my_debug(results)
             result_string = helper.hash_results(str(results))
             cmp_flag = True
             if record.label in self.labels:
@@ -251,35 +252,6 @@ class Runner():
                             break
                 result_string = '\n'.join(['\t'.join(
                     [str(item) if item != None else 'NULL' for item in row]) for row in results])
-                # actually_result_list = ["\t".join([str(item) if item != None else 'NULL' for item in row])
-                #                         for row in results]
-                # actually_result_list.sort()
-                # cmp_flag = expected_result_list == actually_result_list
-
-                # # ------------------------------------------------------------
-                # # Below things are to make more checking for DuckDB test cases
-                # # ------------------------------------------------------------
-
-                # # DuckDB doesn't very strict to the data type. Sometimes need to cast bool 'True' to int '1'
-                # if not cmp_flag:
-                #     actually_result_list = helper.cast_result_list(
-                #         actually_result_list, 'True', '1')
-                #     actually_result_list = helper.cast_result_list(
-                #         actually_result_list, 'False', '0')
-                #     actually_result_list = helper.cast_result_list(
-                #         actually_result_list, 'None', 'NULL')
-                #     actually_result_list.sort()
-                #     cmp_flag = expected_result_list == actually_result_list
-                # # Because DuckDB has a mixture of row wise and value wise, without specification
-                # if not cmp_flag:
-                #     result_string = '\n'.join(['\n'.join(
-                #         [str(item) if item != None else 'NULL' for item in row]) for row in results])
-                #     cmp_flag = record.result.strip() == result_string
-                #     if not cmp_flag:
-                #         result_string = result_string.replace('True', '1')
-                #         result_string = result_string.replace('False', '0')
-                #         cmp_flag = record.result.strip() == result_string
-                #     # result_string = '\n'.join(actually_result_list)
             elif record.res_format == ResultFormat.HASH:
                 result_string = '\n'.join(['\n'.join(
                     [str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'
@@ -428,7 +400,7 @@ class MySQLRunner(Runner):
     def connect(self, db_name=""):
         logging.info("connect to db %s", db_name)
         self.con = mysql.connector.connect(
-            host="localhost", user="root", password="root", port=3306)
+            host="localhost", user="root", password="root", port=3307)
         self.cur = self.con.cursor()
 
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
