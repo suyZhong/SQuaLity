@@ -250,12 +250,23 @@ class MYTParser(Parser):
         with open(self.resultfile, 'r', encoding='utf-8') as testfile:
             self.result_content = testfile.read()
 
+    def find_next_command(self, id):
+        if id + 1 >=len(self.records):
+            return ""
+        command = self.records[id + 1].sql
+        if command != "":
+            return command.split('\n')[0]
+        else:
+            self.find_next_command(id + 1)
+    
     def parse_file(self):
         self.scripts = [script.strip() for script in self.test_content.strip().split(
             '\n') if script != '']
         record_id = 0
-        command = ""
-        for script in self.scripts:
+        command = []
+        
+        # parse the test file and get commands
+        for i, script in enumerate(self.scripts):
             if script.startswith('#'):
                 continue
             if script.startswith('--'):
@@ -265,11 +276,26 @@ class MYTParser(Parser):
                     tokens[1:]), action=action, id=record_id))
                 record_id += 1
             else:
-                command += script + " "
+                command.append(script)
                 if script.endswith(self.delimiter):
-                    self.records.append(Record(sql=command, id=record_id))
-                    command = ""
+                    self.records.append(Record(sql="\n".join(command), id=record_id))
+                    command = []
                     record_id += 1
+                    
+        # parse the result file and get results
+        for i, record in enumerate(self.records):
+            if type(record) is Record:
+                command = record.sql.split('\n')[-1]
+                assert i == record.id
+                # print(record.id, len(self.records))
+                next_command = self.find_next_command(record.id)
+                loc = self.result_content.find(command) + len(command) + 1
+                self.result_content = self.result_content[loc:]
+                print(self.result_content)
+                print("next", next_command)
+                result = self.result_content[:self.result_content.find(next_command)]
+                record.result = result
+                
 
     def debug(self):
         my_debug(self.test_content)
