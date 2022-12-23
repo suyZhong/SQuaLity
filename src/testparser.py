@@ -1,4 +1,5 @@
 import re
+import difflib
 from copy import copy
 import pandas as pd
 from .utils import *
@@ -52,8 +53,8 @@ class Parser:
         return self.records
 
     def debug(self):
-        my_debug(self.test_content)
-        my_debug(self.result_content)
+        # my_debug(self.test_content)
+        # my_debug(self.result_content)
         for record in self.records:
             my_debug(type(record))
             my_debug(record.sql)
@@ -348,6 +349,50 @@ class PGTParser(MYTParser):
                 record_id += 1
                 command = []
     
+    def get_records(self):
+        record_id = 0
+        command = []
+        result = []
+        test_input = []
+        test_differ = difflib.Differ()
+        test_lines = [line for line in self.test_content.splitlines(keepends=True) if line != '\n']
+        result_lines = [line for line in self.result_content.splitlines(keepends=True) if line != '\n']
+        diff = list(test_differ.compare(test_lines, result_lines))
+        
+        
+        for i, line in enumerate(diff):
+            line = line.rstrip()
+            print(line)
+            
+            # It is both in test and expected file, means a command
+            if line.startswith('  '):
+                tmp_command = line.strip()
+                if tmp_command.startswith('--'):
+                    continue
+                else:
+                    command.append(tmp_command)
+                    if strip_comment_suffix(tmp_command).endswith(self.delimiter):
+                        record_sql = '\n'.join(command)
+                        self.records.append(Record(sql=record_sql, id = record_id))
+                        record_id += 1
+                        command = []
+            elif line.startswith('+ '):
+                result.append(line.lstrip('+ '))
+                if i == len(diff) - 1:
+                    self.records[record_id - 1].result = "\n".join(result)
+                    result = []
+                elif not diff[i + 1].startswith('+ '):
+                    self.records[record_id - 1].result = "\n".join(result)
+                    result = []
+            elif line.startswith('- '):
+                test_input.append(line.lstrip('- '))
+                if i == len(diff) - 1:
+                    self.records[record_id - 1].result = "\n".join(test_input)
+                    test_input = []
+                elif not diff[i + 1].startswith('- '):
+                    self.records[record_id - 1].result = "\n".join(test_input)
+                    test_input = []
+                
     def get_test_results(self):
         return super().get_test_results()
     
@@ -359,11 +404,13 @@ class PGTParser(MYTParser):
         self.scripts = [script.strip() for script in self.test_content.strip().split(
             '\n') if script != '' and not script.startswith('--')]
         
-        # parse the test file and get commands
-        self.get_test_commands()
+        self.get_records()
         
-        # parse the output file and get test results
-        self.get_test_results()
+        # # parse the test file and get commands
+        # self.get_test_commands()
+        
+        # # parse the output file and get test results
+        # self.get_test_results()
 
 
 class DTParser(SLTParser):
