@@ -53,11 +53,12 @@ class Parser:
 
     def debug(self):
         my_debug(self.test_content)
+        my_debug(self.result_content)
         for record in self.records:
             my_debug(type(record))
             my_debug(record.sql)
             my_debug(record.result)
-        print(self.test_content)
+        # print(self.test_content)
 
 
 class CSVParser(Parser):
@@ -267,13 +268,9 @@ class MYTParser(Parser):
         else:
             return self.find_next_command(id + 1)
 
-    def parse_file(self):
-        self.scripts = [script.strip() for script in self.test_content.strip().split(
-            '\n') if script != '']
+    def get_test_commands(self):
         record_id = 0
         command = []
-
-        # parse the test file and get commands
         for i, script in enumerate(self.scripts):
             if script.startswith('#'):
                 continue
@@ -290,8 +287,8 @@ class MYTParser(Parser):
                         Record(sql="\n".join(command), id=record_id))
                     command = []
                     record_id += 1
-
-        # parse the result file and get results
+    
+    def get_test_results(self):
         for i, record in enumerate(self.records):
             if type(record) is Record:
                 command = record.sql.split('\n')[-1]
@@ -307,6 +304,16 @@ class MYTParser(Parser):
                 else:
                     result = ""
                 record.result = result
+
+    def parse_file(self):
+        self.scripts = [script.strip() for script in self.test_content.strip().split(
+            '\n') if script != '']
+        
+        # parse the test file and get commands
+        self.get_test_commands()
+
+        # parse the result file and get results
+        self.get_test_results()
 
 
 
