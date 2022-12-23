@@ -51,6 +51,14 @@ class Parser:
     def get_records(self):
         return self.records
 
+    def debug(self):
+        my_debug(self.test_content)
+        for record in self.records:
+            my_debug(type(record))
+            my_debug(record.sql)
+            my_debug(record.result)
+        print(self.test_content)
+
 
 class CSVParser(Parser):
     def __init__(self, filename='') -> None:
@@ -251,13 +259,13 @@ class MYTParser(Parser):
             self.result_content = testfile.read()
 
     def find_next_command(self, id):
-        if id + 1 >=len(self.records):
+        if id + 1 >= len(self.records):
             return ""
         command = self.records[id + 1].sql
         if command != "":
             return command.split('\n')[0]
         else:
-            self.find_next_command(id + 1)
+            return self.find_next_command(id + 1)
     
     def parse_file(self):
         self.scripts = [script.strip() for script in self.test_content.strip().split(
@@ -291,9 +299,11 @@ class MYTParser(Parser):
                 next_command = self.find_next_command(record.id)
                 loc = self.result_content.find(command) + len(command) + 1
                 self.result_content = self.result_content[loc:]
-                print(self.result_content)
-                print("next", next_command)
-                result = self.result_content[:self.result_content.find(next_command)]
+                next_loc = self.result_content.find(next_command) if next_command != "" else 0
+                if next_loc > 0:
+                    result = self.result_content[:next_loc]
+                else:
+                    result = ""
                 record.result = result
                 
 
