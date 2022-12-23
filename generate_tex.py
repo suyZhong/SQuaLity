@@ -22,16 +22,18 @@ DuckDB & 171 & 7.4k & {duckdb_test_files}\\\
 
 def generate_test_suites_summary():
     path = BASE_PATH + "table/TestSuitesTable.tex"
-    
+
     data = dict()
-    
+
     data['sqlite_test_files'] = len(testcollector.find_local_tests('sqlite'))
     data['mysql_test_files'] = len(testcollector.find_local_tests('mysql'))
-    data['postgres_test_files'] = len(testcollector.find_local_tests('postgres'))
-    data['cockroach_test_files'] = len(testcollector.find_local_tests('cockroach'))
+    data['postgres_test_files'] = len(
+        testcollector.find_local_tests('postgres'))
+    data['cockroach_test_files'] = len(
+        testcollector.find_local_tests('cockroach'))
     data['duckdb_test_files'] = len(testcollector.find_local_duckdb_test())
     content = TEST_SUITES_SUMMARY.format(**data)
-    
+
     with open(path, 'w') as f:
         f.write(content)
 

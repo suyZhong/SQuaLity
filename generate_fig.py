@@ -5,6 +5,7 @@ from src import analyzer
 
 BASE_PATH = "../SQuaLity-Paper/assets/"
 
+
 def generate_sql_distribution(dbms_name: str = 'sqlite'):
     print("Get metadata for {}".format(dbms_name))
     test_analyzer = analyzer.TestCaseAnalyzer()
@@ -15,7 +16,6 @@ def generate_sql_distribution(dbms_name: str = 'sqlite'):
     print("Total number of statement is", len(statements))
     print("Average statement length is", statements['SQL'].apply(len).mean())
 
-
     print("Total number of query is", len(queries))
     print("Average query length is", queries['SQL'].apply(len).mean())
     statements['SQL'] = statements['SQL'].str.upper()
@@ -23,7 +23,6 @@ def generate_sql_distribution(dbms_name: str = 'sqlite'):
     print("Statement type:")
     stmt_count = statements_key.value_counts(normalize=True)
     # print(stmt_count)
-
 
     queries = queries[:1000]
 
@@ -40,7 +39,8 @@ def generate_sql_distribution(dbms_name: str = 'sqlite'):
     stmt_count[:min(len(stmt_count), 10)].plot.bar(
         title="Statement Commands", ax=a0, color='gray')
     f.tight_layout()
-    f.savefig("{}img/{}-testcase".format(BASE_PATH,dbms_name))
+    f.savefig("{}img/{}-testcase".format(BASE_PATH, dbms_name))
+
 
 if __name__ == '__main__':
     generate_sql_distribution('sqlite')

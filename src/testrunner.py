@@ -238,7 +238,7 @@ class Runner():
                             cmp_flag = item == str(rvalue) or cmp_flag
                             # if DuckDB
                             cmp_flag = item == '(empty)' and rvalue == '' or cmp_flag
-                            
+
                             if not cmp_flag:
                                 try:
                                     lvalue = eval(item)
@@ -247,7 +247,8 @@ class Runner():
                                 cmp_flag = lvalue == rvalue or cmp_flag
                                 # if numeric (No, even data type is I, still would have float type
                                 if type(lvalue) is float and type(rvalue) is float:
-                                    cmp_flag = math.isclose(lvalue, rvalue) or cmp_flag
+                                    cmp_flag = math.isclose(
+                                        lvalue, rvalue) or cmp_flag
                         if not cmp_flag:
                             break
                 result_string = '\n'.join(['\t'.join(
@@ -434,7 +435,7 @@ class MySQLRunner(Runner):
 class PostgreSQLRunner(CockroachDBRunner):
     def __init__(self) -> None:
         super().__init__()
-        
+
     def set_db(self, db_name):
         self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
         self.connect("postgres")
@@ -446,7 +447,7 @@ class PostgreSQLRunner(CockroachDBRunner):
         self.close()
         dsn = "postgresql://postgres:root@localhost:5432/%s?sslmode=disable" % db_name
         self.db = dsn
-        
+
     def remove_db(self, db_name):
         self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
         self.connect("postgres")

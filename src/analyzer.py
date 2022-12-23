@@ -86,7 +86,7 @@ class TestResultAnalyzer():
         self.logs = pd.read_csv(OUTPUT_PATH['execution_log'].format(dbms))
         self.result_num = len(self.results)
 
-    def get_result_cols(self, df:pd.DataFrame = None ,column=[], length: int = -1, rand: bool = False):
+    def get_result_cols(self, df: pd.DataFrame = None, column=[], length: int = -1, rand: bool = False):
         if df is not None:
             result_df = df
         else:

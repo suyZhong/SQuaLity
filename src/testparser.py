@@ -307,14 +307,10 @@ class MYTParser(Parser):
                 record.result = result
                 
 
-    def debug(self):
-        my_debug(self.test_content)
-        my_debug(self.result_content)
-        for record in self.records:
-            my_debug(type(record))
-            my_debug(record.sql)
-            my_debug(record.result)
-        print(self.test_content)
+class PGTParser(Parser):
+    def __init__(self, filename='') -> None:
+        super().__init__(filename)
+        
 
 
 class DTParser(SLTParser):

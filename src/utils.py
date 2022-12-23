@@ -54,7 +54,7 @@ TestCaseColumns = ['INDEX',  # testcase index
                    'STATUS',  # Expected SQL execution status, 1 for Success, 2 for Failed
                    'RESULT',  # SQL execution result. For Statement it's error msg if fail
                    'DBMS',  # The dbms that can execute this test case
-                   'SUITE', # The suite that original test case came from
+                   'SUITE',  # The suite that original test case came from
                    'DATA_TYPE',  # Query only, store the require result type
                    'SORT_TYPE',  # Query only, store the required sort methods
                    'LABEL',      # Query only, store the result label
@@ -67,7 +67,7 @@ ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE
 
 OUTPUT_PATH = {
     'testcase_dir': 'data/',
-    'execution_result': 'output/{}_results.csv', # means execution db engine
+    'execution_result': 'output/{}_results.csv',  # means execution db engine
     'execution_log': 'output/{}_logs.csv'
 }
 
