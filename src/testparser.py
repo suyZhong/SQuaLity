@@ -317,6 +317,54 @@ class MYTParser(Parser):
 
 
 
+class PGTParser(MYTParser):
+    def __init__(self, filename='') -> None:
+        super().__init__(filename)
+        self.testfile = filename
+        self.resultfile = filename.replace('/sql/', '/expected/').replace('.sql','.out')
+        self.delimiter = ';'
+        
+    def get_file_name(self, filename:str):
+        self.testfile = filename
+        self.resultfile = filename.replace(
+            '/sql/', '/expected/').replace('.sql', '.out')
+    
+    def get_file_content(self):
+        super().get_file_content()
+        
+    def get_test_commands(self):
+        command = []
+        record_id = 0
+        for i, script in enumerate(self.scripts):
+            script = strip_comment_suffix(script).strip()
+            command.append(script)
+            if script.endswith(self.delimiter):
+                sql = "\n".join(command)
+                if sql.split()[0] == 'COPY':
+                    self.records.append(
+                        Control(action=RunnerAction.HALT, id=self.record_id))
+                    break
+                self.records.append(Record(sql=sql,id=record_id))
+                record_id += 1
+                command = []
+    
+    def get_test_results(self):
+        return super().get_test_results()
+    
+    def testfile_dialect_handler(self, *args, **kwargs):
+        
+        return super().testfile_dialect_handler(*args, **kwargs)
+    
+    def parse_file(self):
+        self.scripts = [script.strip() for script in self.test_content.strip().split(
+            '\n') if script != '' and not script.startswith('--')]
+        
+        # parse the test file and get commands
+        self.get_test_commands()
+        
+        # parse the output file and get test results
+        self.get_test_results()
+
 
 class DTParser(SLTParser):
     def __init__(self, filename='') -> None:
