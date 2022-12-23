@@ -266,13 +266,13 @@ class MYTParser(Parser):
             return command.split('\n')[0]
         else:
             return self.find_next_command(id + 1)
-    
+
     def parse_file(self):
         self.scripts = [script.strip() for script in self.test_content.strip().split(
             '\n') if script != '']
         record_id = 0
         command = []
-        
+
         # parse the test file and get commands
         for i, script in enumerate(self.scripts):
             if script.startswith('#'):
@@ -286,10 +286,11 @@ class MYTParser(Parser):
             else:
                 command.append(script)
                 if script.endswith(self.delimiter):
-                    self.records.append(Record(sql="\n".join(command), id=record_id))
+                    self.records.append(
+                        Record(sql="\n".join(command), id=record_id))
                     command = []
                     record_id += 1
-                    
+
         # parse the result file and get results
         for i, record in enumerate(self.records):
             if type(record) is Record:
@@ -299,18 +300,15 @@ class MYTParser(Parser):
                 next_command = self.find_next_command(record.id)
                 loc = self.result_content.find(command) + len(command) + 1
                 self.result_content = self.result_content[loc:]
-                next_loc = self.result_content.find(next_command) if next_command != "" else 0
+                next_loc = self.result_content.find(
+                    next_command) if next_command != "" else 0
                 if next_loc > 0:
                     result = self.result_content[:next_loc]
                 else:
                     result = ""
                 record.result = result
-                
 
-class PGTParser(Parser):
-    def __init__(self, filename='') -> None:
-        super().__init__(filename)
-        
+
 
 
 class DTParser(SLTParser):
