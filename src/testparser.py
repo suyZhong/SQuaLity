@@ -288,7 +288,7 @@ class MYTParser(Parser):
                         Record(sql="\n".join(command), id=record_id))
                     command = []
                     record_id += 1
-    
+
     def get_test_results(self):
         for i, record in enumerate(self.records):
             if type(record) is Record:
@@ -309,7 +309,7 @@ class MYTParser(Parser):
     def parse_file(self):
         self.scripts = [script.strip() for script in self.test_content.strip().split(
             '\n') if script != '']
-        
+
         # parse the test file and get commands
         self.get_test_commands()
 
@@ -317,28 +317,27 @@ class MYTParser(Parser):
         self.get_test_results()
 
 
-
 class PGTParser(MYTParser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.testfile = filename
-        self.resultfile = filename.replace('/sql/', '/expected/').replace('.sql','.out')
+        self.resultfile = filename.replace(
+            '/sql/', '/expected/').replace('.sql', '.out')
         self.delimiter = ';'
-        
-    def get_file_name(self, filename:str):
+
+    def get_file_name(self, filename: str):
         self.testfile = filename
         self.resultfile = filename.replace(
             '/sql/', '/expected/').replace('.sql', '.out')
-    
+
     def get_file_content(self):
         super().get_file_content()
-    
+
     def testfile_dialect_handler(self, *args, **kwargs):
-        
+
         return super().testfile_dialect_handler(*args, **kwargs)
-    
-    def parse_file(self):
-        self.records = []
+
+    def parse_file_by_differ(self):
         record_id = 0
         command = []
         result = []
@@ -351,7 +350,7 @@ class PGTParser(MYTParser):
         diff = list(test_differ.compare(test_lines, result_lines))
 
         for i, line in enumerate(diff):
-            line = line.rstrip()
+            line = line.rstrip('\n')
             # print(line)
             # print(len(self.records))
 
@@ -368,10 +367,11 @@ class PGTParser(MYTParser):
                             Record(sql=record_sql, id=record_id))
                         record_id += 1
                         command = []
-                    # Some psql features
+                    # Some psql features (postgres specific commands)
                     if tmp_command.startswith('\\'):
                         record_sql = '\n'.join(command)
-                        self.records.append(Control(sql=record_sql, id=record_id))
+                        self.records.append(
+                            Control(sql=record_sql, id=record_id))
                         record_id += 1
                         command = []
             # It is only in the result file, means it's a result
@@ -392,6 +392,65 @@ class PGTParser(MYTParser):
                 elif not diff[i + 1].startswith('- '):
                     self.records[record_id - 1].result = "\n".join(test_input)
                     test_input = []
+
+    def convert_result(self, result: str):
+        '''
+        The function convert the expected result in postgres to the more general form in SQuaLity.
+        '''
+        # convert the SELECT result to the SQuaLity row-wise format
+        print(result)
+        rows_regex = re.compile(r"\(\s*[0-9]+\s*rows?\)")
+        result_lines = result.rstrip().split('\n')
+        # if it is an error
+        if result == "":
+            return result
+        if result_lines[0].strip().startswith('ERROR'):
+            return "\n".join(result_lines)
+        elif re.match(rows_regex, result_lines[-1]):
+            # print(result_lines)
+            result_rows = int(
+                re.search(r"[0-9]+", result_lines[-1]).group())
+            value_table = result_lines[2:-1]
+            assert len(value_table) == result_rows, "the len of value table should be same with result_rows"
+            row_wise_result = "\n".join(
+                ["\t".join([item.strip() for item in row.split('|')]) for row in value_table])
+            if result_rows > 0:
+                return row_wise_result
+            else:
+                return ""
+        else:
+            logging.warning("Parsing result error: while parsing {}".format(result))
+            return None
+
+    def convert_record(self, record: Record):
+        '''
+        The function convert the expected result in postgres to the more general form in SQuaLity.
+        '''
+        converted_record = Statement(id=record.id)
+
+        converted_result = self.convert_result(record.result)
+        # Statement ok
+        if converted_result == "":
+            return Statement(sql=record.sql, id=record.id)
+        # Statement error
+        elif converted_result.startswith("ERROR"):
+            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id)
+        # Query
+        elif converted_result:
+            data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
+            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type)
+
+        return converted_record
+
+    def convert_records(self):
+        for i, record in enumerate(self.records):
+            self.records[i] = self.convert_record(record)
+
+    def parse_file(self):
+        self.records = []
+
+        self.parse_file_by_differ()
+        self.convert_records()
 
 
 class DTParser(SLTParser):

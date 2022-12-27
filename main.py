@@ -82,6 +82,8 @@ if __name__ == "__main__":
         p = testparser.DTParser()
     elif suite_name == 'squality':
         p = testparser.CSVParser()
+    elif suite_name == 'postgresql':
+        p = testparser.PGTParser()
     else:
         sys.exit("Not implement yet")
 
