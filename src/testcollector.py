@@ -57,14 +57,14 @@ def find_local_tests(db_name: str):
     db_name = db_name.lower()
 
     test_suite_dir = db_name + "_tests/"
-    if db_name == "cockroach":
+    if db_name == "cockroachdb":
         test_suite_dir += 'logic_test'
     elif db_name == "duckdb":
         return find_local_duckdb_test()
     elif db_name == "mysql":
         test_suite_dir += 'r'
-    elif db_name == "postgres":
-        test_suite_dir += 'regress/expected'
+    elif db_name == "postgresql":
+        test_suite_dir += 'regress/sql'
     elif db_name == "sqlite":
         test_suite_dir += ''
     else:

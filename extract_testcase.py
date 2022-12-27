@@ -20,9 +20,9 @@ def extract(dbms_name:str, parser:testparser.Parser, compression:bool = True):
 
         # save the records to a csv
         testcase_name = "-".join(test_file.removeprefix(
-            "{}_tests/".format(dbms_name)).replace(".test", ".csv").split('/'))
+            "{}_tests/".format(dbms_name)).replace(".test", ".csv").replace(".sql", ".csv").split('/'))
         records = parser.get_records()
-        # print(len(records))
+        print(len(records))
         
         collector.init_testcase_schema(dbms_name, testcase_name, compression)
         collector.save_records(records)
@@ -34,7 +34,7 @@ def extract(dbms_name:str, parser:testparser.Parser, compression:bool = True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--suite', choices={'sqlite', 'duckdb', 'cockroach', 'all'}, default='all')
+    parser.add_argument('-s', '--suite', choices={'sqlite', 'duckdb', 'cockroach', 'all', 'postgresql'}, default='all')
     args = parser.parse_args()
     suite = args.suite
     
@@ -57,3 +57,7 @@ if __name__ == "__main__":
     if suite == 'mysql' or suite == 'all':
         mysql_parser = testparser.MYTParser()
         extract('mysql', mysql_parser)
+        
+    if suite == 'postgresql' or suite == 'all':
+        postgres_parser = testparser.PGTParser()
+        extract('postgresql', postgres_parser, compression=False)
