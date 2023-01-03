@@ -360,6 +360,10 @@ class PGTParser(MYTParser):
         ind = 0
         result = []
         for i, command in enumerate(commands):
+            if re.match(r'^[\\]', command.strip()):
+                logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
+                self.records.append(Control(id = i))
+                break
             self.records.append(Record(sql=pure_commands[i], id = i))
             ind += len(command.split('\n'))
             while(ind <= len(diff) - 1):
@@ -446,7 +450,13 @@ class PGTParser(MYTParser):
             result_rows = int(
                 re.search(r"[0-9]+", result_lines[-1]).group())
             value_table = result_lines[2:-1]
-            assert len(value_table) == result_rows, "the len of value table should be same with result_rows"
+            # handle multiple rows
+            if len(value_table) != result_rows:
+                # empty_ind = [i for i, row in enumerate(value_table) if row.strip().endswith('+')]
+                logging.warning(
+                    "the len of value table should be same with result_rows")
+                
+            # assert len(value_table) == result_rows, "the len of value table should be same with result_rows"
             row_wise_result = "\n".join(
                 ["\t".join([item.strip() for item in row.split('|')]) for row in value_table])
             if result_rows > 0:
@@ -454,8 +464,8 @@ class PGTParser(MYTParser):
             else:
                 return ""
         else:
-            logging.warning("Parsing result error: while parsing {}".format(result))
-            return None
+            # logging.warning("Parsing result warning: while parsing {}".format(result))
+            return result
 
     def convert_record(self, record: Record):
         '''
