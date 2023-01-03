@@ -1,14 +1,17 @@
 import re
 import difflib
+import sqlparse
 from copy import copy
 import pandas as pd
 from .utils import *
 from typing import List
 
 
-def strip_comment_lines(code: str):
+def strip_hash_comment_lines(code: str):
     return re.sub(r'(?m)^ *#.*\n?', '', code)
 
+def strip_dash_comment_lines(code: str):
+    return re.sub(r'(?m)^ *--.*\n?', '', code)
 
 def strip_comment_suffix(code: str):
     return re.sub(r'--.*', '', code)
@@ -337,17 +340,49 @@ class PGTParser(MYTParser):
 
         return super().testfile_dialect_handler(*args, **kwargs)
 
-    def parse_file_by_differ(self):
-        record_id = 0
-        command = []
-        result = []
-        test_input = []
+    def get_diff(self):
         test_differ = difflib.Differ()
         test_lines = [line for line in self.test_content.splitlines(
             keepends=True) if line != '\n']
         result_lines = [line for line in self.result_content.splitlines(
             keepends=True) if line != '\n']
-        diff = list(test_differ.compare(test_lines, result_lines))
+        return list(test_differ.compare(test_lines, result_lines))
+
+    def parse_file_by_split(self):
+        commands = sqlparse.split(self.test_content)
+        commands = ['\n'.join([line for line in command.splitlines() if line]) for command in commands]
+        pure_commands = [strip_dash_comment_lines(command) for command in commands]
+        
+        diff = self.get_diff()
+        
+        # Compare with the commands parsed by sqlparse
+        # split the diff according to the line number
+        ind = 0
+        result = []
+        for i, command in enumerate(commands):
+            self.records.append(Record(sql=pure_commands[i], id = i))
+            ind += len(command.split('\n'))
+            while(ind <= len(diff) - 1):
+                line = diff[ind].rstrip('\n')
+                if line.startswith('+ '): # result
+                    ind += 1
+                    result.append(line.lstrip('+ '))
+                elif line.startswith('- '): # input, but still can store in the result attribute
+                    ind += 1
+                    result.append(line.lstrip('- '))
+                else:
+                    self.records[i].result = "\n".join(result)
+                    result = []
+                    break
+            if result:
+                self.records[i].result = "\n".join(result)
+
+    def parse_file_by_differ(self):
+        record_id = 0
+        command = []
+        result = []
+        test_input = []
+        diff = self.get_diff()
 
         for i, line in enumerate(diff):
             line = line.rstrip('\n')
@@ -398,7 +433,7 @@ class PGTParser(MYTParser):
         The function convert the expected result in postgres to the more general form in SQuaLity.
         '''
         # convert the SELECT result to the SQuaLity row-wise format
-        print(result)
+        # print(result)
         rows_regex = re.compile(r"\(\s*[0-9]+\s*rows?\)")
         result_lines = result.rstrip().split('\n')
         # if it is an error
@@ -449,7 +484,8 @@ class PGTParser(MYTParser):
     def parse_file(self):
         self.records = []
 
-        self.parse_file_by_differ()
+        # self.parse_file_by_differ()
+        self.parse_file_by_split()
         self.convert_records()
 
 
@@ -473,7 +509,7 @@ class DTParser(SLTParser):
         return super().get_file_content()
 
     def parse_script(self, script: str):
-        script = strip_comment_lines(script)
+        script = strip_hash_comment_lines(script)
         if script:
             lines = script.split('\n')
         else:
@@ -559,7 +595,7 @@ class CDBTParser(SLTParser):
         return super().get_query(tokens, lines)
 
     def parse_script(self, script: str):
-        script = strip_comment_lines(script)
+        script = strip_hash_comment_lines(script)
         if script:
             lines = script.split('\n')
         else:

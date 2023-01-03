@@ -12,6 +12,7 @@ do
     echo "Testing $dbms"
     echo "Start docker container"
     docker start $dbms-test
+    sleep 1
     echo "python3 main.py --dbms $dbms -f tempdb --log INFO >> logs/system_$dbms.log"
     python3 main.py --dbms $dbms -f tempdb --log INFO >> logs/system_$dbms.log
     docker stop $dbms-test
