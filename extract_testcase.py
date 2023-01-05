@@ -31,6 +31,7 @@ def extract(dbms_name:str, parser:testparser.Parser, compression:bool = True):
         except Exception:
             pass
         # exit(0)
+    print(parser.meta_data)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

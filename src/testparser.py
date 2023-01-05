@@ -327,6 +327,7 @@ class PGTParser(MYTParser):
         self.resultfile = filename.replace(
             '/sql/', '/expected/').replace('.sql', '.out')
         self.delimiter = ';'
+        self.meta_data = {'psql':0, 'total_files':0, 'total_testcase':0}
 
     def get_file_name(self, filename: str):
         self.testfile = filename
@@ -334,6 +335,7 @@ class PGTParser(MYTParser):
             '/sql/', '/expected/').replace('.sql', '.out')
 
     def get_file_content(self):
+        self.meta_data['total_files'] += 1
         super().get_file_content()
 
     def testfile_dialect_handler(self, *args, **kwargs):
@@ -360,8 +362,10 @@ class PGTParser(MYTParser):
         ind = 0
         result = []
         for i, command in enumerate(commands):
+            self.meta_data['total_testcase'] += 1
             if re.match(r'^[\\]', command.strip()):
                 logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
+                self.meta_data['psql'] += 1
                 self.records.append(Control(id = i))
                 break
             self.records.append(Record(sql=pure_commands[i], id = i))
