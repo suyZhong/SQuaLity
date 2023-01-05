@@ -351,8 +351,9 @@ class PGTParser(MYTParser):
         return list(test_differ.compare(test_lines, result_lines))
 
     def split_file(self):
+        test_content = self.test_content
         test_content = '\n'.join([line if not line.startswith(
-            '\\') else line.strip() + ';' for line in self.test_content.splitlines()])
+            '\\') else line.strip() + ';\n' for line in self.test_content.splitlines(keepends=True)])
         commands = sqlparse.split(test_content)
         return commands
 
@@ -373,11 +374,15 @@ class PGTParser(MYTParser):
             if re.match(r'^[\\]', command.strip()):
                 # logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
                 self.meta_data['psql_testcase'] += 1
-                self.records.append(Control(id = i))
+                if re.match(r'^[\\]quit', command.strip()):
+                    self.records.append(Control(id = i, sql = command))
+                else:
+                    self.records.append(Control(id = i, sql=command, action=RunnerAction.ECHO))
                 psql_flag = True
                 # print("psql:", command)
                 # break
-            self.records.append(Record(sql=pure_commands[i], id = i))
+            else:
+                self.records.append(Record(sql=pure_commands[i], id = i))
             ind += len(command.split('\n'))
             while(ind <= len(diff) - 1):
                 line = diff[ind].rstrip('\n')
@@ -473,8 +478,11 @@ class PGTParser(MYTParser):
                     "the len of value table should be same with result_rows")
                 
             # assert len(value_table) == result_rows, "the len of value table should be same with result_rows"
-            row_wise_result = "\n".join(
-                ["\t".join([item.strip() for item in row.split('|')]) for row in value_table])
+            row_wise_result_list = [[item.strip() for item in row.split('|')] for row in value_table]
+            row_wise_result_list = [['True' if elem == 't' else elem for elem in row] for row in row_wise_result_list]
+            row_wise_result_list = [['False' if elem == 'f' else elem for elem in row] for row in row_wise_result_list]
+            
+            row_wise_result = '\n'.join(['\t'.join(row) for row in row_wise_result_list])
             if result_rows > 0:
                 return row_wise_result
             else:
@@ -487,6 +495,10 @@ class PGTParser(MYTParser):
         '''
         The function convert the expected result in postgres to the more general form in SQuaLity.
         '''
+        # if record is control, skip
+        if type(record) == Control:
+            return record
+        
         converted_record = Statement(id=record.id)
 
         converted_result = self.convert_result(record.result)

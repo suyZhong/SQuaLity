@@ -76,7 +76,7 @@ class Runner():
             if type(record) == Control:
                 action = record.action
                 try:
-                    self.handle_control(action)
+                    self.handle_control(action, record)
                 except StopRunnerException:
                     break
 
@@ -169,11 +169,13 @@ class Runner():
     def not_allright(self):
         self.allright = False
 
-    def handle_control(self, action: RunnerAction):
+    def handle_control(self, action: RunnerAction, record: Record):
         if action == RunnerAction.HALT:
             logging.warning("halt the rest of the test cases")
             self.allright = False
             raise StopRunnerException
+        elif action == RunnerAction.ECHO:
+            logging.info(record.sql)
 
     def handle_stmt_result(self, status, record: Statement):
         # myDebug("%r %r", status, record.status)
