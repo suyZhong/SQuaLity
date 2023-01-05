@@ -327,7 +327,7 @@ class PGTParser(MYTParser):
         self.resultfile = filename.replace(
             '/sql/', '/expected/').replace('.sql', '.out')
         self.delimiter = ';'
-        self.meta_data = {'psql':0, 'total_files':0, 'total_testcase':0}
+        self.meta_data = {'psql_testcase':0, 'total_files':0, 'total_testcase':0, 'psql_files':0}
 
     def get_file_name(self, filename: str):
         self.testfile = filename
@@ -350,8 +350,14 @@ class PGTParser(MYTParser):
             keepends=True) if line != '\n']
         return list(test_differ.compare(test_lines, result_lines))
 
+    def split_file(self):
+        test_content = '\n'.join([line if not line.startswith(
+            '\\') else line.strip() + ';' for line in self.test_content.splitlines()])
+        commands = sqlparse.split(test_content)
+        return commands
+
     def parse_file_by_split(self):
-        commands = sqlparse.split(self.test_content)
+        commands = self.split_file()
         commands = ['\n'.join([line for line in command.splitlines() if line]) for command in commands]
         pure_commands = [strip_dash_comment_lines(command) for command in commands]
         
@@ -361,13 +367,16 @@ class PGTParser(MYTParser):
         # split the diff according to the line number
         ind = 0
         result = []
+        psql_flag = False
         for i, command in enumerate(commands):
             self.meta_data['total_testcase'] += 1
             if re.match(r'^[\\]', command.strip()):
-                logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
-                self.meta_data['psql'] += 1
+                # logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
+                self.meta_data['psql_testcase'] += 1
                 self.records.append(Control(id = i))
-                break
+                psql_flag = True
+                # print("psql:", command)
+                # break
             self.records.append(Record(sql=pure_commands[i], id = i))
             ind += len(command.split('\n'))
             while(ind <= len(diff) - 1):
@@ -384,6 +393,9 @@ class PGTParser(MYTParser):
                     break
             if result:
                 self.records[i].result = "\n".join(result)
+        if psql_flag:
+            self.meta_data['psql_files'] += 1
+
 
     def parse_file_by_differ(self):
         record_id = 0
