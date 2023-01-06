@@ -234,8 +234,7 @@ class Runner():
                         for j, item in enumerate(items):
                             # direct comparison
                             rvalue = actually_result_list[i][j]
-                            my_debug("lvalue = [%s], rvalue = [%s]",
-                                     item, rvalue)
+                            # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
                             cmp_flag = item is rvalue
                             cmp_flag = item == str(rvalue) or cmp_flag
                             # if DuckDB
