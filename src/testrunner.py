@@ -62,6 +62,9 @@ class Runner():
     def run(self):
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
+        # TODO make here more elegant
+        if dbms_name == 'psql':
+            dbms_name = 'postgresql'
         self.single_run_stats = {}.fromkeys(Running_Stats, 0)
         self.records_log = []
         self.exec_time = datetime.now()
@@ -551,15 +554,15 @@ class PSQLRunner(Runner):
         pass
     
     def execute_stmt(self, sql):
-        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True)
+        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True, encoding='utf-8')
         if psql_proc.stderr:
-            my_debug('execute failed {}'.format(psql_proc.stderr) )
-            raise DBEngineExcetion
+            # my_debug('execute failed {}'.format(psql_proc.stderr) )
+            raise DBEngineExcetion(psql_proc.stderr)
         
     def execute_query(self, sql:str):
-        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True)
+        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True,universal_newlines=True, encoding='utf-8')
         if psql_proc.stderr:
-            raise DBEngineExcetion
+            raise DBEngineExcetion(psql_proc.stderr)
         else:
-            my_debug(psql_proc.stdout)
-            return convert_postgres_result(psql_proc.stdout[len(sql.split('\n')):])
+            result_string = convert_postgres_result("\n".join(psql_proc.stdout.split('\n')[len(sql.split('\n')): -1]))
+            return result_string

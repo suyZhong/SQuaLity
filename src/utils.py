@@ -35,7 +35,8 @@ class StopRunnerException(Exception):
     pass
 
 class DBEngineExcetion(Exception):
-    pass
+    def __init__(self, message):
+        super().__init__(message)
 
 
 DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb'])
