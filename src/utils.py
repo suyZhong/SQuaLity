@@ -1,5 +1,6 @@
 from enum import Enum
 import logging
+import re
 import hashlib
 import pandas as pd
 
@@ -31,6 +32,9 @@ class RunnerAction(Enum):
 
 
 class StopRunnerException(Exception):
+    pass
+
+class DBEngineExcetion(Exception):
     pass
 
 
@@ -115,6 +119,45 @@ class Control(Record):
 
 def my_debug(mystr: str, *args):
     logging.debug(mystr, *args)
+
+
+def convert_postgres_result(result: str):
+    '''
+    The function convert the expected result in postgres to the more general form in SQuaLity.
+    '''
+    # convert the SELECT result to the SQuaLity row-wise format
+    # print(result)
+    rows_regex = re.compile(r"\(\s*[0-9]+\s*rows?\)")
+    result_lines = result.rstrip().split('\n')
+    # if it is an error
+    if result == "":
+        return result
+    if result_lines[0].strip().startswith('ERROR'):
+        return "\n".join(result_lines)
+    elif re.match(rows_regex, result_lines[-1]):
+        # print(result_lines)
+        result_rows = int(
+            re.search(r"[0-9]+", result_lines[-1]).group())
+        value_table = result_lines[2:-1]
+        # handle multiple rows
+        if len(value_table) != result_rows:
+            # empty_ind = [i for i, row in enumerate(value_table) if row.strip().endswith('+')]
+            logging.warning(
+                "the len of value table should be same with result_rows")
+            
+        # assert len(value_table) == result_rows, "the len of value table should be same with result_rows"
+        row_wise_result_list = [[item.strip() for item in row.split('|')] for row in value_table]
+        row_wise_result_list = [['True' if elem == 't' else elem for elem in row] for row in row_wise_result_list]
+        row_wise_result_list = [['False' if elem == 'f' else elem for elem in row] for row in row_wise_result_list]
+        
+        row_wise_result = '\n'.join(['\t'.join(row) for row in row_wise_result_list])
+        if result_rows > 0:
+            return row_wise_result
+        else:
+            return ""
+    else:
+        # logging.warning("Parsing result warning: while parsing {}".format(result))
+        return result
 
 
 class ResultHelper():

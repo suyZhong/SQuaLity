@@ -3,6 +3,7 @@ import sqlite3
 import psycopg2
 import logging
 import math
+import subprocess
 import mysql.connector
 from typing import List
 from datetime import datetime
@@ -164,7 +165,10 @@ class Runner():
             else:
                 self.single_run_stats['success_query_num'] += 1
             # print(results)
-            self.handle_query_result(results, record)
+            if type(results) == list:
+                self.handle_query_result_list(results, record)
+            else:
+                self.handle_query_result_string(results, record)
 
     def not_allright(self):
         self.allright = False
@@ -194,7 +198,33 @@ class Runner():
                 status), (datetime.now()-self.cur_time).microseconds, is_error=True)
             return False
 
-    def handle_query_result(self, results: list, record: Query):
+    def handle_query_result_string(self, results: str, record: Query):
+        result_string = results
+        expected_result = record.result
+        cmp_flag = False
+        if results == expected_result:
+            cmp_flag = True
+        else:
+            cmp_flag = False
+            
+        if cmp_flag:
+            my_debug("Query %s Success", record.sql)
+            if self.dump_all:
+                self.bug_dumper.save_state(
+                    self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
+        else:
+            self.single_run_stats['wrong_query_num'] += 1
+            logging.error(
+                "Query %s does not return expected result. \nExpected: %s\nActually: %s",
+                record.sql, record.result.strip(), result_string.strip())
+            logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
+                          record.result.strip(), result_string.strip(), results)
+            self.allright = False
+            self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now(
+            )-self.cur_time).microseconds, is_error=True)
+        
+
+    def handle_query_result_list(self, results: list, record: Query):
         result_string = ""
         cmp_flag = False
         helper = ResultHelper(results, record)
@@ -457,3 +487,79 @@ class PostgreSQLRunner(CockroachDBRunner):
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
         self.commit()
         self.close()
+
+
+class CLIRunner(Runner):
+    def __init__(self) -> None:
+        super().__init__()
+        self.cli = None
+
+    def set_db(self, db_name: str):
+        return super().set_db(db_name)
+
+    def debug(self):
+        # psql_cli = subprocess.Popen(['psql', 'postgresql://postgres:root@localhost:5432/?sslmode=disable'],
+        #                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # passwd = b'root\n'
+        # psql_cli.stdin.write(passwd)
+        # psql_cli.stdin.flush()
+        # psql_cli.communicate()
+        dbms_name = 'tempdb'
+        psql_cmd = [
+            'psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(dbms_name), '-X', '-a', '-q', '-c']
+        # psql_cmd.append(dbms_name)
+
+        queries = ['\d', 'CREATE TABLE BIT_TABLE(b BIT(11));', "INSERT INTO BIT_TABLE VALUES (B'10');",
+                   "INSERT INTO BIT_TABLE VALUES (B'00000000000');", '\d', ]
+        for query in queries:
+            # output, err = psql_cli.communicate(query)
+            psql_proc = subprocess.run(psql_cmd + [query], capture_output=True)
+            print('output:', psql_proc.stdout.decode())
+            print('error:', psql_proc.stderr.decode())
+        # psql_cli.terminate()
+
+class PSQLRunner(Runner):
+    def __init__(self) -> None:
+        super().__init__()
+        self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
+        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+            'postgres'), '-X', '-a', '-q', '-c']
+        
+    def set_db(self, db_name: str):
+        my_debug('set up db {}'.format(db_name))
+        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+            'postgres'), '-X', '-a', '-q', '-c']
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+        self.execute_stmt("CREATE DATABASE %s" % db_name)
+        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+            db_name), '-X', '-a', '-q', '-c']
+
+        
+    
+    def remove_db(self, db_name: str):
+        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+            'postgres'), '-X', '-a', '-q', '-c']
+        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
+    
+    def commit(self):
+        pass
+    
+    def close(self):
+        pass
+    
+    def connect(self, db_name):
+        pass
+    
+    def execute_stmt(self, sql):
+        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True)
+        if psql_proc.stderr:
+            my_debug('execute failed {}'.format(psql_proc.stderr) )
+            raise DBEngineExcetion
+        
+    def execute_query(self, sql:str):
+        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True)
+        if psql_proc.stderr:
+            raise DBEngineExcetion
+        else:
+            my_debug(psql_proc.stdout)
+            return convert_postgres_result(psql_proc.stdout[len(sql.split('\n')):])
