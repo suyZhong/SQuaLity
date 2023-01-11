@@ -22,16 +22,15 @@ class Runner():
         self.dump_all = False
         self.bug_dumper = None
         self.dbms_name = ""
-    
-    
-    def set_db(self, db_name:str):
+
+    def set_db(self, db_name: str):
         """Set up the Database that this test run should use
 
         Args:
             db_name (str): The database name.
-        """        
+        """
         pass
-    
+
     def get_records(self, records: List[Record], testfile_index: int, testfile_path: str):
         """get records for the test runner
 
@@ -39,39 +38,39 @@ class Runner():
             records (List[Record]): Test record, could be Statement, Query or Control
             testfile_index (int): The index of the test file among all the files
             testfile_path (str): The path of the test file
-        """        
+        """
         pass
-    
-    def connect(self, db_name:str):
+
+    def connect(self, db_name: str):
         """connect to the database instance by the file path or the database name
 
         Args:
             db_name (str): For embedded DB, it is the filepath. For C/S DB, it is the database name
-        """        
+        """
         pass
-    
+
     def run(self):
         """The core logic of the test runner
-        """        
+        """
         pass
-    
+
     def close(self):
         """close the current DB connection
-        """        
+        """
         pass
-    
+
     def commit(self):
         """commit the current changes
-        """        
+        """
         pass
-    
+
     def running_summary(self, test_name, running_time):
         """Summary the running stats and output to the stdout
 
         Args:
             test_name (_type_): Test case name
             running_time (_type_): the running time of the execution
-        """        
+        """
         if test_name == "ALL":
             stats = self.all_run_stats
 
@@ -91,24 +90,24 @@ class Runner():
         print("Wrong SQL statement: ", stats['wrong_stmt_num'])
         print("Wrong SQL query: ", stats['wrong_query_num'])
         print("-------------------------------------------", flush=True)
-    
+
     def init_dumper(self, dump_all=False):
         """init the bug dumper in the test runner
 
         Args:
             dump_all (bool, optional): Decide whether should dump all the information but not only the bugs. Defaults to False.
-        """        
+        """
         self.dump_all = dump_all
         self.bug_dumper = BugDumper(self.dbms_name, dump_all)
-    
+
     def dump(self, mode='a'):
         """Dump the results and logs
 
         Args:
             mode (str, optional): a means add, 'w' means cover write. Defaults to 'a'.
-        """        
+        """
         self.bug_dumper.dump_to_csv(self.dbms_name, mode=mode)
-    
+
 
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
@@ -145,8 +144,6 @@ class PyDBCRunner(Runner):
             except:
                 logging.error("No such file or directory: %s", self.db)
 
-
-
     def run(self):
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
@@ -175,7 +172,7 @@ class PyDBCRunner(Runner):
             self._single_run(record)
             self.end_time = datetime.now()
             exec_time = (self.end_time-self.cur_time).seconds
-            
+
             # If some SQL query too slow
             if exec_time > self.MAX_RUNTIME_PERSQL:
                 logging.warning("Time Exceed - %d" % exec_time)
@@ -278,7 +275,7 @@ class PyDBCRunner(Runner):
             cmp_flag = True
         else:
             cmp_flag = False
-            
+
         if cmp_flag:
             my_debug("Query %s Success", record.sql)
             if self.dump_all:
@@ -294,7 +291,6 @@ class PyDBCRunner(Runner):
             self.allright = False
             self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now(
             )-self.cur_time).microseconds, is_error=True)
-        
 
     def handle_query_result_list(self, results: list, record: Query):
         result_string = ""
@@ -576,13 +572,14 @@ class CLIRunner(Runner):
         self.sql = []
         for record in self.records:
             self.sql.append(record.sql + ';\n')
-            
-    def handle_results(self, output:str):
+
+    def handle_results(self, output: str):
         pass
 
     def run(self):
         self.extract_sql()
-        self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8',universal_newlines=True)
+        self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
         for i, sql in enumerate(self.sql):
             self.cli.stdin.write(self.res_delimiter)
             self.cli.stdin.write(sql)
@@ -595,13 +592,13 @@ class CLIRunner(Runner):
         psql_cmd = [
             'psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(dbms_name), '-X', '-a', '-q']
         psql_cli = subprocess.Popen(['psql', 'postgresql://postgres:root@localhost:5432/?sslmode=disable', '-X', '-q'],
-                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,encoding='utf-8', universal_newlines=True)
+                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
 
         queries = ['\d\n', 'CREATE TABLE BIT_TABLE(b BIT(11));\n', "INSERT INTO BIT_TABLE VALUES (B'10');\n",
                    "INSERT INTO BIT_TABLE VALUES (B'00000000000');\n", '\d\n', 'CREATE TABLE large_table (id INT, data TEXT);\n', '\d\n']
         # for i in range(1,10000):
         #     queries.append("\echo ----------")
-        
+
         for i, query in enumerate(tqdm(queries)):
             # print(query)
             psql_cli.stdin.write('\echo {}---------------\n'.format(i))
@@ -614,13 +611,14 @@ class CLIRunner(Runner):
         print('error:', err)
         psql_cli.terminate()
 
+
 class PSQLRunner(CLIRunner):
     def __init__(self) -> None:
         super().__init__()
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
-        
+
     def set_db(self, db_name: str):
         my_debug('set up db {}'.format(db_name))
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
@@ -630,32 +628,33 @@ class PSQLRunner(CLIRunner):
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             db_name), '-X', '-a', '-q', '-c']
 
-        
-    
     def remove_db(self, db_name: str):
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
-    
+
     def commit(self):
         pass
-    
+
     def close(self):
         pass
-    
+
     def connect(self, db_name):
         pass
-    
+
     def execute_stmt(self, sql):
-        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True, encoding='utf-8')
+        psql_proc = subprocess.run(
+            self.cmd + [sql], capture_output=True, encoding='utf-8')
         if psql_proc.stderr:
             # my_debug('execute failed {}'.format(psql_proc.stderr) )
             raise DBEngineExcetion(psql_proc.stderr)
-        
-    def execute_query(self, sql:str):
-        psql_proc = subprocess.run(self.cmd + [sql], capture_output=True,universal_newlines=True, encoding='utf-8')
+
+    def execute_query(self, sql: str):
+        psql_proc = subprocess.run(
+            self.cmd + [sql], capture_output=True, universal_newlines=True, encoding='utf-8')
         if psql_proc.stderr:
             raise DBEngineExcetion(psql_proc.stderr)
         else:
-            result_string = convert_postgres_result("\n".join(psql_proc.stdout.split('\n')[len(sql.split('\n')): -1]))
+            result_string = convert_postgres_result(
+                "\n".join(psql_proc.stdout.split('\n')[len(sql.split('\n')): -1]))
             return result_string
