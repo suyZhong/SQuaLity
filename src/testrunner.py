@@ -17,6 +17,7 @@ from .bugdumper import BugDumper
 
 class Runner():
     def __init__(self) -> None:
+        self.records:List[Record] = []
         self.all_run_stats = {}.fromkeys(Running_Stats, 0)
         self.single_run_stats = {}.fromkeys(Running_Stats, 0)
         self.dump_all = False
@@ -29,7 +30,13 @@ class Runner():
         Args:
             db_name (str): The database name.
         """
-        pass
+
+    def remove_db(self, db_name: str):
+        """Remove the temp database
+
+        Args:
+            db_name (str): The database name
+        """
 
     def get_records(self, records: List[Record], testfile_index: int, testfile_path: str):
         """get records for the test runner
@@ -39,7 +46,6 @@ class Runner():
             testfile_index (int): The index of the test file among all the files
             testfile_path (str): The path of the test file
         """
-        pass
 
     def connect(self, db_name: str):
         """connect to the database instance by the file path or the database name
@@ -47,22 +53,18 @@ class Runner():
         Args:
             db_name (str): For embedded DB, it is the filepath. For C/S DB, it is the database name
         """
-        pass
 
     def run(self):
         """The core logic of the test runner
         """
-        pass
 
     def close(self):
         """close the current DB connection
         """
-        pass
 
     def commit(self):
         """commit the current changes
         """
-        pass
 
     def running_summary(self, test_name, running_time):
         """Summary the running stats and output to the stdout
@@ -115,7 +117,6 @@ class PyDBCRunner(Runner):
 
     def __init__(self) -> None:
         super().__init__()
-        self.records = []
         self.hash_threshold = 8
         self.allright = True
         self.db_error = Exception
@@ -392,8 +393,8 @@ class SQLiteRunner(PyDBCRunner):
         self.con = None
         self.cur = None
 
-    def connect(self, file_path):
-        logging.info("connect to db %s", file_path)
+    def connect(self, db_name):
+        logging.info("connect to db %s", db_name)
         self.con = sqlite3.connect(self.db)
         self.cur = self.con.cursor()
 
@@ -417,8 +418,8 @@ class DuckDBRunner(PyDBCRunner):
         self.con = None
         # self.db_error = (duckdb.ProgrammingError, duckdb.DataError, duckdb.IOException,duckdb.PermissionException)
 
-    def connect(self, file_path):
-        logging.info("connect to db %s", file_path)
+    def connect(self, db_name):
+        logging.info("connect to db %s", db_name)
         self.con = duckdb.connect(database=self.db)
 
     def close(self):
@@ -573,8 +574,11 @@ class CLIRunner(Runner):
         for record in self.records:
             self.sql.append(record.sql + ';\n')
 
-    def handle_results(self, output: str):
-        pass
+    def handle_results(self, output: List[str]):
+        for i, result in enumerate(output):
+            record = self.records[i]
+            expected_result = record.result
+            
 
     def run(self):
         self.extract_sql()
@@ -585,7 +589,9 @@ class CLIRunner(Runner):
             self.cli.stdin.write(sql)
             self.cli.stdin.flush()
         output, _ = self.cli.communicate()
-        self.handle_results(output)
+        output_list = output.split(self.res_delimiter)[1:]
+        assert len(output_list) == i, "The length of result list should be equal to the commands have executed"
+        self.handle_results(output_list)
 
     def debug(self):
         dbms_name = 'tempdb'
@@ -594,14 +600,14 @@ class CLIRunner(Runner):
         psql_cli = subprocess.Popen(['psql', 'postgresql://postgres:root@localhost:5432/?sslmode=disable', '-X', '-q'],
                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
 
-        queries = ['\d\n', 'CREATE TABLE BIT_TABLE(b BIT(11));\n', "INSERT INTO BIT_TABLE VALUES (B'10');\n",
-                   "INSERT INTO BIT_TABLE VALUES (B'00000000000');\n", '\d\n', 'CREATE TABLE large_table (id INT, data TEXT);\n', '\d\n']
+        queries = ['\\d\n', 'CREATE TABLE BIT_TABLE(b BIT(11));\n', "INSERT INTO BIT_TABLE VALUES (B'10');\n",
+                   "INSERT INTO BIT_TABLE VALUES (B'00000000000');\n", '\\d\n', 'CREATE TABLE large_table (id INT, data TEXT);\n', '\\d\n']
         # for i in range(1,10000):
         #     queries.append("\echo ----------")
 
         for i, query in enumerate(tqdm(queries)):
             # print(query)
-            psql_cli.stdin.write('\echo {}---------------\n'.format(i))
+            psql_cli.stdin.write('\\echo {}---------------\n'.format(i))
             psql_cli.stdin.write(query)
             psql_cli.stdin.flush()
             # print(psql_cli.stdout.read())
