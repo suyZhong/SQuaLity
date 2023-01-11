@@ -382,7 +382,7 @@ class PGTParser(MYTParser):
                 # print("psql:", command)
                 # break
             else:
-                self.records.append(Record(sql=pure_commands[i], id = i))
+                self.records.append(Record(sql=pure_commands[i].strip(';'), id = i))
             ind += len(command.split('\n'))
             while(ind <= len(diff) - 1):
                 line = diff[ind].rstrip('\n')
