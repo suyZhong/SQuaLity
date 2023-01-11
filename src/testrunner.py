@@ -8,6 +8,7 @@ import mysql.connector
 from typing import List
 from datetime import datetime
 from copy import copy
+from tqdm import tqdm
 
 import duckdb
 from .utils import *
@@ -87,6 +88,8 @@ class Runner():
             self._single_run(record)
             self.end_time = datetime.now()
             exec_time = (self.end_time-self.cur_time).seconds
+            
+            # If some SQL query too slow
             if exec_time > self.MAX_RUNTIME_PERSQL:
                 logging.warning("Time Exceed - %d" % exec_time)
                 self.bug_dumper.save_state(self.records_log, record, "Time Exceed - %d" % exec_time,
@@ -496,32 +499,56 @@ class CLIRunner(Runner):
     def __init__(self) -> None:
         super().__init__()
         self.cli = None
+        self.sql = []
+        self.cmd = []
+        self.res_delimiter = '------'
 
     def set_db(self, db_name: str):
         return super().set_db(db_name)
 
+    def extract_sql(self):
+        self.sql = []
+        for record in self.records:
+            self.sql.append(record.sql + ';\n')
+            
+    def handle_results(self, output:str):
+        pass
+
+    def run(self):
+        self.extract_sql()
+        self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8',universal_newlines=True)
+        for i, sql in enumerate(self.sql):
+            self.cli.stdin.write(self.res_delimiter)
+            self.cli.stdin.write(sql)
+            self.cli.stdin.flush()
+        output, _ = self.cli.communicate()
+        self.handle_results(output)
+
     def debug(self):
-        # psql_cli = subprocess.Popen(['psql', 'postgresql://postgres:root@localhost:5432/?sslmode=disable'],
-        #                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # passwd = b'root\n'
-        # psql_cli.stdin.write(passwd)
-        # psql_cli.stdin.flush()
-        # psql_cli.communicate()
         dbms_name = 'tempdb'
         psql_cmd = [
-            'psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(dbms_name), '-X', '-a', '-q', '-c']
-        # psql_cmd.append(dbms_name)
+            'psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(dbms_name), '-X', '-a', '-q']
+        psql_cli = subprocess.Popen(['psql', 'postgresql://postgres:root@localhost:5432/?sslmode=disable', '-X', '-q'],
+                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,encoding='utf-8', universal_newlines=True)
 
-        queries = ['\d', 'CREATE TABLE BIT_TABLE(b BIT(11));', "INSERT INTO BIT_TABLE VALUES (B'10');",
-                   "INSERT INTO BIT_TABLE VALUES (B'00000000000');", '\d', ]
-        for query in queries:
-            # output, err = psql_cli.communicate(query)
-            psql_proc = subprocess.run(psql_cmd + [query], capture_output=True)
-            print('output:', psql_proc.stdout.decode())
-            print('error:', psql_proc.stderr.decode())
-        # psql_cli.terminate()
+        queries = ['\d\n', 'CREATE TABLE BIT_TABLE(b BIT(11));\n', "INSERT INTO BIT_TABLE VALUES (B'10');\n",
+                   "INSERT INTO BIT_TABLE VALUES (B'00000000000');\n", '\d\n', 'CREATE TABLE large_table (id INT, data TEXT);\n', '\d\n']
+        # for i in range(1,10000):
+        #     queries.append("\echo ----------")
+        
+        for i, query in enumerate(tqdm(queries)):
+            # print(query)
+            psql_cli.stdin.write('\echo {}---------------\n'.format(i))
+            psql_cli.stdin.write(query)
+            psql_cli.stdin.flush()
+            # print(psql_cli.stdout.read())
+            # psql_proc = subprocess.run(psql_cmd + [query], capture_output=True)
+        output, err = psql_cli.communicate()
+        print('output len:\n', output)
+        print('error:', err)
+        psql_cli.terminate()
 
-class PSQLRunner(Runner):
+class PSQLRunner(CLIRunner):
     def __init__(self) -> None:
         super().__init__()
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
