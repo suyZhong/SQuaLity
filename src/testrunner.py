@@ -16,33 +16,121 @@ from .bugdumper import BugDumper
 
 
 class Runner():
+    def __init__(self) -> None:
+        self.all_run_stats = {}.fromkeys(Running_Stats, 0)
+        self.single_run_stats = {}.fromkeys(Running_Stats, 0)
+        self.dump_all = False
+        self.bug_dumper = None
+        self.dbms_name = ""
+    
+    
+    def set_db(self, db_name:str):
+        """Set up the Database that this test run should use
+
+        Args:
+            db_name (str): The database name.
+        """        
+        pass
+    
+    def get_records(self, records: List[Record], testfile_index: int, testfile_path: str):
+        """get records for the test runner
+
+        Args:
+            records (List[Record]): Test record, could be Statement, Query or Control
+            testfile_index (int): The index of the test file among all the files
+            testfile_path (str): The path of the test file
+        """        
+        pass
+    
+    def connect(self, db_name:str):
+        """connect to the database instance by the file path or the database name
+
+        Args:
+            db_name (str): For embedded DB, it is the filepath. For C/S DB, it is the database name
+        """        
+        pass
+    
+    def run(self):
+        """The core logic of the test runner
+        """        
+        pass
+    
+    def close(self):
+        """close the current DB connection
+        """        
+        pass
+    
+    def commit(self):
+        """commit the current changes
+        """        
+        pass
+    
+    def running_summary(self, test_name, running_time):
+        """Summary the running stats and output to the stdout
+
+        Args:
+            test_name (_type_): Test case name
+            running_time (_type_): the running time of the execution
+        """        
+        if test_name == "ALL":
+            stats = self.all_run_stats
+
+        else:
+            stats = self.single_run_stats
+        print("-------------------------------------------")
+        print("Testing DBMS: %s" %
+              type(self).__name__.lower().removesuffix("runner"))
+        print("Test Case: %s" % test_name)
+        print("Total execute SQL: ", stats['total_sql'])
+        print("Total execution time: %ds" % running_time)
+        print("Total SQL statement: ", stats['statement_num'])
+        print("Total SQL query: ", stats['query_num'])
+        print("Failed SQL statement: ", stats['failed_statement_num'])
+        print("Failed SQL query: ", stats['failed_query_num'])
+        print("Success SQL query: ", stats['success_query_num'])
+        print("Wrong SQL statement: ", stats['wrong_stmt_num'])
+        print("Wrong SQL query: ", stats['wrong_query_num'])
+        print("-------------------------------------------", flush=True)
+    
+    def init_dumper(self, dump_all=False):
+        """init the bug dumper in the test runner
+
+        Args:
+            dump_all (bool, optional): Decide whether should dump all the information but not only the bugs. Defaults to False.
+        """        
+        self.dump_all = dump_all
+        self.bug_dumper = BugDumper(self.dbms_name, dump_all)
+    
+    def dump(self, mode='a'):
+        """Dump the results and logs
+
+        Args:
+            mode (str, optional): a means add, 'w' means cover write. Defaults to 'a'.
+        """        
+        self.bug_dumper.dump_to_csv(self.dbms_name, mode=mode)
+    
+
+class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
     MAX_RUNTIME_PERSQL = 10
 
     def __init__(self) -> None:
+        super().__init__()
         self.records = []
         self.hash_threshold = 8
         self.allright = True
-        self.all_run_stats = {}.fromkeys(Running_Stats, 0)
-        self.single_run_stats = {}.fromkeys(Running_Stats, 0)
         self.db_error = Exception
         self.db = ":memory:"
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.records_log = []
         self.log_level = logging.root.level
         self.exec_time = 0
-        self.dump_all = False
-        self.bug_dumper = None
         self.result_helper = None
         self.cur_time = datetime.now()
         self.end_time = datetime.now()
         self.testfile_index = 0
         self.testfile_path = ""
         self.labels = {}
-
-    def init_dumper(self, dump_all=False):
-        self.dump_all = dump_all
-        self.bug_dumper = BugDumper(self.dbms_name, dump_all)
 
     def set_db(self, db_name: str):
         if not db_name.startswith(":memory:"):
@@ -57,8 +145,7 @@ class Runner():
             except:
                 logging.error("No such file or directory: %s", self.db)
 
-    def dump(self, mode='a'):
-        self.bug_dumper.dump_to_csv(self.dbms_name, mode=mode)
+
 
     def run(self):
         class_name = type(self).__name__
@@ -97,27 +184,6 @@ class Runner():
                 break
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
-
-    def running_summary(self, test_name, running_time):
-        if test_name == "ALL":
-            stats = self.all_run_stats
-
-        else:
-            stats = self.single_run_stats
-        print("-------------------------------------------")
-        print("Testing DBMS: %s" %
-              type(self).__name__.lower().removesuffix("runner"))
-        print("Test Case: %s" % test_name)
-        print("Total execute SQL: ", stats['total_sql'])
-        print("Total execution time: %ds" % running_time)
-        print("Total SQL statement: ", stats['statement_num'])
-        print("Total SQL query: ", stats['query_num'])
-        print("Failed SQL statement: ", stats['failed_statement_num'])
-        print("Failed SQL query: ", stats['failed_query_num'])
-        print("Success SQL query: ", stats['success_query_num'])
-        print("Wrong SQL statement: ", stats['wrong_stmt_num'])
-        print("Wrong SQL query: ", stats['wrong_query_num'])
-        print("-------------------------------------------", flush=True)
 
     def get_records(self, records: List[Record], testfile_index: int, testfile_path: str):
         self.allright = True
@@ -324,7 +390,7 @@ class Runner():
             # self.bug_dumper.print_state()
 
 
-class SQLiteRunner(Runner):
+class SQLiteRunner(PyDBCRunner):
     def __init__(self) -> None:
         super().__init__()
         self.con = None
@@ -349,7 +415,7 @@ class SQLiteRunner(Runner):
         self.con.commit()
 
 
-class DuckDBRunner(Runner):
+class DuckDBRunner(PyDBCRunner):
     def __init__(self) -> None:
         super().__init__()
         self.con = None
@@ -375,7 +441,7 @@ class DuckDBRunner(Runner):
         # self.con.fetchall()
 
 
-class CockroachDBRunner(Runner):
+class CockroachDBRunner(PyDBCRunner):
     def __init__(self) -> None:
         super().__init__()
         self.con = None
@@ -421,7 +487,7 @@ class CockroachDBRunner(Runner):
         self.con.commit()
 
 
-class MySQLRunner(Runner):
+class MySQLRunner(PyDBCRunner):
     def __init__(self) -> None:
         super().__init__()
         self.cur = None
