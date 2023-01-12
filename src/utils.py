@@ -39,7 +39,7 @@ class DBEngineExcetion(Exception):
         super().__init__(message)
 
 
-DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb'])
+DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb', 'psql'])
 Suite_Set = set(['mysql', 'sqlite', 'postgresql',
                 'duckdb', 'cockroachdb', 'squality'])
 

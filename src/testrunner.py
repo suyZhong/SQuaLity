@@ -49,6 +49,12 @@ class Runner():
             testfile_index (int): The index of the test file among all the files
             testfile_path (str): The path of the test file
         """
+        self.allright = True
+        self.records = records
+        self.testfile_index = testfile_index
+        self.testfile_path = testfile_path
+        self.bug_dumper.get_testfile_data(testfile_index=testfile_index,
+                                          testfile_path=testfile_path)
 
     def connect(self, db_name: str):
         """connect to the database instance by the file path or the database name
@@ -135,9 +141,12 @@ class Runner():
             "Statement %s does not behave as expected", stmt.sql)
         self.allright = False
         if 'err_msg' in kwargs:
-            self.bug_dumper.save_state(self.records_log, stmt, str(status), (datetime.now()-self.cur_time).microseconds, is_error=True, msg=kwargs['err_msg'])
+            self.bug_dumper.save_state(self.records_log, stmt, str(status), (datetime.now(
+            )-self.cur_time).microseconds, is_error=True, msg=kwargs['err_msg'])
         else:
-            self.bug_dumper.save_state(self.records_log, stmt, str(status), (datetime.now()-self.cur_time).microseconds, is_error=True)
+            self.bug_dumper.save_state(self.records_log, stmt, str(
+                status), (datetime.now()-self.cur_time).microseconds, is_error=True)
+
 
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
@@ -208,14 +217,6 @@ class PyDBCRunner(Runner):
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
 
-    def get_records(self, records: List[Record], testfile_index: int, testfile_path: str):
-        self.allright = True
-        self.records = records
-        self.testfile_index = testfile_index
-        self.testfile_path = testfile_path
-        self.bug_dumper.get_testfile_data(testfile_index=testfile_index,
-                                          testfile_path=testfile_path)
-
     def execute_stmt(self, sql):
         pass
 
@@ -277,7 +278,7 @@ class PyDBCRunner(Runner):
         elif action == RunnerAction.ECHO:
             logging.info(record.sql)
 
-    def handle_stmt_result(self, status, record: Statement, err_msg:Exception=None):
+    def handle_stmt_result(self, status, record: Statement, err_msg: Exception = None):
         # myDebug("%r %r", status, record.status)
         if status == record.status:
             logging.debug(record.sql + " Success")
@@ -286,7 +287,8 @@ class PyDBCRunner(Runner):
                     status), (datetime.now()-self.cur_time).microseconds, err_msg=str(err_msg))
             return True
         else:
-            self.handle_wrong_stmt(stmt=record, status=status, err_msg=str(err_msg))
+            self.handle_wrong_stmt(
+                stmt=record, status=status, err_msg=str(err_msg))
             return False
 
     def handle_query_result_string(self, results: str, record: Query):
@@ -381,7 +383,8 @@ class PyDBCRunner(Runner):
                 self.bug_dumper.save_state(
                     self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
         elif record.label != '':
-            self.handle_wrong_query(query=record, result=result_string, label=record.label)
+            self.handle_wrong_query(
+                query=record, result=result_string, label=record.label)
         else:
             self.handle_wrong_query(query=record, result=result_string)
 
@@ -564,9 +567,7 @@ class CLIRunner(Runner):
         self.sql = []
         self.cmd = []
         self.res_delimiter = '------'
-
-    def set_db(self, db_name: str):
-        return super().set_db(db_name)
+        self.echo = ''
 
     def extract_sql(self):
         self.sql = []
@@ -577,24 +578,43 @@ class CLIRunner(Runner):
         for i, result in enumerate(output):
             record = self.records[i]
             expected_result = record.result
-            if expected_result != result:
-                logging.error(
-                    "Query %s does not return expected result. \nExpected: %s\nActually: %s",
-                    record.sql, expected_result.strip(), result)
-                logging.debug()
+            actually_result = convert_postgres_result(result.strip('\n'))
+            if type(record) == Statement:
+                self.single_run_stats['statement_num'] += 1
+                if expected_result == actually_result:
+                    logging.debug("Statement {} Success".format(record.sql))
+                    if self.dump_all:
+                        self.bug_dumper.save_state(
+                            self.records_log, record, str(record.status), 0, msg=actually_result)
+                else:
+                    self.handle_wrong_stmt(record, actually_result)
+            elif type(record) == Query:
+                self.single_run_stats['query_num'] += 1
+                if expected_result == actually_result:
+                    my_debug("Query {} Success", record.sql)
+                    if self.dump_all:
+                        self.bug_dumper.save_state(
+                            self.records_log, record, actually_result, 0)
+                else:
+                    # TODO we should know if the query success or failed.
+                    self.handle_wrong_query(record, actually_result)
 
     def run(self):
+        self.single_run_stats = {}.fromkeys(Running_Stats, 0)
+        self.records_log = []
         self.extract_sql()
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
+        i = 0
         for i, sql in enumerate(self.sql):
-            self.cli.stdin.write(self.res_delimiter)
+            self.cli.stdin.write(self.echo.format(self.res_delimiter))
             self.cli.stdin.write(sql)
             self.cli.stdin.flush()
         output, _ = self.cli.communicate()
         output_list = output.split(self.res_delimiter)[1:]
+        my_debug(output)
         assert len(
-            output_list) == i, "The length of result list should be equal to the commands have executed"
+            output_list) == i + 1, "The length of result list should be equal to the commands have executed"
         self.handle_results(output_list)
 
     def debug(self):
@@ -623,6 +643,16 @@ class CLIRunner(Runner):
 
 
 class PSQLRunner(CLIRunner):
+    def __init__(self) -> None:
+        super().__init__()
+        self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
+        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+            'postgres'), '-X', '-q']
+        self.res_delimiter = "*-------------*"
+        self.echo = "\\echo {}\n"
+
+
+class PSQLSingleRunner(CLIRunner):
     def __init__(self) -> None:
         super().__init__()
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"

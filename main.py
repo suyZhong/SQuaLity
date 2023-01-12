@@ -70,7 +70,8 @@ if __name__ == "__main__":
     elif dbms_name == 'mysql':
         r = testrunner.MySQLRunner()
     elif dbms_name == 'postgresql':
-        # r = testrunner.PostgreSQLRunner()
+        r = testrunner.PostgreSQLRunner()
+    elif dbms_name == 'psql':
         r = testrunner.PSQLRunner()
     else:
         sys.exit("Not implement yet")
@@ -113,7 +114,7 @@ if __name__ == "__main__":
         logging.info("running %s", test_file)
         try:
             r.run()
-        except r.db_error as e:
+        except Exception as e:
             logging.critical(
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
             logging.debug(traceback.format_exc())
