@@ -68,7 +68,7 @@ TestCaseColumns = ['INDEX',  # testcase index
 
 ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
                  'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT',
-                 'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'LOGS_INDEX']
+                 'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'ERROR_MSG', 'LOGS_INDEX']
 
 OUTPUT_PATH = {
     'testcase_dir': 'data/',

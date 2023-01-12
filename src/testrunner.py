@@ -17,12 +17,15 @@ from .bugdumper import BugDumper
 
 class Runner():
     def __init__(self) -> None:
-        self.records:List[Record] = []
+        self.records: List[Record] = []
+        self.records_log = []
         self.all_run_stats = {}.fromkeys(Running_Stats, 0)
         self.single_run_stats = {}.fromkeys(Running_Stats, 0)
         self.dump_all = False
         self.bug_dumper = None
         self.dbms_name = ""
+        self.cur_time = datetime.now()
+        self.end_time = datetime.now()
 
     def set_db(self, db_name: str):
         """Set up the Database that this test run should use
@@ -110,6 +113,31 @@ class Runner():
         """
         self.bug_dumper.dump_to_csv(self.dbms_name, mode=mode)
 
+    def handle_wrong_query(self, query: Query, result: str, **kwargs):
+        self.single_run_stats['wrong_query_num'] += 1
+        if 'label' in kwargs:
+            logging.error(
+                "Query %s does not return expected result. The Expected result is not equal to %s's result", query.sql, query.label)
+        else:
+            logging.error(
+                "Query %s does not return expected result. \nExpected: %s\nActually: %s",
+                query.sql, query.result.strip(), result.strip())
+            logging.debug("Expected:\n %s\n Actually:\n %s\n",
+                          query.result.strip(), result.strip())
+        self.allright = False
+        self.bug_dumper.save_state(self.records_log, query, result, (datetime.now(
+        )-self.cur_time).microseconds, is_error=True)
+        # self.bug_dumper.print_state()
+
+    def handle_wrong_stmt(self, stmt: Statement, status: str, **kwargs):
+        self.single_run_stats['wrong_stmt_num'] += 1
+        logging.error(
+            "Statement %s does not behave as expected", stmt.sql)
+        self.allright = False
+        if 'err_msg' in kwargs:
+            self.bug_dumper.save_state(self.records_log, stmt, str(status), (datetime.now()-self.cur_time).microseconds, is_error=True, msg=kwargs['err_msg'])
+        else:
+            self.bug_dumper.save_state(self.records_log, stmt, str(status), (datetime.now()-self.cur_time).microseconds, is_error=True)
 
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
@@ -122,12 +150,9 @@ class PyDBCRunner(Runner):
         self.db_error = Exception
         self.db = ":memory:"
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
-        self.records_log = []
         self.log_level = logging.root.level
         self.exec_time = 0
         self.result_helper = None
-        self.cur_time = datetime.now()
-        self.end_time = datetime.now()
         self.testfile_index = 0
         self.testfile_path = ""
         self.labels = {}
@@ -177,8 +202,8 @@ class PyDBCRunner(Runner):
             # If some SQL query too slow
             if exec_time > self.MAX_RUNTIME_PERSQL:
                 logging.warning("Time Exceed - %d" % exec_time)
-                self.bug_dumper.save_state(self.records_log, record, "Time Exceed - %d" % exec_time,
-                                           execution_time=(self.end_time-self.cur_time).microseconds, is_error=True)
+                self.bug_dumper.save_state(self.records_log, record, str(True),
+                                           execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(exec_time))
                 break
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
@@ -208,6 +233,7 @@ class PyDBCRunner(Runner):
         if type(record) is Statement:
             self.single_run_stats['statement_num'] += 1
             status = True
+            except_msg = None
             try:
                 self.execute_stmt(record.sql)
             except self.db_error as except_msg:
@@ -215,7 +241,7 @@ class PyDBCRunner(Runner):
                 self.single_run_stats['failed_statement_num'] += 1
                 logging.debug(
                     "Statement %s execution error: %s", record.sql, except_msg)
-            self.handle_stmt_result(status, record)
+            self.handle_stmt_result(status, record, except_msg)
             self.commit()
             if status:
                 self.records_log.append(record)
@@ -229,8 +255,8 @@ class PyDBCRunner(Runner):
                 logging.debug("Query %s execution error: %s",
                               record.sql, except_msg)
                 self.commit()
-                self.bug_dumper.save_state(self.records_log, record, "Execution Failed: %s" % except_msg, (
-                    datetime.now()-self.cur_time).microseconds, is_error=True)
+                self.bug_dumper.save_state(self.records_log, record, str(False), (
+                    datetime.now()-self.cur_time).microseconds, is_error=True, msg="Execution Failed: {}".format(except_msg))
                 return
             else:
                 self.single_run_stats['success_query_num'] += 1
@@ -251,21 +277,16 @@ class PyDBCRunner(Runner):
         elif action == RunnerAction.ECHO:
             logging.info(record.sql)
 
-    def handle_stmt_result(self, status, record: Statement):
+    def handle_stmt_result(self, status, record: Statement, err_msg:Exception=None):
         # myDebug("%r %r", status, record.status)
         if status == record.status:
             logging.debug(record.sql + " Success")
             if self.dump_all:
                 self.bug_dumper.save_state(self.records_log, record, str(
-                    status), (datetime.now()-self.cur_time).microseconds)
+                    status), (datetime.now()-self.cur_time).microseconds, err_msg=str(err_msg))
             return True
         else:
-            self.single_run_stats['wrong_stmt_num'] += 1
-            logging.error(
-                "Statement %s does not behave as expected", record.sql)
-            self.allright = False
-            self.bug_dumper.save_state(self.records_log, record, str(
-                status), (datetime.now()-self.cur_time).microseconds, is_error=True)
+            self.handle_wrong_stmt(stmt=record, status=status, err_msg=str(err_msg))
             return False
 
     def handle_query_result_string(self, results: str, record: Query):
@@ -283,15 +304,7 @@ class PyDBCRunner(Runner):
                 self.bug_dumper.save_state(
                     self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
         else:
-            self.single_run_stats['wrong_query_num'] += 1
-            logging.error(
-                "Query %s does not return expected result. \nExpected: %s\nActually: %s",
-                record.sql, record.result.strip(), result_string.strip())
-            logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
-                          record.result.strip(), result_string.strip(), results)
-            self.allright = False
-            self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now(
-            )-self.cur_time).microseconds, is_error=True)
+            self.handle_wrong_query(record, result_string)
 
     def handle_query_result_list(self, results: list, record: Query):
         result_string = ""
@@ -368,23 +381,9 @@ class PyDBCRunner(Runner):
                 self.bug_dumper.save_state(
                     self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
         elif record.label != '':
-            self.single_run_stats['wrong_query_num'] += 1
-            logging.error(
-                "Query %s does not return expected result. The Expected result is not equal to %s's result", record.sql, record.label)
-            self.allright = False
-            self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now(
-            )-self.cur_time).microseconds, is_error=True)
+            self.handle_wrong_query(query=record, result=result_string, label=record.label)
         else:
-            self.single_run_stats['wrong_query_num'] += 1
-            logging.error(
-                "Query %s does not return expected result. \nExpected: %s\nActually: %s",
-                record.sql, record.result.strip(), result_string.strip())
-            logging.debug("Expected:\n %s\n Actually:\n %s\nReturn Table:\n %s\n",
-                          record.result.strip(), result_string.strip(), results)
-            self.allright = False
-            self.bug_dumper.save_state(self.records_log, record, result_string, (datetime.now(
-            )-self.cur_time).microseconds, is_error=True)
-            # self.bug_dumper.print_state()
+            self.handle_wrong_query(query=record, result=result_string)
 
 
 class SQLiteRunner(PyDBCRunner):
@@ -578,7 +577,11 @@ class CLIRunner(Runner):
         for i, result in enumerate(output):
             record = self.records[i]
             expected_result = record.result
-            
+            if expected_result != result:
+                logging.error(
+                    "Query %s does not return expected result. \nExpected: %s\nActually: %s",
+                    record.sql, expected_result.strip(), result)
+                logging.debug()
 
     def run(self):
         self.extract_sql()
@@ -590,7 +593,8 @@ class CLIRunner(Runner):
             self.cli.stdin.flush()
         output, _ = self.cli.communicate()
         output_list = output.split(self.res_delimiter)[1:]
-        assert len(output_list) == i, "The length of result list should be equal to the commands have executed"
+        assert len(
+            output_list) == i, "The length of result list should be equal to the commands have executed"
         self.handle_results(output_list)
 
     def debug(self):
