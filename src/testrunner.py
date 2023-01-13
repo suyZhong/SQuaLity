@@ -591,7 +591,7 @@ class CLIRunner(Runner):
             elif type(record) == Query:
                 self.single_run_stats['query_num'] += 1
                 if expected_result == actually_result:
-                    my_debug("Query {} Success", record.sql)
+                    my_debug("Query {} Success".format(record.sql))
                     if self.dump_all:
                         self.bug_dumper.save_state(
                             self.records_log, record, actually_result, 0)
@@ -651,43 +651,34 @@ class PSQLRunner(CLIRunner):
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
 
-
-class PSQLSingleRunner(CLIRunner):
-    def __init__(self) -> None:
-        super().__init__()
-        self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
-        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-            'postgres'), '-X', '-a', '-q', '-c']
-
     def set_db(self, db_name: str):
         my_debug('set up db {}'.format(db_name))
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
-        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
-        self.execute_stmt("CREATE DATABASE %s" % db_name)
+        stmts = [
+            "DROP DATABASE IF EXISTS {};\n".format(db_name),
+            "CREATE DATABASE {};\n".format(db_name),
+        ]
+        for stmt in stmts:
+            self.execute_stmt(stmt)
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-            db_name), '-X', '-a', '-q', '-c']
+            db_name), '-X', '-q']
 
     def remove_db(self, db_name: str):
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
-        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
-
-    def commit(self):
-        pass
-
-    def close(self):
-        pass
-
-    def connect(self, db_name):
-        pass
+        self.execute_stmt("DROP DATABASE IF EXISTS {}".format(db_name))
+        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+            db_name), '-X', '-q']
 
     def execute_stmt(self, sql):
+        cmd = self.cmd + [sql]
         psql_proc = subprocess.run(
-            self.cmd + [sql], capture_output=True, encoding='utf-8')
+            cmd, capture_output=True, encoding='utf-8')
         if psql_proc.stderr:
             # my_debug('execute failed {}'.format(psql_proc.stderr) )
-            raise DBEngineExcetion(psql_proc.stderr)
+            if str(psql_proc.stderr).find('ERROR:') > 0:
+                raise DBEngineExcetion(psql_proc.stderr)
 
     def execute_query(self, sql: str):
         psql_proc = subprocess.run(
