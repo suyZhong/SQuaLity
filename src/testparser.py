@@ -382,7 +382,7 @@ class PGTParser(MYTParser):
                 # print("psql:", command)
                 # break
             else:
-                self.records.append(Record(sql=pure_commands[i], id = i))
+                self.records.append(Record(sql=pure_commands[i].strip(';'), id = i))
             ind += len(command.split('\n'))
             while(ind <= len(diff) - 1):
                 line = diff[ind].rstrip('\n')
@@ -453,44 +453,6 @@ class PGTParser(MYTParser):
                     self.records[record_id - 1].result = "\n".join(test_input)
                     test_input = []
 
-    def convert_result(self, result: str):
-        '''
-        The function convert the expected result in postgres to the more general form in SQuaLity.
-        '''
-        # convert the SELECT result to the SQuaLity row-wise format
-        # print(result)
-        rows_regex = re.compile(r"\(\s*[0-9]+\s*rows?\)")
-        result_lines = result.rstrip().split('\n')
-        # if it is an error
-        if result == "":
-            return result
-        if result_lines[0].strip().startswith('ERROR'):
-            return "\n".join(result_lines)
-        elif re.match(rows_regex, result_lines[-1]):
-            # print(result_lines)
-            result_rows = int(
-                re.search(r"[0-9]+", result_lines[-1]).group())
-            value_table = result_lines[2:-1]
-            # handle multiple rows
-            if len(value_table) != result_rows:
-                # empty_ind = [i for i, row in enumerate(value_table) if row.strip().endswith('+')]
-                logging.warning(
-                    "the len of value table should be same with result_rows")
-                
-            # assert len(value_table) == result_rows, "the len of value table should be same with result_rows"
-            row_wise_result_list = [[item.strip() for item in row.split('|')] for row in value_table]
-            row_wise_result_list = [['True' if elem == 't' else elem for elem in row] for row in row_wise_result_list]
-            row_wise_result_list = [['False' if elem == 'f' else elem for elem in row] for row in row_wise_result_list]
-            
-            row_wise_result = '\n'.join(['\t'.join(row) for row in row_wise_result_list])
-            if result_rows > 0:
-                return row_wise_result
-            else:
-                return ""
-        else:
-            # logging.warning("Parsing result warning: while parsing {}".format(result))
-            return result
-
     def convert_record(self, record: Record):
         '''
         The function convert the expected result in postgres to the more general form in SQuaLity.
@@ -501,7 +463,7 @@ class PGTParser(MYTParser):
         
         converted_record = Statement(id=record.id)
 
-        converted_result = self.convert_result(record.result)
+        converted_result = convert_postgres_result(record.result)
         # Statement ok
         if converted_result == "":
             return Statement(sql=record.sql, id=record.id)

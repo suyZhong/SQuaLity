@@ -34,9 +34,9 @@ def extract(dbms_name:str, parser:testparser.Parser, compression:bool = True):
     print(parser.meta_data)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--suite', choices={'sqlite', 'duckdb', 'cockroach', 'all', 'postgresql'}, default='all')
-    args = parser.parse_args()
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('-s', '--suite', choices={'sqlite', 'duckdb', 'cockroach', 'all', 'postgresql'}, default='all')
+    args = arg_parser.parse_args()
     suite = args.suite
     
     # Extract SQL Logic Test (SQLite testcase)

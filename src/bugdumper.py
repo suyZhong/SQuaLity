@@ -72,7 +72,7 @@ class BugDumper():
     def recover_db(self):
         pass
 
-    def save_state(self, logs: List[Statement], record: Record, result, execution_time: int, is_error=False):
+    def save_state(self, logs: List[Statement], record: Record, result:str, execution_time: int, is_error=False, msg:str=''):
         # record the log
         temp_log = ";\n".join([log.sql for log in logs])
         new_log_flag = (temp_log != self.logs_single_row['LOGS'])
@@ -101,6 +101,7 @@ class BugDumper():
             "%y-%m-%d-%H:%M")
         self.bugs_single_row['EXEC_TIME'] = execution_time
         self.bugs_single_row['IS_ERROR'] = str(is_error)
+        self.bugs_single_row['ERROR_MSG'] = msg
 
         self.bugs_single_row['LOGS_INDEX'] = self.log_index - 1
         self.bugs_dataframe = pd.concat(
