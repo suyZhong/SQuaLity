@@ -11,7 +11,7 @@ from datetime import datetime
 from src import testparser
 from src import testrunner
 from src import testcollector
-from src.utils import DBMS_Set, Suite_Set
+from src.utils import DBMS_Set, Suite_Set, SETUP_PATH
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -60,6 +60,18 @@ if __name__ == "__main__":
                             level=getattr(logging, log_level.upper()), filemode='w')
         sys.stdout = open("logs/debug" + ".out", "w", encoding='utf-8')
 
+    # set the parser
+    if suite_name == 'sqlite':
+        p = testparser.SLTParser()
+    elif suite_name == 'duckdb':
+        p = testparser.DTParser()
+    elif suite_name == 'squality':
+        p = testparser.CSVParser()
+    elif suite_name == 'postgresql':
+        p = testparser.PGTParser(SETUP_PATH['postgresql'])
+    else:
+        sys.exit("Not implement yet")
+
     # set the runner
     if dbms_name == 'sqlite':
         r = testrunner.SQLiteRunner()
@@ -72,33 +84,25 @@ if __name__ == "__main__":
     elif dbms_name == 'postgresql':
         r = testrunner.PostgreSQLRunner()
     elif dbms_name == 'psql':
-        r = testrunner.PSQLRunner()
+        r = testrunner.PSQLRunner(p.setup_records)
     else:
         sys.exit("Not implement yet")
     r.init_dumper(dump_all=args.dump_all)
-
-    # set the parser
-    if suite_name == 'sqlite':
-        p = testparser.SLTParser()
-    elif suite_name == 'duckdb':
-        p = testparser.DTParser()
-    elif suite_name == 'squality':
-        p = testparser.CSVParser()
-    elif suite_name == 'postgresql':
-        p = testparser.PGTParser()
-    else:
-        sys.exit("Not implement yet")
 
     skip_index = []
     for i, test_file in enumerate(test_files):
         db_name = args.db_name
         single_begin_time = datetime.now()
+        
+        # skip some files
         if i in skip_index:
             continue
         if max_files <= 0 and i < abs(max_files):
             continue
         if 0 < max_files < i:
             break
+        if test_file in SETUP_PATH:
+            continue
         # print("-----------------------------------")
         logging.info("test file %d", i)
         logging.info("parsing %s", test_file)

@@ -70,6 +70,10 @@ ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE
                  'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT',
                  'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'ERROR_MSG', 'LOGS_INDEX']
 
+SETUP_PATH = {
+    'postgresql': 'postgresql_tests/regress/sql/test_setup.sql'
+}
+
 OUTPUT_PATH = {
     'testcase_dir': 'data/',
     'execution_result': 'output/{}_results.csv',  # means execution db engine

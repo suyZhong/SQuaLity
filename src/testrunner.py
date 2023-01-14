@@ -16,8 +16,8 @@ from .bugdumper import BugDumper
 
 
 class Runner():
-    def __init__(self) -> None:
-        self.records: List[Record] = []
+    def __init__(self, records: List[Record] = []) -> None:
+        self.records = records
         self.records_log = []
         self.all_run_stats = {}.fromkeys(Running_Stats, 0)
         self.single_run_stats = {}.fromkeys(Running_Stats, 0)
@@ -26,6 +26,11 @@ class Runner():
         self.dbms_name = ""
         self.cur_time = datetime.now()
         self.end_time = datetime.now()
+        self.db = ":memory:"
+
+    def test_setup(self):
+        """set up the test environment
+        """        
 
     def set_db(self, db_name: str):
         """Set up the Database that this test run should use
@@ -152,12 +157,12 @@ class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
     MAX_RUNTIME_PERSQL = 10
 
-    def __init__(self) -> None:
-        super().__init__()
+
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
         self.hash_threshold = 8
         self.allright = True
         self.db_error = Exception
-        self.db = ":memory:"
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.log_level = logging.root.level
         self.exec_time = 0
@@ -390,8 +395,8 @@ class PyDBCRunner(Runner):
 
 
 class SQLiteRunner(PyDBCRunner):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
         self.con = None
         self.cur = None
 
@@ -415,8 +420,8 @@ class SQLiteRunner(PyDBCRunner):
 
 
 class DuckDBRunner(PyDBCRunner):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
         self.con = None
         # self.db_error = (duckdb.ProgrammingError, duckdb.DataError, duckdb.IOException,duckdb.PermissionException)
 
@@ -441,8 +446,8 @@ class DuckDBRunner(PyDBCRunner):
 
 
 class CockroachDBRunner(PyDBCRunner):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
         self.con = None
         self.cur = None
         # self.db_error(psycopg2.ProgrammingError)
@@ -487,8 +492,8 @@ class CockroachDBRunner(PyDBCRunner):
 
 
 class MySQLRunner(PyDBCRunner):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
         self.cur = None
         self.con = None
 
@@ -535,8 +540,8 @@ class MySQLRunner(PyDBCRunner):
 
 
 class PostgreSQLRunner(CockroachDBRunner):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
 
     def set_db(self, db_name):
         self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
@@ -561,8 +566,8 @@ class PostgreSQLRunner(CockroachDBRunner):
 
 
 class CLIRunner(Runner):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
         self.cli = None
         self.sql = []
         self.cmd = []
@@ -616,6 +621,7 @@ class CLIRunner(Runner):
         assert len(
             output_list) == i + 1, "The length of result list should be equal to the commands have executed"
         self.handle_results(output_list)
+        self.cli.terminate()
 
     def debug(self):
         dbms_name = 'tempdb'
@@ -643,15 +649,47 @@ class CLIRunner(Runner):
 
 
 class PSQLRunner(CLIRunner):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, records: List[Record] = []) -> None:
+        super().__init__(records)
+        self.setup_records = copy(records)
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-q']
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
+        self.test_setup()
+        
+
+    def test_setup(self):
+        my_debug(len(self.records))
+        if len(self.setup_records) > 0: 
+            db_name = 'testdb'
+            self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+                'postgres'), '-X', '-a', '-q', '-c']
+            stmts = [
+                "DROP DATABASE IF EXISTS {};\n".format(db_name),
+                "CREATE DATABASE {};\n".format(db_name),
+            ]
+            for stmt in stmts:
+                self.execute_stmt(stmt)
+            self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+                db_name), '-X', '-q']
+            self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
+            self.extract_sql()
+            for i, sql in enumerate(self.sql):
+                self.cli.stdin.write(self.echo.format(self.res_delimiter))
+                self.cli.stdin.write(sql)
+                self.cli.stdin.flush()
+            output, err = self.cli.communicate()
+            my_debug(output)
+            my_debug(err)
+            self.cli.terminate()
+            
 
     def set_db(self, db_name: str):
+        if len(self.setup_records) > 0:
+            return
         my_debug('set up db {}'.format(db_name))
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
@@ -665,6 +703,9 @@ class PSQLRunner(CLIRunner):
             db_name), '-X', '-q']
 
     def remove_db(self, db_name: str):
+        # return
+        if len(self.records) > 0:
+            return
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
         self.execute_stmt("DROP DATABASE IF EXISTS {}".format(db_name))

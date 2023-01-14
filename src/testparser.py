@@ -24,9 +24,12 @@ class Parser:
         self.result_content = ""
         self.hash_threshold = 8
         self.records: List[Record] = list()
+        self.setup_records: List[Record] = list()
         self.record_id = 0
 
-    # read the whole file
+    def get_setup_tests(self):
+        """get the environment set up records
+        """        
 
     def get_file_name(self, filename):
         self.filename = filename
@@ -328,6 +331,15 @@ class PGTParser(MYTParser):
             '/sql/', '/expected/').replace('.sql', '.out')
         self.delimiter = ';'
         self.meta_data = {'psql_testcase':0, 'total_files':0, 'total_testcase':0, 'psql_files':0}
+        self.get_setup_tests(filename)
+
+        
+    def get_setup_tests(self, filename):
+        if filename!='':
+            self.get_file_name(filename)
+            self.get_file_content()
+            self.parse_file()
+            self.setup_records = copy(self.records)
 
     def get_file_name(self, filename: str):
         self.testfile = filename
