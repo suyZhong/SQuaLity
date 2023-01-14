@@ -387,9 +387,9 @@ class PGTParser(MYTParser):
                 # logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
                 self.meta_data['psql_testcase'] += 1
                 if re.match(r'^[\\]quit', command.strip()):
-                    self.records.append(Control(id = i, sql = command))
+                    self.records.append(Control(id = i, sql = command.strip(';')))
                 else:
-                    self.records.append(Control(id = i, sql=command, action=RunnerAction.ECHO))
+                    self.records.append(Control(id = i, sql=command.strip(';'), action=RunnerAction.ECHO))
                 psql_flag = True
                 # print("psql:", command)
                 # break

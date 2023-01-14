@@ -70,6 +70,10 @@ ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE
                  'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT',
                  'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'ERROR_MSG', 'LOGS_INDEX']
 
+TESTCASE_PATH = {
+    'postgresql': 'postgresql_tests/regress/'
+}
+
 SETUP_PATH = {
     'postgresql': 'postgresql_tests/regress/sql/test_setup.sql'
 }

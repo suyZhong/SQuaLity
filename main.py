@@ -101,7 +101,7 @@ if __name__ == "__main__":
             continue
         if 0 < max_files < i:
             break
-        if test_file in SETUP_PATH:
+        if test_file in SETUP_PATH.values():
             continue
         # print("-----------------------------------")
         logging.info("test file %d", i)

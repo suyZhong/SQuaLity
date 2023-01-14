@@ -573,11 +573,20 @@ class CLIRunner(Runner):
         self.cmd = []
         self.res_delimiter = '------'
         self.echo = ''
+        self.env = {}
+
+    def get_env(self):
+        """get the environment variable
+        """        
 
     def extract_sql(self):
         self.sql = []
         for record in self.records:
-            self.sql.append(record.sql + ';\n')
+            sql = record.sql
+            if sql.startswith('\\'):
+                self.sql.append(sql + '\n')
+            else:
+                self.sql.append(sql + ';\n')
 
     def handle_results(self, output: List[str]):
         for i, result in enumerate(output):
@@ -657,13 +666,26 @@ class PSQLRunner(CLIRunner):
             'postgres'), '-X', '-q']
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
+        self.get_env()
         self.test_setup()
         
+    # TODO make here more elegant
+    def get_env(self):
+        self.env['PKGLIBDIR'] = subprocess.run(
+            ['pg_config', '--pkglibdir'], capture_output=True, encoding='utf-8').stdout.strip()
+        self.env['PG_ABS_SRCDIR'] = os.path.abspath(TESTCASE_PATH['postgresql'])
+        self.env['DLSUFFIX'] = '.so'
 
     def test_setup(self):
         my_debug(len(self.records))
         if len(self.setup_records) > 0: 
             db_name = 'testdb'
+            # set the env variable
+            for env_name in self.env:
+                os.environ[env_name] = self.env[env_name]
+                
+            # os.system('echo $PG_ABS_SRCDIR')
+            # init a test database
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
                 'postgres'), '-X', '-a', '-q', '-c']
             stmts = [
@@ -673,7 +695,9 @@ class PSQLRunner(CLIRunner):
             for stmt in stmts:
                 self.execute_stmt(stmt)
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-                db_name), '-X', '-q']
+                db_name), '-X', '-q', '-a']
+            
+            # run the test_setup.sql
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
             self.extract_sql()
