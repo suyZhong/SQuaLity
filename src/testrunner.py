@@ -679,10 +679,10 @@ class PSQLRunner(CLIRunner):
         
     # TODO make here more elegant
     def get_env(self):
-        self.env['PKGLIBDIR'] = subprocess.run(
+        self.env['PG_LIBDIR'] = subprocess.run(
             ['pg_config', '--pkglibdir'], capture_output=True, encoding='utf-8').stdout.strip()
         self.env['PG_ABS_SRCDIR'] = os.path.abspath(TESTCASE_PATH['postgresql'])
-        self.env['DLSUFFIX'] = '.so'
+        self.env['PG_DLSUFFIX'] = '.so'
 
     def test_setup(self):
         my_debug(len(self.records))
@@ -692,7 +692,6 @@ class PSQLRunner(CLIRunner):
             for env_name in self.env:
                 os.environ[env_name] = self.env[env_name]
                 
-            # os.system('echo $PG_ABS_SRCDIR')
             # init a test database
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
                 'postgres'), '-X', '-a', '-q', '-c']
@@ -713,6 +712,10 @@ class PSQLRunner(CLIRunner):
                 self.cli.stdin.write(self.echo.format(self.res_delimiter))
                 self.cli.stdin.write(sql)
                 self.cli.stdin.flush()
+            # self.cli.stdin.write(self.echo.format(":'libdir'"))
+            # self.cli.stdin.write(self.echo.format(":'regresslib'"))
+            # self.cli.stdin.write(self.echo.format(":'dlsuffix'"))
+            self.cli.stdin.flush()
             output, err = self.cli.communicate()
             my_debug(output)
             self.cli.terminate()
