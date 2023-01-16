@@ -601,15 +601,16 @@ class CLIRunner(Runner):
             record = self.records[i]
             expected_result = record.result
             actually_result = convert_postgres_result(result.strip('\n'))
+            actually_status = not bool(re.match(r'^ERROR:', actually_result))
             if type(record) == Statement:
                 self.single_run_stats['statement_num'] += 1
-                if expected_result == actually_result:
+                if record.status == actually_status:
                     logging.debug("Statement {} Success".format(record.sql))
                     if self.dump_all:
                         self.bug_dumper.save_state(
                             self.records_log, record, str(record.status), 0, msg=actually_result)
                 else:
-                    self.handle_wrong_stmt(record, actually_result)
+                    self.handle_wrong_stmt(record, actually_status, err_msg = actually_result)
             elif type(record) == Query:
                 self.single_run_stats['query_num'] += 1
                 if expected_result == actually_result:
