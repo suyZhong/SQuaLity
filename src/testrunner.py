@@ -583,6 +583,14 @@ class CLIRunner(Runner):
         self.sql = []
         for record in self.records:
             sql = record.sql
+            if re.match(r'^COPY', sql):
+                # the COPY statement in Postgres will try to find file in server side
+                # if the backend is docker, the file will be missing
+                # So we transform COPY to \copy in psql
+                # psql \copy don't support variable substitude so we transform it to command
+                sql = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
+                self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql[0], sql[1]))
+                continue
             if sql.startswith('\\'):
                 self.sql.append(sql + '\n')
             else:
@@ -695,7 +703,7 @@ class PSQLRunner(CLIRunner):
             for stmt in stmts:
                 self.execute_stmt(stmt)
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-                db_name), '-X', '-q', '-a']
+                db_name), '-X', '-q']
             
             # run the test_setup.sql
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -707,7 +715,6 @@ class PSQLRunner(CLIRunner):
                 self.cli.stdin.flush()
             output, err = self.cli.communicate()
             my_debug(output)
-            my_debug(err)
             self.cli.terminate()
             
 
