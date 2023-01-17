@@ -602,6 +602,8 @@ class CLIRunner(Runner):
             expected_result = record.result
             actually_result = convert_postgres_result(result.strip('\n'))
             actually_status = not bool(re.match(r'^ERROR:', actually_result))
+
+            self.single_run_stats['total_sql'] += 1
             if type(record) == Statement:
                 self.single_run_stats['statement_num'] += 1
                 if record.status == actually_status:
@@ -640,6 +642,9 @@ class CLIRunner(Runner):
             output_list) == i + 1, "The length of result list should be equal to the commands have executed"
         self.handle_results(output_list)
         self.cli.terminate()
+        
+        for key in self.single_run_stats:
+            self.all_run_stats[key] += self.single_run_stats[key]
 
     def debug(self):
         dbms_name = 'tempdb'
