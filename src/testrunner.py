@@ -289,7 +289,7 @@ class PyDBCRunner(Runner):
             logging.debug(record.sql + " Success")
             if self.dump_all:
                 self.bug_dumper.save_state(self.records_log, record, str(
-                    status), (datetime.now()-self.cur_time).microseconds, err_msg=str(err_msg))
+                    status), (datetime.now()-self.cur_time).microseconds, msg=str(err_msg))
             return True
         else:
             self.handle_wrong_stmt(
