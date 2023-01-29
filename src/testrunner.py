@@ -583,18 +583,7 @@ class CLIRunner(Runner):
         self.sql = []
         for record in self.records:
             sql = record.sql
-            if re.match(r'^COPY', sql):
-                # the COPY statement in Postgres will try to find file in server side
-                # if the backend is docker, the file will be missing
-                # So we transform COPY to \copy in psql
-                # psql \copy don't support variable substitude so we transform it to command
-                sql = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
-                self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql[0], sql[1]))
-                continue
-            if sql.startswith('\\'):
-                self.sql.append(sql + '\n')
-            else:
-                self.sql.append(sql + ';\n')
+            self.sql.append(sql + ';\n')
 
     def handle_results(self, output: List[str]):
         for i, result in enumerate(output):
@@ -646,29 +635,6 @@ class CLIRunner(Runner):
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
 
-    def debug(self):
-        dbms_name = 'tempdb'
-        psql_cmd = [
-            'psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(dbms_name), '-X', '-a', '-q']
-        psql_cli = subprocess.Popen(['psql', 'postgresql://postgres:root@localhost:5432/?sslmode=disable', '-X', '-q'],
-                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
-
-        queries = ['\\d\n', 'CREATE TABLE BIT_TABLE(b BIT(11));\n', "INSERT INTO BIT_TABLE VALUES (B'10');\n",
-                   "INSERT INTO BIT_TABLE VALUES (B'00000000000');\n", '\\d\n', 'CREATE TABLE large_table (id INT, data TEXT);\n', '\\d\n']
-        # for i in range(1,10000):
-        #     queries.append("\echo ----------")
-
-        for i, query in enumerate(tqdm(queries)):
-            # print(query)
-            psql_cli.stdin.write('\\echo {}---------------\n'.format(i))
-            psql_cli.stdin.write(query)
-            psql_cli.stdin.flush()
-            # print(psql_cli.stdout.read())
-            # psql_proc = subprocess.run(psql_cmd + [query], capture_output=True)
-        output, err = psql_cli.communicate()
-        print('output len:\n', output)
-        print('error:', err)
-        psql_cli.terminate()
 
 
 class PSQLRunner(CLIRunner):
@@ -682,7 +648,25 @@ class PSQLRunner(CLIRunner):
         self.echo = "\\echo {}\n"
         self.get_env()
         self.test_setup()
-        
+    
+    def extract_sql(self):
+        self.sql = []
+        for record in self.records:
+            sql = record.sql
+            if re.match(r'^COPY', sql):
+                # the COPY statement in Postgres will try to find file in server side
+                # if the backend is docker, the file will be missing
+                # So we transform COPY to \copy in psql
+                # psql \copy don't support variable substitude so we transform it to command
+                sql = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
+                self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql[0], sql[1]))
+                continue
+            if sql.startswith('\\'):
+                self.sql.append(sql + '\n')
+            else:
+                self.sql.append(sql + ';\n')
+    
+    
     # TODO make here more elegant
     def get_env(self):
         self.env['PG_LIBDIR'] = subprocess.run(
@@ -718,9 +702,6 @@ class PSQLRunner(CLIRunner):
                 self.cli.stdin.write(self.echo.format(self.res_delimiter))
                 self.cli.stdin.write(sql)
                 self.cli.stdin.flush()
-            # self.cli.stdin.write(self.echo.format(":'libdir'"))
-            # self.cli.stdin.write(self.echo.format(":'regresslib'"))
-            # self.cli.stdin.write(self.echo.format(":'dlsuffix'"))
             self.cli.stdin.flush()
             output, err = self.cli.communicate()
             my_debug(output)
