@@ -568,6 +568,7 @@ class PostgreSQLRunner(CockroachDBRunner):
 class CLIRunner(Runner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
+        self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
         self.cmd = []
@@ -595,6 +596,8 @@ class CLIRunner(Runner):
             self.single_run_stats['total_sql'] += 1
             if type(record) == Statement:
                 self.single_run_stats['statement_num'] += 1
+                if actually_status:
+                    self.records_log.append(record)
                 if record.status == actually_status:
                     logging.debug("Statement {} Success".format(record.sql))
                     if self.dump_all:
