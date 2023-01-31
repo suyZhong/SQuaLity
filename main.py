@@ -69,6 +69,8 @@ if __name__ == "__main__":
         p = testparser.CSVParser()
     elif suite_name == 'postgresql':
         p = testparser.PGTParser(SETUP_PATH['postgresql'])
+    elif suite_name == 'cockroachdb':
+        p = testparser.CDBTParser()
     else:
         sys.exit("Not implement yet")
 
