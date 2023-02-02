@@ -17,7 +17,8 @@ from .bugdumper import BugDumper
 
 class Runner():
     def __init__(self, records: List[Record] = []) -> None:
-        self.records = records
+        self.records = []
+        self.setup_records = copy(records)
         self.records_log = []
         self.all_run_stats = {}.fromkeys(Running_Stats, 0)
         self.single_run_stats = {}.fromkeys(Running_Stats, 0)
@@ -27,6 +28,8 @@ class Runner():
         self.cur_time = datetime.now()
         self.end_time = datetime.now()
         self.db = ":memory:"
+        self.env = {}
+        self.test_setup()
 
     def test_setup(self):
         """set up the test environment
@@ -567,14 +570,13 @@ class PostgreSQLRunner(CockroachDBRunner):
 
 class CLIRunner(Runner):
     def __init__(self, records: List[Record] = []) -> None:
+        self.res_delimiter = '------'
+        self.echo = ''
+        self.cmd = []
         super().__init__(records)
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
-        self.cmd = []
-        self.res_delimiter = '------'
-        self.echo = ''
-        self.env = {}
 
     def get_env(self):
         """get the environment variable
@@ -643,14 +645,9 @@ class CLIRunner(Runner):
 class PSQLRunner(CLIRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
-        self.setup_records = copy(records)
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
-        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-            'postgres'), '-X', '-q']
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
-        self.get_env()
-        self.test_setup()
     
     def extract_sql(self):
         self.sql = []
@@ -678,8 +675,10 @@ class PSQLRunner(CLIRunner):
         self.env['PG_DLSUFFIX'] = '.so'
 
     def test_setup(self):
-        my_debug(len(self.records))
+        self.get_env()
+        my_debug('setup total {} test cases'.format(len(self.setup_records)))
         if len(self.setup_records) > 0: 
+            self.records = self.setup_records
             db_name = 'testdb'
             # set the env variable
             for env_name in self.env:
@@ -708,10 +707,12 @@ class PSQLRunner(CLIRunner):
             self.cli.stdin.flush()
             output, err = self.cli.communicate()
             my_debug(output)
+            my_debug(err)
             self.cli.terminate()
             
 
     def set_db(self, db_name: str):
+        # if the test suites have some setup records, then don't set up db when each test
         if len(self.setup_records) > 0:
             return
         my_debug('set up db {}'.format(db_name))
