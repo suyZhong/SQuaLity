@@ -3,6 +3,13 @@ import argparse
 import random
 
 
+def find_flag(lines):
+    for line in lines:
+        if str.startswith(line, 'COPY'):
+            return True
+    return False
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--db', type=str, default='mysql')
 parser.add_argument('--output', type=str, default='demo')
@@ -22,7 +29,7 @@ elif db_name == "duckdb":
     test_suite_dir += 'sql'
 elif db_name == "mysql":
     test_suite_dir += 'r'
-elif db_name == "postgres":
+elif db_name == "postgresql":
     test_suite_dir += 'regress/expected'
 elif db_name == "sqlite":
     test_suite_dir += ''
@@ -42,8 +49,7 @@ cnt = 0
 while (cnt < 20):
     print('iter' + str(cnt))
     with open(tests_files[ind], 'r') as f:
-        test_length = len(f.readlines())
-        if test_length > 100:
+        if find_flag(f.readlines()):
             break
         else:
             ind = random.randint(0, len(tests_files))

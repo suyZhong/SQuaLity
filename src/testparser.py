@@ -361,6 +361,13 @@ class PGTParser(MYTParser):
         result_lines = [line for line in self.result_content.splitlines(
             keepends=True) if line != '\n']
         return list(test_differ.compare(test_lines, result_lines))
+    
+    def get_merge(self):
+        test_lines = [line for line in self.test_content.splitlines(
+            keepends=True) if line != '\n']
+        result_lines = [line for line in self.result_content.splitlines(
+            keepends=True) if line != '\n']
+        
 
     def split_file(self):
         test_content = self.test_content
@@ -371,6 +378,8 @@ class PGTParser(MYTParser):
 
     def parse_file_by_split(self):
         commands = self.split_file()
+        
+        # clear the empty line in the commands
         commands = ['\n'.join([line for line in command.splitlines() if line]) for command in commands]
         pure_commands = [strip_dash_comment_lines(command) for command in commands]
         
@@ -379,37 +388,41 @@ class PGTParser(MYTParser):
         # Compare with the commands parsed by sqlparse
         # split the diff according to the line number
         ind = 0
-        result = []
+        tmp_result = []
         psql_flag = False
         for i, command in enumerate(commands):
-            self.meta_data['total_testcase'] += 1
-            if re.match(r'^[\\]', command.strip()):
-                # logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
-                self.meta_data['psql_testcase'] += 1
-                if re.match(r'^[\\]quit', command.strip()):
-                    self.records.append(Control(id = i, sql = command.strip(';')))
-                else:
-                    self.records.append(Control(id = i, sql=command.strip(';'), action=RunnerAction.ECHO))
-                psql_flag = True
-                # print("psql:", command)
-                # break
-            else:
-                self.records.append(Record(sql=pure_commands[i].strip(';'), id = i))
+            result = ""
             ind += len(command.split('\n'))
             while(ind <= len(diff) - 1):
                 line = diff[ind].rstrip('\n')
                 if line.startswith('+ '): # result
                     ind += 1
-                    result.append(line.lstrip('+ '))
+                    tmp_result.append(line.removeprefix('+ '))
                 elif line.startswith('- '): # input, but still can store in the result attribute
                     ind += 1
-                    result.append(line.lstrip('- '))
+                    tmp_result.append(line.removeprefix('- '))
                 else:
-                    self.records[i].result = "\n".join(result)
-                    result = []
+                    result = "\n".join(tmp_result)
+                    tmp_result = []
                     break
-            if result:
-                self.records[i].result = "\n".join(result)
+                
+            # if it is the last result, it will quit while without join tmp results
+            if tmp_result:
+                result = "\n".join(tmp_result)
+            # Create new record
+            self.meta_data['total_testcase'] += 1
+            if re.match(r'^[\\]', command.strip()):
+                # logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
+                self.meta_data['psql_testcase'] += 1
+                if re.match(r'^[\\]quit', command.strip()):
+                    self.records.append(Control(id = i, sql = command.strip(';'), result=result))
+                else:
+                    self.records.append(Control(id = i, sql=command.strip(';'), action=RunnerAction.ECHO, result=result))
+                psql_flag = True
+                # print("psql:", command)
+                # break
+            else:
+                self.records.append(Record(sql=pure_commands[i].strip(';'), id = i, result=result))
         if psql_flag:
             self.meta_data['psql_files'] += 1
 
