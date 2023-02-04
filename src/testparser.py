@@ -386,8 +386,7 @@ class PGTParser(MYTParser):
         pure_commands = [strip_dash_comment_lines(
             command) for command in commands]
 
-        result_lines = [line.strip(
-            ';') for line in self.result_content.splitlines() if line != '']
+        result_lines = [line for line in self.result_content.splitlines() if line != '']
 
         # Compare with the commands parsed by sqlparse
         # split the diff according to the line number
@@ -406,7 +405,7 @@ class PGTParser(MYTParser):
                     break
             next_line = next_command.strip(';').splitlines()[0] if next_command != ';' else ''
 
-            if command_lines[0] == result_lines[ind]:
+            if command_lines[0] == result_lines[ind].strip(';'):
                 ind += len(command.split('\n'))
             # skip the input command
             else:
@@ -417,11 +416,11 @@ class PGTParser(MYTParser):
             # boundary checking
             if next_line == "":
                 result = '\n'.join(result_lines[ind: len(result_lines)])
-            elif result_lines[ind] == next_line:
+            elif result_lines[ind].strip(';') == next_line:
                 result = ""
             else:
                 for j in range(ind, len(result_lines)):
-                    if result_lines[j] == next_line:
+                    if result_lines[j] .strip(';') == next_line:
                         result = '\n'.join(result_lines[ind:j])
                         ind = j
                         break
