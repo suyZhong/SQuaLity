@@ -50,7 +50,8 @@ Running_Stats = ['total_sql',
                  'wrong_query_num',
                  'wrong_stmt_num',
                  'statement_num',
-                 'query_num']
+                 'query_num',
+                 'control_num']
 
 
 TestCaseColumns = ['INDEX',  # testcase index
@@ -147,7 +148,7 @@ def convert_postgres_result(result: str):
         # print(result_lines)
         result_rows = int(
             re.search(r"[0-9]+", result_lines[-1]).group())
-        value_table = result_lines[2:-1]
+        value_table = result_lines[-result_rows - 1:-1]
         # handle multiple rows
         if len(value_table) != result_rows:
             # empty_ind = [i for i, row in enumerate(value_table) if row.strip().endswith('+')]
