@@ -659,7 +659,8 @@ class PSQLRunner(CLIRunner):
                 # So we transform COPY to \copy in psql
                 # psql \copy don't support variable substitude so we transform it to command
                 sql = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
-                self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql[0], sql[1]))
+                if len(sql) > 1:
+                    self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql[0], sql[1]))
                 continue
             if sql.startswith('\\'):
                 self.sql.append(sql + '\n')

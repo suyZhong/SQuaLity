@@ -350,10 +350,6 @@ class PGTParser(MYTParser):
 
     def get_file_content(self):
         self.meta_data['total_files'] += 1
-        if self.testfile.endswith('copy2.sql'): 
-            self.test_content = ""
-            self.result_content = ""
-            return
         super().get_file_content()
 
     def testfile_dialect_handler(self, *args, **kwargs):
@@ -377,7 +373,7 @@ class PGTParser(MYTParser):
     def split_file(self):
         test_content = self.test_content
         test_content = '\n'.join([line if not line.startswith(
-            '\\') else line.strip() + ';\n' for line in self.test_content.splitlines(keepends=True)])
+            '\\') else line.strip('; \n') + ';\n' for line in self.test_content.splitlines(keepends=True)])
         commands = sqlparse.split(test_content)
         return commands
 
@@ -386,7 +382,7 @@ class PGTParser(MYTParser):
 
         # clear the empty line in the commands
         commands = ['\n'.join(
-            [line for line in command.splitlines() if line]) for command in commands]
+            [line for line in command.splitlines() if line]) for command in commands if command != ';']
         pure_commands = [strip_dash_comment_lines(
             command) for command in commands]
 
@@ -408,7 +404,7 @@ class PGTParser(MYTParser):
                 next_command = commands[k + 1] if k < num_command - 1 else "\n"
                 if not next_command.endswith('\\.;'):
                     break
-            next_line = next_command.strip(';').splitlines()[0]
+            next_line = next_command.strip(';').splitlines()[0] if next_command != ';' else ''
 
             if command_lines[0] == result_lines[ind]:
                 ind += len(command.split('\n'))
