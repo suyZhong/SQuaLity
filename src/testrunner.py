@@ -245,11 +245,12 @@ class PyDBCRunner(Runner):
             except_msg = None
             try:
                 self.execute_stmt(record.sql)
-            except self.db_error as except_msg:
+            except self.db_error as e:
                 status = False
                 self.single_run_stats['failed_statement_num'] += 1
+                except_msg = str(e)
                 logging.debug(
-                    "Statement %s execution error: %s", record.sql, except_msg)
+                    "Statement %s execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record, except_msg)
             self.commit()
             if status:
@@ -270,10 +271,7 @@ class PyDBCRunner(Runner):
             else:
                 self.single_run_stats['success_query_num'] += 1
             # print(results)
-            if type(results) == list:
-                self.handle_query_result_list(results, record)
-            else:
-                self.handle_query_result_string(results, record)
+            self.handle_query_result(results, record)
 
     def not_allright(self):
         self.allright = False
@@ -299,24 +297,7 @@ class PyDBCRunner(Runner):
                 stmt=record, status=status, err_msg=str(err_msg))
             return False
 
-    def handle_query_result_string(self, results: str, record: Query):
-        result_string = results
-        expected_result = record.result
-        cmp_flag = False
-        if results == expected_result:
-            cmp_flag = True
-        else:
-            cmp_flag = False
-
-        if cmp_flag:
-            my_debug("Query %s Success", record.sql)
-            if self.dump_all:
-                self.bug_dumper.save_state(
-                    self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
-        else:
-            self.handle_wrong_query(record, result_string)
-
-    def handle_query_result_list(self, results: list, record: Query):
+    def handle_query_result(self, results: list, record: Query):
         result_string = ""
         cmp_flag = False
         helper = ResultHelper(results, record)
@@ -340,42 +321,7 @@ class PyDBCRunner(Runner):
                     results, record, hash_threshold)
             # Currently it is only for DuckDB records
             elif record.res_format == ResultFormat.ROW_WISE:
-                expected_result_list = record.result.strip().split('\n') if record.result else []
-                # expected_result_list.sort()
-                NULL = None
-                actually_result_list = copy(results)
-                # actually_result_list.sort()
-                my_debug("%s, %s", actually_result_list, expected_result_list)
-                if len(expected_result_list) == len(actually_result_list) == 0:
-                    cmp_flag = True
-                elif len(expected_result_list) != len(actually_result_list):
-                    cmp_flag = False
-                else:
-                    for i, row in enumerate(expected_result_list):
-                        items = row.strip().split('\t')
-                        for j, item in enumerate(items):
-                            # direct comparison
-                            rvalue = actually_result_list[i][j]
-                            # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
-                            cmp_flag = item is rvalue
-                            cmp_flag = item == str(rvalue) or cmp_flag
-                            # if DuckDB
-                            cmp_flag = item == '(empty)' and rvalue == '' or cmp_flag
-
-                            if not cmp_flag:
-                                try:
-                                    lvalue = eval(item)
-                                except (TypeError, SyntaxError, NameError):
-                                    continue
-                                cmp_flag = lvalue == rvalue or cmp_flag
-                                # if numeric (No, even data type is I, still would have float type
-                                if type(lvalue) is float and type(rvalue) is float:
-                                    cmp_flag = math.isclose(
-                                        lvalue, rvalue) or cmp_flag
-                        if not cmp_flag:
-                            break
-                result_string = '\n'.join(['\t'.join(
-                    [str(item) if item != None else 'NULL' for item in row]) for row in results])
+                cmp_flag, result_string = helper.row_wise_compare(results, record)
             elif record.res_format == ResultFormat.HASH:
                 result_string = '\n'.join(['\n'.join(
                     [str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'

@@ -121,7 +121,7 @@ if __name__ == "__main__":
         except Exception as e:
             logging.critical(
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
-            logging.debug(traceback.format_exc())
+            logging.info(traceback.format_exc())
         r.close()
         if log_level != "DEBUG":
             r.remove_db(db_name)

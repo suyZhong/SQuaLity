@@ -2,7 +2,9 @@ from enum import Enum
 import logging
 import re
 import hashlib
+import math
 import pandas as pd
+from copy import copy
 
 
 class SortType(Enum):
@@ -273,6 +275,45 @@ class ResultHelper():
             result_string = str(result_len) + \
                 " values hashing to " + result_string
         cmp_flag = result_string.strip() == record.result.strip()
+        return cmp_flag, result_string
+    
+    
+    def row_wise_compare(self, results, record: Record):
+        expected_result_list = record.result.strip().split('\n') if record.result else []
+        # expected_result_list.sort()
+        NULL = None
+        actually_result_list = copy(results)
+        # actually_result_list.sort()
+        my_debug("%s, %s", actually_result_list, expected_result_list)
+        if len(expected_result_list) == len(actually_result_list) == 0:
+            cmp_flag = True
+        elif len(expected_result_list) != len(actually_result_list):
+            cmp_flag = False
+        else:
+            for i, row in enumerate(expected_result_list):
+                items = row.strip().split('\t')
+                for j, item in enumerate(items):
+                    # direct comparison
+                    rvalue = actually_result_list[i][j]
+                    # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
+                    cmp_flag = item is rvalue
+                    cmp_flag = item == str(rvalue) or cmp_flag
+                    # if DuckDB
+                    cmp_flag = item == '(empty)' and rvalue == '' or cmp_flag
+                    if not cmp_flag:
+                        try:
+                            lvalue = eval(item)
+                        except (TypeError, SyntaxError, NameError):
+                            continue
+                        cmp_flag = lvalue == rvalue or cmp_flag
+                        # if numeric (No, even data type is I, still would have float type
+                        if type(lvalue) is float and type(rvalue) is float:
+                            cmp_flag = math.isclose(
+                                lvalue, rvalue) or cmp_flag
+                if not cmp_flag:
+                    break
+        result_string = '\n'.join(['\t'.join(
+            [str(item) if item != None else 'NULL' for item in row]) for row in results])
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):
