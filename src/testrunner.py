@@ -136,8 +136,8 @@ class Runner():
             logging.error(
                 "Query %s does not return expected result. \nExpected: %s\nActually: %s",
                 query.sql, query.result.strip(), result.strip())
-            logging.debug("Expected:\n %s\n Actually:\n %s\n",
-                          query.result.strip(), result.strip())
+            # logging.debug("Expected:\n %s\n Actually:\n %s\n",
+            #               query.result.strip(), result.strip())
         self.allright = False
         self.bug_dumper.save_state(self.records_log, query, result, (datetime.now(
         )-self.cur_time).microseconds, is_error=True)
@@ -604,9 +604,11 @@ class PSQLRunner(CLIRunner):
                 # if the backend is docker, the file will be missing
                 # So we transform COPY to \copy in psql
                 # psql \copy don't support variable substitude so we transform it to command
-                sql = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
-                if len(sql) > 1:
-                    self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql[0], sql[1]))
+                sql_cmd = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
+                if len(sql_cmd) > 1:
+                    self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1]))
+                elif type(record) == Statement:
+                    self.sql.append(sql + ';\n' +record.input_data + '\n')
                 continue
             if sql.startswith('\\'):
                 self.sql.append(sql + '\n')

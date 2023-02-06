@@ -36,12 +36,14 @@ class RunnerAction(Enum):
 class StopRunnerException(Exception):
     pass
 
+
 class DBEngineExcetion(Exception):
     def __init__(self, message):
         super().__init__(message)
 
 
-DBMS_Set = set(['mysql', 'sqlite', 'postgresql', 'duckdb', 'cockroachdb', 'psql'])
+DBMS_Set = set(['mysql', 'sqlite', 'postgresql',
+               'duckdb', 'cockroachdb', 'psql'])
 Suite_Set = set(['mysql', 'sqlite', 'postgresql',
                 'duckdb', 'cockroachdb', 'squality'])
 
@@ -90,12 +92,13 @@ OUTPUT_PATH = {
 
 class Record:
 
-    def __init__(self, sql="", result="", suite="", **kwargs) -> None:
+    def __init__(self, sql="", result="", suite="", input_data="", **kwargs) -> None:
         self.sql = sql
         self.result = result
         self.db = DBMS_Set
         self.id = kwargs['id']
         self.suite = suite
+        self.input_data = input_data
 
     def set_execute_db(self, db: set):
         self.db = db
@@ -103,8 +106,8 @@ class Record:
 
 class Statement(Record):
     def __init__(self, sql="", result="", status=True,
-                 affected_rows=0, **kwargs) -> None:
-        super().__init__(sql, result, **kwargs)
+                 affected_rows=0, input_data="",  **kwargs) -> None:
+        super().__init__(sql, result, input_data=input_data, ** kwargs)
         self.status = status
         self.affected_rows = affected_rows
 
@@ -156,13 +159,17 @@ def convert_postgres_result(result: str):
             # empty_ind = [i for i, row in enumerate(value_table) if row.strip().endswith('+')]
             logging.warning(
                 "the len of value table should be same with result_rows")
-            
+
         # assert len(value_table) == result_rows, "the len of value table should be same with result_rows"
-        row_wise_result_list = [[item.strip() for item in row.split('|')] for row in value_table]
-        row_wise_result_list = [['True' if elem == 't' else elem for elem in row] for row in row_wise_result_list]
-        row_wise_result_list = [['False' if elem == 'f' else elem for elem in row] for row in row_wise_result_list]
-        
-        row_wise_result = '\n'.join(['\t'.join(row) for row in row_wise_result_list])
+        row_wise_result_list = [
+            [item.strip() for item in row.split('|')] for row in value_table]
+        row_wise_result_list = [
+            ['True' if elem == 't' else elem for elem in row] for row in row_wise_result_list]
+        row_wise_result_list = [
+            ['False' if elem == 'f' else elem for elem in row] for row in row_wise_result_list]
+
+        row_wise_result = '\n'.join(['\t'.join(row)
+                                    for row in row_wise_result_list])
         if result_rows > 0:
             return row_wise_result
         else:
@@ -276,8 +283,7 @@ class ResultHelper():
                 " values hashing to " + result_string
         cmp_flag = result_string.strip() == record.result.strip()
         return cmp_flag, result_string
-    
-    
+
     def row_wise_compare(self, results, record: Record):
         expected_result_list = record.result.strip().split('\n') if record.result else []
         # expected_result_list.sort()

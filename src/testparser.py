@@ -409,7 +409,7 @@ class PGTParser(MYTParser):
                 ind += len(command.split('\n'))
             # skip the input command
             else:
-                self.records[i - 1 - num_input].result = command
+                self.records[i - 1 - num_input].input_data = command.strip(';')
                 num_input += 1
                 continue
 
@@ -434,13 +434,13 @@ class PGTParser(MYTParser):
                         Control(id=i - num_input, sql=command.strip(';'), result=result))
                 else:
                     self.records.append(
-                        Query(id=i - num_input, sql=command.strip(';'), result=result))
+                        Record(id=i - num_input, sql=command.strip(';'), result=result))
                 psql_flag = True
                 # print("psql:", command)
                 # break
             else:
                 self.records.append(
-                    Record(sql=pure_commands[i - num_input].strip(';'), id=i - num_input, result=result))
+                    Record(sql=pure_commands[i].strip(';'), id=i - num_input, result=result))
         if psql_flag:
             self.meta_data['psql_files'] += 1
 
@@ -456,10 +456,10 @@ class PGTParser(MYTParser):
         converted_record = Statement(id=record.id)
         # Statement ok
         if converted_result == "":
-            return Statement(sql=record.sql, id=record.id)
+            return Statement(sql=record.sql, id=record.id, input_data=record.input_data)
         # Statement error
         elif converted_result.startswith("ERROR"):
-            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id)
+            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id, input_data=record.input_data)
         # Query
         elif converted_result:
             data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
