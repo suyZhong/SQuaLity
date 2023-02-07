@@ -2,42 +2,153 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  set-up-python:
+  code-style:
     runs-on: ubuntu-latest
-    strategy:
-        matrix:
-          python-version: ["3.9", "3.10"]
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-  code-style: 
-    runs-on: ubuntu-latest 
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
-    needs: set-up-python
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install pylint
-    - name: Analysing the code with pylint
-      run: |
-        pylint ./*.py src/*.py --fail-under=7.0
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pylint
+      - name: Analysing the code with pylint
+        run: |
+          pylint ./*.py src/*.py --fail-under=7.0
+
+  sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Test SQLite Runner and Parser
+        run: |
+          mkdir -p logs
+          mkdir -p output
+          python ./main.py --dbms sqlite -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f output/temp.db --log INFO
+      - name: Read logs
+        run: |
+          cat logs/*
+
+  duckdb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Test DuckDB Runner
+        run: |
+          mkdir -p logs
+          mkdir -p output
+          python ./main.py --dbms duckdb -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f output/temp.db --log INFO
+      - name: Read logs
+        run: |
+          cat logs/*
+
+  postgresql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: 
+          postgres:latest
+        env:
+          POSTGRES_PASSWORD: root
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Test PostgreSQL Python Connector Runner
+        run: |
+          mkdir -p logs
+          mkdir -p output
+          python ./main.py --dbms postgresql -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f tempdb --log INFO
+      - name: Read logs
+        run: |
+          cat logs/*
+
+  mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: 
+          mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3307:3306
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Test MySQL Python Connector Runner
+        run: |
+          mkdir -p logs
+          mkdir -p output
+          python ./main.py --dbms mysql -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f tempdb --log INFO
+      - name: Read logs
+        run: |
+          cat logs/*
+
+  cockroachdb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Set up CockroachDB Server
+        run: |
+          docker pull cockroachdb/cockroach:latest
+          docker run -d --env COCKROACH_DATABASE=squalitytest --env COCKROACH_USER=root --env COCKROACH_PASSWORD=root --name=cockroachdb-test -p 26257:26257 -p 8080:8080 -v "roach-single:/cockroach/cockroach-data" cockroachdb/cockroach:latest start-single-node --insecure
+          sleep 5
+      - name: Test CockroachDB Python Connector Runner
+        run: |
+          mkdir -p logs
+          mkdir -p output
+          python ./main.py --dbms cockroachdb -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f tempdb --log INFO
+      - name: Read logs
+        run: |
+          cat logs/*
