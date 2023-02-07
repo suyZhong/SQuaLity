@@ -45,8 +45,10 @@ jobs:
           mkdir -p output
           python ./main.py --dbms sqlite -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f output/temp.db --log INFO
       - name: Read logs
+        if: always()
         run: |
           cat logs/*
+          rm -f logs/*
 
   duckdb:
     runs-on: ubuntu-latest
@@ -66,8 +68,10 @@ jobs:
           mkdir -p output
           python ./main.py --dbms duckdb -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f output/temp.db --log INFO
       - name: Read logs
+        if: always()
         run: |
           cat logs/*
+          rm -f logs/*
 
   postgresql:
     runs-on: ubuntu-latest
@@ -89,14 +93,35 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          sudo apt-get -y install postgresql-client
       - name: Test PostgreSQL Python Connector Runner
         run: |
           mkdir -p logs
           mkdir -p output
           python ./main.py --dbms postgresql -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f tempdb --log INFO
       - name: Read logs
+        if: always()
         run: |
           cat logs/*
+          rm -f logs/*
+      - name: Checkout PostgreSQL repository
+        uses: actions/checkout@v3
+        with:
+          repository: postgres/postgres
+          path: postgres
+      - name: Get PostgreSQL regression tests
+        run: |
+          mkdir postgresql_tests
+          mv postgres/src/test/regress postgresql_tests
+          echo "Total test file is `ls -l postgresql_tests/regress/sql | wc -l `"
+      - name: Test PostgreSQL Test Parser
+        run: |
+          python ./main.py --dbms psql -s postgresql -f tempdb --log INFO
+      - name: Read logs
+        if: always()
+        run: |
+          cat logs/*
+          rm -f logs/*
 
   mysql:
     runs-on: ubuntu-latest
@@ -124,8 +149,10 @@ jobs:
           mkdir -p output
           python ./main.py --dbms mysql -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f tempdb --log INFO
       - name: Read logs
+        if: always()
         run: |
           cat logs/*
+          rm -f logs/*
 
   cockroachdb:
     runs-on: ubuntu-latest
@@ -150,5 +177,7 @@ jobs:
           mkdir -p output
           python ./main.py --dbms cockroachdb -s sqlite -t demo/sqlite_tests-index-orderby_nosort-10-slt_good_23.test -f tempdb --log INFO
       - name: Read logs
+        if: always()
         run: |
           cat logs/*
+          rm -f logs/*
