@@ -33,16 +33,21 @@ class Parser:
         """get the environment set up records
         """
 
+    def _read_file(self, filename):
+        content = ""
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            with open(filename, 'r', encoding='windows-1252') as f:
+                content = f.read()
+        return content
+    
     def get_file_name(self, filename):
         self.filename = filename
 
     def get_file_content(self):
-        try:
-            with open(self.filename, 'r', encoding='utf-8') as f:
-                self.test_content = f.read()
-        except UnicodeDecodeError:
-            with open(self.filename, 'r', encoding='windows-1252') as f:
-                self.test_content = f.read()
+        self.test_content = self._read_file(self.filename)
 
     def parse_file(self):
         pass
@@ -262,11 +267,8 @@ class MYTParser(Parser):
             '/t/', '/r/').replace('.test', '.result')
 
     def get_file_content(self):
-        with open(self.testfile, 'r', encoding='utf-8') as testfile:
-            self.test_content = testfile.read()
-
-        with open(self.resultfile, 'r', encoding='utf-8') as testfile:
-            self.result_content = testfile.read()
+        self.test_content = self._read_file(self.testfile)
+        self.result_content = self._read_file(self.resultfile)
 
     def find_next_command(self, id):
         if id + 1 >= len(self.records):
@@ -325,7 +327,7 @@ class MYTParser(Parser):
         self.get_test_results()
 
 
-class PGTParser(MYTParser):
+class PGTParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.testfile = filename
@@ -350,7 +352,8 @@ class PGTParser(MYTParser):
 
     def get_file_content(self):
         self.meta_data['total_files'] += 1
-        super().get_file_content()
+        self.test_content = self._read_file(self.testfile)
+        self.result_content = self._read_file(self.resultfile)
 
     def testfile_dialect_handler(self, *args, **kwargs):
 
