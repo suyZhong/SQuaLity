@@ -107,6 +107,7 @@ jobs:
       - name: Checkout PostgreSQL repository
         uses: actions/checkout@v3
         with:
+          ref: REL_15_STABLE
           repository: postgres/postgres
           path: postgres
       - name: Get PostgreSQL regression tests
