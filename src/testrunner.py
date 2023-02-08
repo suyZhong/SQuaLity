@@ -574,6 +574,7 @@ class CLIRunner(Runner):
         for i, sql in enumerate(self.sql):
             self.cli.stdin.write(self.echo.format(self.res_delimiter))
             self.cli.stdin.write(sql)
+            result = self.records[i].result
             self.cli.stdin.flush()
         output, _ = self.cli.communicate()
         output_list = output.split(self.res_delimiter)[1:]
@@ -587,7 +588,6 @@ class CLIRunner(Runner):
             self.all_run_stats[key] += self.single_run_stats[key]
 
 
-
 class PSQLRunner(CLIRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
@@ -599,15 +599,16 @@ class PSQLRunner(CLIRunner):
         self.sql = []
         for record in self.records:
             sql = record.sql
-            if re.match(r'^COPY', sql):
+            if re.match(r'^COPY', sql, re.IGNORECASE):
                 # the COPY statement in Postgres will try to find file in server side
                 # if the backend is docker, the file will be missing
                 # So we transform COPY to \copy in psql
                 # psql \copy don't support variable substitude so we transform it to command
-                sql_cmd = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
-                if len(sql_cmd) > 1:
-                    self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1]))
-                elif type(record) == Statement:
+                if sql.find(":'filename'") >=0 :
+                    sql_cmd = [s.replace("\\", "\\\\").replace("'", "\\'") for s in re.sub(r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
+                    self.sql.append("\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1].strip()))
+                # it is a copy from stdin, no need to change 
+                elif type(record) == Statement or type(record) == Query:
                     self.sql.append(sql + ';\n' +record.input_data + '\n')
                 continue
             if sql.startswith('\\'):
@@ -622,6 +623,7 @@ class PSQLRunner(CLIRunner):
             ['pg_config', '--pkglibdir'], capture_output=True, encoding='utf-8').stdout.strip()
         self.env['PG_ABS_SRCDIR'] = os.path.abspath(TESTCASE_PATH['postgresql'])
         self.env['PG_DLSUFFIX'] = '.so'
+        self.env['PG_ABS_BUILDDIR'] = os.path.abspath(OUTPUT_PATH['base'])
 
     def test_setup(self):
         self.get_env()

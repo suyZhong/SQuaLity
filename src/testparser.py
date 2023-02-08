@@ -466,7 +466,7 @@ class PGTParser(Parser):
         # Query
         elif converted_result:
             data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
-            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type)
+            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type, input_data=record.input_data)
 
         return converted_record
 

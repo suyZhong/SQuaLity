@@ -85,6 +85,7 @@ SETUP_PATH = {
 
 OUTPUT_PATH = {
     'testcase_dir': 'data/',
+    'base': 'output/',
     'execution_result': 'output/{}_results.csv',  # means execution db engine
     'execution_log': 'output/{}_logs.csv'
 }
@@ -114,8 +115,8 @@ class Statement(Record):
 
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
-                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, **kwargs) -> None:
-        super().__init__(sql=sql, result=result, **kwargs)
+                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE,input_data="", **kwargs) -> None:
+        super().__init__(sql=sql, result=result,input_data=input_data, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label
