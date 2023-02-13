@@ -257,13 +257,19 @@ class PyDBCRunner(Runner):
             try:
                 results = self.execute_query(record.sql)
             except self.db_error as except_msg:
-                self.single_run_stats['failed_query_num'] += 1
-                logging.debug("Query %s execution error: %s",
+                except_msg = str(except_msg).strip(' ').strip('\t').strip('\n')
+                if self.compare_results(except_msg ,record):
+                    self.single_run_stats['success_query_num'] += 1
+                    results = except_msg
+                    self.commit()
+                else:
+                    self.single_run_stats['failed_query_num'] += 1
+                    logging.debug("Query %s execution error: %s",
                               record.sql, except_msg)
-                self.commit()
-                self.bug_dumper.save_state(self.records_log, record, str(False), (
+                    self.commit()
+                    self.bug_dumper.save_state(self.records_log, record, str(False), (
                     datetime.now()-self.cur_time).microseconds, is_error=True, msg="Execution Failed: {}".format(except_msg))
-                return
+                    return
             else:
                 self.single_run_stats['success_query_num'] += 1
             # print(results)
@@ -296,14 +302,16 @@ class PyDBCRunner(Runner):
                 stmt=record, status=status, err_msg=str(err_msg))
             return False
 
+    def compare_results(self, result: str, record: Query):
+        expected_result = record.result
+        if result == expected_result:
+            return True
+        else:
+            return False
+
     def handle_query_result_string(self, results: str, record: Query):
         result_string = results
-        expected_result = record.result
-        cmp_flag = False
-        if results == expected_result:
-            cmp_flag = True
-        else:
-            cmp_flag = False
+        cmp_flag = self.compare_results(results, record)
 
         if cmp_flag:
             my_debug("Query %s Success", record.sql)

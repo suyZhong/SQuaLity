@@ -603,8 +603,11 @@ class CDBTParser(SLTParser):
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def get_query(self, tokens, lines):
-
-        return super().get_query(tokens, lines)
+        tokens_copy = tokens.copy()
+        query = super().get_query(tokens, lines)
+        if query.data_type == 'error':
+            query.result = ' '.join(tokens_copy[2:])
+        return query
 
     def parse_script(self, script: str):
         script = strip_hash_comment_lines(script)
@@ -632,16 +635,19 @@ class CDBTParser(SLTParser):
             record = self.get_query(tokens=tokens, lines=lines)
 
             cols = len(record.data_type)
-            if cols > 1:
+            if 'error' != record.data_type and cols > 1:
                 record.result = record.result.strip('\t').strip('\n')
                 record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split(' ') if value not in ['', '\n', '\t', ' '])
 
-            record.result = re.sub(
-                r'true(\t|\n|$)', r'True\1', record.result)
-            record.result = re.sub(
-                r'false(\t|\n|$)', r'False\1', record.result)
+            if 'error' != record.data_type:
+                record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
+                record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
 
-            record.set_resformat(ResultFormat.ROW_WISE)
+            if not isinstance(record.result, list) and record.sort == SortType.NO_SORT:
+                record.set_resformat(ResultFormat.VALUE_WISE)
+            else:
+                record.set_resformat(ResultFormat.ROW_WISE)
+
             self.records.append(record)
             self.record_id += 1
         else:
