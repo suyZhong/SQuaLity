@@ -599,7 +599,10 @@ class CDBTParser(SLTParser):
         self.dbms_set = set(['cockroach'])
 
         tokens = lines[0].split()
-        record_type = tokens[0]
+        if tokens[1] == 'error':
+            record_type = 'statement'
+        else:
+            record_type = tokens[0]
         record = Statement(id=self.record_id)
 
         if record_type == 'statement':
@@ -624,11 +627,7 @@ class CDBTParser(SLTParser):
                 record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
                 record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
 
-            if not isinstance(record.result, list) and record.sort == SortType.NO_SORT:
-                record.set_resformat(ResultFormat.VALUE_WISE)
-            else:
-                record.set_resformat(ResultFormat.ROW_WISE)
-
+            record.set_resformat(ResultFormat.ROW_WISE)
             self.records.append(record)
             self.record_id += 1
         else:

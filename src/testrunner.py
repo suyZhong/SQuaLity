@@ -33,7 +33,7 @@ class Runner():
 
     def test_setup(self):
         """set up the test environment
-        """        
+        """
 
     def set_db(self, db_name: str):
         """Set up the Database that this test run should use
@@ -247,13 +247,14 @@ class PyDBCRunner(Runner):
                 self.execute_stmt(record.sql)
             except self.db_error as e:
                 status = False
-                self.single_run_stats['failed_statement_num'] += 1
+                if status != record.status:
+                    self.single_run_stats['failed_statement_num'] += 1
                 except_msg = str(e)
                 logging.debug(
                     "Statement %s execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record, except_msg)
             self.commit()
-            if status:
+            if status == record.status:
                 self.records_log.append(record)
         elif type(record) is Query:
             self.single_run_stats['query_num'] += 1
@@ -261,19 +262,14 @@ class PyDBCRunner(Runner):
             try:
                 results = self.execute_query(record.sql)
             except self.db_error as except_msg:
-                except_msg = str(except_msg).strip(' ').strip('\t').strip('\n')
-                if self.compare_results(except_msg ,record):
-                    self.single_run_stats['success_query_num'] += 1
-                    results = except_msg
-                    self.commit()
-                else:
-                    self.single_run_stats['failed_query_num'] += 1
-                    logging.debug("Query %s execution error: %s",
+                self.single_run_stats['failed_query_num'] += 1
+                logging.debug("Query %s execution error: %s",
                               record.sql, except_msg)
-                    self.commit()
-                    self.bug_dumper.save_state(self.records_log, record, str(False), (
-                    datetime.now()-self.cur_time).microseconds, is_error=True, msg="Execution Failed: {}".format(except_msg))
-                    return
+                self.commit()
+                self.bug_dumper.save_state(self.records_log, record, str(False), (
+                        datetime.now() - self.cur_time).microseconds, is_error=True,
+                                           msg="Execution Failed: {}".format(except_msg))
+                return
             else:
                 self.single_run_stats['success_query_num'] += 1
             # print(results)
@@ -301,12 +297,6 @@ class PyDBCRunner(Runner):
         else:
             self.handle_wrong_stmt(
                 stmt=record, status=status, err_msg=str(err_msg))
-            return False
-    def compare_results(self, result: str, record: Query):
-        expected_result = record.result
-        if result == expected_result:
-            return True
-        else:
             return False
 
     def handle_query_result(self, results: list, record: Query):
@@ -347,7 +337,7 @@ class PyDBCRunner(Runner):
             my_debug("Query %s Success", record.sql)
             if self.dump_all:
                 self.bug_dumper.save_state(
-                    self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
+                    self.records_log, record, result_string, (datetime.now() - self.cur_time).microseconds)
         elif record.label != '':
             self.handle_wrong_query(
                 query=record, result=result_string, label=record.label)
@@ -538,7 +528,7 @@ class CLIRunner(Runner):
 
     def get_env(self):
         """get the environment variable
-        """        
+        """
 
     def extract_sql(self):
         self.sql = []
@@ -595,7 +585,7 @@ class CLIRunner(Runner):
             output_list) == i + 1, "The length of result list should be equal to the commands have executed"
         self.handle_results(output_list)
         self.cli.terminate()
-        
+
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
 
@@ -616,12 +606,14 @@ class PSQLRunner(CLIRunner):
                 # if the backend is docker, the file will be missing
                 # So we transform COPY to \copy in psql
                 # psql \copy don't support variable substitude so we transform it to command
-                if sql.find(":'filename'") >=0 :
-                    sql_cmd = [s.replace("\\", "\\\\").replace("'", "\\'") for s in re.sub(r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
-                    self.sql.append("\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1].strip()))
+                if sql.find(":'filename'") >= 0:
+                    sql_cmd = [s.replace("\\", "\\\\").replace("'", "\\'") for s in
+                               re.sub(r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
+                    self.sql.append(
+                        "\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1].strip()))
                 # it is a copy from stdin, no need to change
                 elif type(record) == Statement or type(record) == Query:
-                    self.sql.append(sql + ';\n' +record.input_data + '\n')
+                    self.sql.append(sql + ';\n' + record.input_data + '\n')
                 continue
             if sql.startswith('\\'):
                 self.sql.append(sql + '\n')
@@ -640,13 +632,13 @@ class PSQLRunner(CLIRunner):
     def test_setup(self):
         self.get_env()
         my_debug('setup total {} test cases'.format(len(self.setup_records)))
-        if len(self.setup_records) > 0: 
+        if len(self.setup_records) > 0:
             self.records = self.setup_records
             db_name = 'testdb'
             # set the env variable
             for env_name in self.env:
                 os.environ[env_name] = self.env[env_name]
-                
+
             # init a test database
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
                 'postgres'), '-X', '-a', '-q', '-c']
@@ -658,7 +650,7 @@ class PSQLRunner(CLIRunner):
                 self.execute_stmt(stmt)
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
                 db_name), '-X', '-q']
-            
+
             # run the test_setup.sql
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
@@ -672,7 +664,7 @@ class PSQLRunner(CLIRunner):
             my_debug(output)
             my_debug(err)
             self.cli.terminate()
-            
+
 
     def set_db(self, db_name: str):
         # if the test suites have some setup records, then don't set up db when each test
