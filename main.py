@@ -91,7 +91,7 @@ if __name__ == "__main__":
         sys.exit("Not implement yet")
     r.init_dumper(dump_all=args.dump_all)
 
-    skip_index = []
+    skip_index = [34] # copy2.sql
     for i, test_file in enumerate(test_files):
         db_name = args.db_name
         single_begin_time = datetime.now()
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         except Exception as e:
             logging.critical(
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
-            logging.debug(traceback.format_exc())
+            logging.info(traceback.format_exc())
         r.close()
         if log_level != "DEBUG":
             r.remove_db(db_name)

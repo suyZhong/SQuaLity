@@ -17,7 +17,8 @@ from .bugdumper import BugDumper
 
 class Runner():
     def __init__(self, records: List[Record] = []) -> None:
-        self.records = records
+        self.records = []
+        self.setup_records = copy(records)
         self.records_log = []
         self.all_run_stats = {}.fromkeys(Running_Stats, 0)
         self.single_run_stats = {}.fromkeys(Running_Stats, 0)
@@ -27,6 +28,8 @@ class Runner():
         self.cur_time = datetime.now()
         self.end_time = datetime.now()
         self.db = ":memory:"
+        self.env = {}
+        self.test_setup()
 
     def test_setup(self):
         """set up the test environment
@@ -133,8 +136,8 @@ class Runner():
             logging.error(
                 "Query %s does not return expected result. \nExpected: %s\nActually: %s",
                 query.sql, query.result.strip(), result.strip())
-            logging.debug("Expected:\n %s\n Actually:\n %s\n",
-                          query.result.strip(), result.strip())
+            # logging.debug("Expected:\n %s\n Actually:\n %s\n",
+            #               query.result.strip(), result.strip())
         self.allright = False
         self.bug_dumper.save_state(self.records_log, query, result, (datetime.now(
         )-self.cur_time).microseconds, is_error=True)
@@ -242,11 +245,12 @@ class PyDBCRunner(Runner):
             except_msg = None
             try:
                 self.execute_stmt(record.sql)
-            except self.db_error as except_msg:
+            except self.db_error as e:
                 status = False
                 self.single_run_stats['failed_statement_num'] += 1
+                except_msg = str(e)
                 logging.debug(
-                    "Statement %s execution error: %s", record.sql, except_msg)
+                    "Statement %s execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record, except_msg)
             self.commit()
             if status:
@@ -273,10 +277,7 @@ class PyDBCRunner(Runner):
             else:
                 self.single_run_stats['success_query_num'] += 1
             # print(results)
-            if type(results) == list:
-                self.handle_query_result_list(results, record)
-            else:
-                self.handle_query_result_string(results, record)
+            self.handle_query_result(results, record)
 
     def not_allright(self):
         self.allright = False
@@ -301,7 +302,6 @@ class PyDBCRunner(Runner):
             self.handle_wrong_stmt(
                 stmt=record, status=status, err_msg=str(err_msg))
             return False
-
     def compare_results(self, result: str, record: Query):
         expected_result = record.result
         if result == expected_result:
@@ -309,19 +309,7 @@ class PyDBCRunner(Runner):
         else:
             return False
 
-    def handle_query_result_string(self, results: str, record: Query):
-        result_string = results
-        cmp_flag = self.compare_results(results, record)
-
-        if cmp_flag:
-            my_debug("Query %s Success", record.sql)
-            if self.dump_all:
-                self.bug_dumper.save_state(
-                    self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
-        else:
-            self.handle_wrong_query(record, result_string)
-
-    def handle_query_result_list(self, results: list, record: Query):
+    def handle_query_result(self, results: list, record: Query):
         result_string = ""
         cmp_flag = False
         helper = ResultHelper(results, record)
@@ -345,42 +333,7 @@ class PyDBCRunner(Runner):
                     results, record, hash_threshold)
             # Currently it is only for DuckDB records
             elif record.res_format == ResultFormat.ROW_WISE:
-                expected_result_list = record.result.strip().split('\n') if record.result else []
-                # expected_result_list.sort()
-                NULL = None
-                actually_result_list = copy(results)
-                # actually_result_list.sort()
-                my_debug("%s, %s", actually_result_list, expected_result_list)
-                if len(expected_result_list) == len(actually_result_list) == 0:
-                    cmp_flag = True
-                elif len(expected_result_list) != len(actually_result_list):
-                    cmp_flag = False
-                else:
-                    for i, row in enumerate(expected_result_list):
-                        items = row.strip().split('\t')
-                        for j, item in enumerate(items):
-                            # direct comparison
-                            rvalue = actually_result_list[i][j]
-                            # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
-                            cmp_flag = item is rvalue
-                            cmp_flag = item == str(rvalue) or cmp_flag
-                            # if DuckDB
-                            cmp_flag = item == '(empty)' and rvalue == '' or cmp_flag
-
-                            if not cmp_flag:
-                                try:
-                                    lvalue = eval(item)
-                                except (TypeError, SyntaxError, NameError):
-                                    continue
-                                cmp_flag = lvalue == rvalue or cmp_flag
-                                # if numeric (No, even data type is I, still would have float type
-                                if type(lvalue) is float and type(rvalue) is float:
-                                    cmp_flag = math.isclose(
-                                        lvalue, rvalue) or cmp_flag
-                        if not cmp_flag:
-                            break
-                result_string = '\n'.join(['\t'.join(
-                    [str(item) if item != None else 'NULL' for item in row]) for row in results])
+                cmp_flag, result_string = helper.row_wise_compare(results, record)
             elif record.res_format == ResultFormat.HASH:
                 result_string = '\n'.join(['\n'.join(
                     [str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'
@@ -575,13 +528,13 @@ class PostgreSQLRunner(CockroachDBRunner):
 
 class CLIRunner(Runner):
     def __init__(self, records: List[Record] = []) -> None:
-        super().__init__(records)
-        self.cli = None
-        self.sql = []
-        self.cmd = []
         self.res_delimiter = '------'
         self.echo = ''
-        self.env = {}
+        self.cmd = []
+        super().__init__(records)
+        self.dbms_name = type(self).__name__.lower().removesuffix("runner")
+        self.cli = None
+        self.sql = []
 
     def get_env(self):
         """get the environment variable
@@ -591,18 +544,7 @@ class CLIRunner(Runner):
         self.sql = []
         for record in self.records:
             sql = record.sql
-            if re.match(r'^COPY', sql):
-                # the COPY statement in Postgres will try to find file in server side
-                # if the backend is docker, the file will be missing
-                # So we transform COPY to \copy in psql
-                # psql \copy don't support variable substitude so we transform it to command
-                sql = re.sub(r'^COPY',r'\\\\copy', sql).split(':')
-                self.sql.append("\\set cp_cmd '{}':{}\n:cp_cmd\n".format(sql[0], sql[1]))
-                continue
-            if sql.startswith('\\'):
-                self.sql.append(sql + '\n')
-            else:
-                self.sql.append(sql + ';\n')
+            self.sql.append(sql + ';\n')
 
     def handle_results(self, output: List[str]):
         for i, result in enumerate(output):
@@ -614,6 +556,8 @@ class CLIRunner(Runner):
             self.single_run_stats['total_sql'] += 1
             if type(record) == Statement:
                 self.single_run_stats['statement_num'] += 1
+                if actually_status:
+                    self.records_log.append(record)
                 if record.status == actually_status:
                     logging.debug("Statement {} Success".format(record.sql))
                     if self.dump_all:
@@ -642,6 +586,7 @@ class CLIRunner(Runner):
         for i, sql in enumerate(self.sql):
             self.cli.stdin.write(self.echo.format(self.res_delimiter))
             self.cli.stdin.write(sql)
+            result = self.records[i].result
             self.cli.stdin.flush()
         output, _ = self.cli.communicate()
         output_list = output.split(self.res_delimiter)[1:]
@@ -654,53 +599,49 @@ class CLIRunner(Runner):
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
 
-    def debug(self):
-        dbms_name = 'tempdb'
-        psql_cmd = [
-            'psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(dbms_name), '-X', '-a', '-q']
-        psql_cli = subprocess.Popen(['psql', 'postgresql://postgres:root@localhost:5432/?sslmode=disable', '-X', '-q'],
-                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
-
-        queries = ['\\d\n', 'CREATE TABLE BIT_TABLE(b BIT(11));\n', "INSERT INTO BIT_TABLE VALUES (B'10');\n",
-                   "INSERT INTO BIT_TABLE VALUES (B'00000000000');\n", '\\d\n', 'CREATE TABLE large_table (id INT, data TEXT);\n', '\\d\n']
-        # for i in range(1,10000):
-        #     queries.append("\echo ----------")
-
-        for i, query in enumerate(tqdm(queries)):
-            # print(query)
-            psql_cli.stdin.write('\\echo {}---------------\n'.format(i))
-            psql_cli.stdin.write(query)
-            psql_cli.stdin.flush()
-            # print(psql_cli.stdout.read())
-            # psql_proc = subprocess.run(psql_cmd + [query], capture_output=True)
-        output, err = psql_cli.communicate()
-        print('output len:\n', output)
-        print('error:', err)
-        psql_cli.terminate()
-
 
 class PSQLRunner(CLIRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
-        self.setup_records = copy(records)
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
-        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-            'postgres'), '-X', '-q']
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
-        self.get_env()
-        self.test_setup()
-        
+
+    def extract_sql(self):
+        self.sql = []
+        for record in self.records:
+            sql = record.sql
+            if re.match(r'^COPY', sql, re.IGNORECASE):
+                # the COPY statement in Postgres will try to find file in server side
+                # if the backend is docker, the file will be missing
+                # So we transform COPY to \copy in psql
+                # psql \copy don't support variable substitude so we transform it to command
+                if sql.find(":'filename'") >=0 :
+                    sql_cmd = [s.replace("\\", "\\\\").replace("'", "\\'") for s in re.sub(r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
+                    self.sql.append("\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1].strip()))
+                # it is a copy from stdin, no need to change
+                elif type(record) == Statement or type(record) == Query:
+                    self.sql.append(sql + ';\n' +record.input_data + '\n')
+                continue
+            if sql.startswith('\\'):
+                self.sql.append(sql + '\n')
+            else:
+                self.sql.append(sql + ';\n')
+
+
     # TODO make here more elegant
     def get_env(self):
         self.env['PG_LIBDIR'] = subprocess.run(
             ['pg_config', '--pkglibdir'], capture_output=True, encoding='utf-8').stdout.strip()
         self.env['PG_ABS_SRCDIR'] = os.path.abspath(TESTCASE_PATH['postgresql'])
         self.env['PG_DLSUFFIX'] = '.so'
+        self.env['PG_ABS_BUILDDIR'] = os.path.abspath(OUTPUT_PATH['base'])
 
     def test_setup(self):
-        my_debug(len(self.records))
+        self.get_env()
+        my_debug('setup total {} test cases'.format(len(self.setup_records)))
         if len(self.setup_records) > 0: 
+            self.records = self.setup_records
             db_name = 'testdb'
             # set the env variable
             for env_name in self.env:
@@ -726,16 +667,15 @@ class PSQLRunner(CLIRunner):
                 self.cli.stdin.write(self.echo.format(self.res_delimiter))
                 self.cli.stdin.write(sql)
                 self.cli.stdin.flush()
-            # self.cli.stdin.write(self.echo.format(":'libdir'"))
-            # self.cli.stdin.write(self.echo.format(":'regresslib'"))
-            # self.cli.stdin.write(self.echo.format(":'dlsuffix'"))
             self.cli.stdin.flush()
             output, err = self.cli.communicate()
             my_debug(output)
+            my_debug(err)
             self.cli.terminate()
             
 
     def set_db(self, db_name: str):
+        # if the test suites have some setup records, then don't set up db when each test
         if len(self.setup_records) > 0:
             return
         my_debug('set up db {}'.format(db_name))

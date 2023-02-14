@@ -10,8 +10,10 @@ from typing import List
 def strip_hash_comment_lines(code: str):
     return re.sub(r'(?m)^ *#.*\n?', '', code)
 
+
 def strip_dash_comment_lines(code: str):
     return re.sub(r'(?m)^ *--.*\n?', '', code)
+
 
 def strip_comment_suffix(code: str):
     return re.sub(r'--.*', '', code)
@@ -29,18 +31,23 @@ class Parser:
 
     def get_setup_tests(self):
         """get the environment set up records
-        """        
+        """
 
+    def _read_file(self, filename):
+        content = ""
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            with open(filename, 'r', encoding='windows-1252') as f:
+                content = f.read()
+        return content
+    
     def get_file_name(self, filename):
         self.filename = filename
 
     def get_file_content(self):
-        try:
-            with open(self.filename, 'r', encoding='utf-8') as f:
-                self.test_content = f.read()
-        except UnicodeDecodeError:
-            with open(self.filename, 'r', encoding='windows-1252') as f:
-                self.test_content = f.read()
+        self.test_content = self._read_file(self.filename)
 
     def parse_file(self):
         pass
@@ -260,11 +267,8 @@ class MYTParser(Parser):
             '/t/', '/r/').replace('.test', '.result')
 
     def get_file_content(self):
-        with open(self.testfile, 'r', encoding='utf-8') as testfile:
-            self.test_content = testfile.read()
-
-        with open(self.resultfile, 'r', encoding='utf-8') as testfile:
-            self.result_content = testfile.read()
+        self.test_content = self._read_file(self.testfile)
+        self.result_content = self._read_file(self.resultfile)
 
     def find_next_command(self, id):
         if id + 1 >= len(self.records):
@@ -323,19 +327,19 @@ class MYTParser(Parser):
         self.get_test_results()
 
 
-class PGTParser(MYTParser):
+class PGTParser(Parser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.testfile = filename
         self.resultfile = filename.replace(
             '/sql/', '/expected/').replace('.sql', '.out')
         self.delimiter = ';'
-        self.meta_data = {'psql_testcase':0, 'total_files':0, 'total_testcase':0, 'psql_files':0}
+        self.meta_data = {'psql_testcase': 0, 'total_files': 0,
+                          'total_testcase': 0, 'psql_files': 0}
         self.get_setup_tests(filename)
 
-        
     def get_setup_tests(self, filename):
-        if filename!='':
+        if filename != '':
             self.get_file_name(filename)
             self.get_file_content()
             self.parse_file()
@@ -348,7 +352,8 @@ class PGTParser(MYTParser):
 
     def get_file_content(self):
         self.meta_data['total_files'] += 1
-        super().get_file_content()
+        self.test_content = self._read_file(self.testfile)
+        self.result_content = self._read_file(self.resultfile)
 
     def testfile_dialect_handler(self, *args, **kwargs):
 
@@ -362,130 +367,106 @@ class PGTParser(MYTParser):
             keepends=True) if line != '\n']
         return list(test_differ.compare(test_lines, result_lines))
 
+    def get_merge(self):
+        test_lines = [line for line in self.test_content.splitlines(
+            keepends=True) if line != '\n']
+        result_lines = [line for line in self.result_content.splitlines(
+            keepends=True) if line != '\n']
+
     def split_file(self):
         test_content = self.test_content
         test_content = '\n'.join([line if not line.startswith(
-            '\\') else line.strip() + ';\n' for line in self.test_content.splitlines(keepends=True)])
+            '\\') else line.strip('; \n') + ';\n' for line in self.test_content.splitlines(keepends=True)])
         commands = sqlparse.split(test_content)
         return commands
 
     def parse_file_by_split(self):
         commands = self.split_file()
-        commands = ['\n'.join([line for line in command.splitlines() if line]) for command in commands]
-        pure_commands = [strip_dash_comment_lines(command) for command in commands]
-        
-        diff = self.get_diff()
-        
+
+        # clear the empty line in the commands
+        commands = ['\n'.join(
+            [line for line in command.splitlines() if line]) for command in commands if command != ';']
+        pure_commands = [strip_dash_comment_lines(
+            command) for command in commands]
+
+        result_lines = [line for line in self.result_content.splitlines() if line != '']
+
         # Compare with the commands parsed by sqlparse
         # split the diff according to the line number
         ind = 0
-        result = []
+        num_command = len(commands)
+        num_input = 0
         psql_flag = False
         for i, command in enumerate(commands):
+            result = ""
+            command_lines = command.strip(';').splitlines()
+
+            # if next command is actually a input, skip this one
+            for k in range(i, num_command):
+                next_command = commands[k + 1] if k < num_command - 1 else "\n"
+                if not next_command.endswith('\\.;'):
+                    break
+            next_line = next_command.strip(';').splitlines()[0] if next_command != ';' else ''
+
+            if command_lines[0] == result_lines[ind].strip(';'):
+                ind += len(command.split('\n'))
+            # skip the input command
+            else:
+                self.records[i - 1 - num_input].input_data = command.strip(';')
+                num_input += 1
+                continue
+
+            # boundary checking
+            if next_line == "":
+                result = '\n'.join(result_lines[ind: len(result_lines)])
+            elif result_lines[ind].strip(';') == next_line:
+                result = ""
+            else:
+                for j in range(ind, len(result_lines)):
+                    if result_lines[j] .strip(';') == next_line:
+                        result = '\n'.join(result_lines[ind:j])
+                        ind = j
+                        break
+            # Create new record
             self.meta_data['total_testcase'] += 1
             if re.match(r'^[\\]', command.strip()):
                 # logging.warning('Currently not support psql commands like {}, change to HALT'.format(command))
                 self.meta_data['psql_testcase'] += 1
                 if re.match(r'^[\\]quit', command.strip()):
-                    self.records.append(Control(id = i, sql = command.strip(';')))
+                    self.records.append(
+                        Control(id=i - num_input, sql=command.strip(';'), result=result))
                 else:
-                    self.records.append(Control(id = i, sql=command.strip(';'), action=RunnerAction.ECHO))
+                    self.records.append(
+                        Record(id=i - num_input, sql=command.strip(';'), result=result))
                 psql_flag = True
                 # print("psql:", command)
                 # break
             else:
-                self.records.append(Record(sql=pure_commands[i].strip(';'), id = i))
-            ind += len(command.split('\n'))
-            while(ind <= len(diff) - 1):
-                line = diff[ind].rstrip('\n')
-                if line.startswith('+ '): # result
-                    ind += 1
-                    result.append(line.lstrip('+ '))
-                elif line.startswith('- '): # input, but still can store in the result attribute
-                    ind += 1
-                    result.append(line.lstrip('- '))
-                else:
-                    self.records[i].result = "\n".join(result)
-                    result = []
-                    break
-            if result:
-                self.records[i].result = "\n".join(result)
+                self.records.append(
+                    Record(sql=pure_commands[i].strip(';'), id=i - num_input, result=result))
         if psql_flag:
             self.meta_data['psql_files'] += 1
-
-
-    def parse_file_by_differ(self):
-        record_id = 0
-        command = []
-        result = []
-        test_input = []
-        diff = self.get_diff()
-
-        for i, line in enumerate(diff):
-            line = line.rstrip('\n')
-            # print(line)
-            # print(len(self.records))
-
-            # It is both in test and expected file, means a command
-            if line.startswith('  '):
-                tmp_command = line.strip()
-                if tmp_command.startswith('--'):
-                    continue
-                else:
-                    command.append(tmp_command)
-                    if strip_comment_suffix(tmp_command).rstrip().endswith(self.delimiter):
-                        record_sql = '\n'.join(command)
-                        self.records.append(
-                            Record(sql=record_sql, id=record_id))
-                        record_id += 1
-                        command = []
-                    # Some psql features (postgres specific commands)
-                    if tmp_command.startswith('\\'):
-                        record_sql = '\n'.join(command)
-                        self.records.append(
-                            Control(sql=record_sql, id=record_id))
-                        record_id += 1
-                        command = []
-            # It is only in the result file, means it's a result
-            elif line.startswith('+ '):
-                result.append(line.lstrip('+ '))
-                if i == len(diff) - 1:
-                    self.records[record_id - 1].result = "\n".join(result)
-                    result = []
-                elif not diff[i + 1].startswith('+ '):
-                    self.records[record_id - 1].result = "\n".join(result)
-                    result = []
-            # It is only in the test file, means it's the input of the test
-            elif line.startswith('- '):
-                test_input.append(line.lstrip('- '))
-                if i == len(diff) - 1:
-                    self.records[record_id - 1].result = "\n".join(test_input)
-                    test_input = []
-                elif not diff[i + 1].startswith('- '):
-                    self.records[record_id - 1].result = "\n".join(test_input)
-                    test_input = []
 
     def convert_record(self, record: Record):
         '''
         The function convert the expected result in postgres to the more general form in SQuaLity.
         '''
         # if record is control, skip
-        if type(record) == Control:
-            return record
-        
-        converted_record = Statement(id=record.id)
-
         converted_result = convert_postgres_result(record.result)
+        if type(record) == Control:
+            record.result = converted_result
+            return record
+        converted_record = Statement(id=record.id)
         # Statement ok
         if converted_result == "":
-            return Statement(sql=record.sql, id=record.id)
+            return Statement(sql=record.sql, id=record.id, input_data=record.input_data)
         # Statement error
         elif converted_result.startswith("ERROR"):
-            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id)
+            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id, input_data=record.input_data)
         # Query
         elif converted_result:
             data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
-            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type)
+            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type, input_data=record.input_data)
 
         return converted_record
 
