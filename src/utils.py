@@ -47,7 +47,9 @@ DBMS_Set = set(['mysql', 'sqlite', 'postgresql',
 Suite_Set = set(['mysql', 'sqlite', 'postgresql',
                 'duckdb', 'cockroachdb', 'squality'])
 
-Running_Stats = ['total_sql',
+Running_Stats = ['success_file_num',
+                 'total_sql',
+                 'total_executed_sql',
                  'failed_statement_num',
                  'success_query_num',
                  'failed_query_num',
@@ -115,8 +117,8 @@ class Statement(Record):
 
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
-                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE,input_data="", **kwargs) -> None:
-        super().__init__(sql=sql, result=result,input_data=input_data, **kwargs)
+                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="", **kwargs) -> None:
+        super().__init__(sql=sql, result=result, input_data=input_data, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label
