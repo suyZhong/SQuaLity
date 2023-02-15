@@ -247,8 +247,7 @@ class PyDBCRunner(Runner):
                 self.execute_stmt(record.sql)
             except self.db_error as e:
                 status = False
-                if status != record.status:
-                    self.single_run_stats['failed_statement_num'] += 1
+                self.single_run_stats['failed_statement_num'] += 1
                 except_msg = str(e)
                 logging.debug(
                     "Statement %s execution error: %s", record.sql, e)
@@ -264,11 +263,10 @@ class PyDBCRunner(Runner):
             except self.db_error as except_msg:
                 self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query %s execution error: %s",
-                              record.sql, except_msg)
+                             record.sql, except_msg)
                 self.commit()
                 self.bug_dumper.save_state(self.records_log, record, str(False), (
-                        datetime.now() - self.cur_time).microseconds, is_error=True,
-                                           msg="Execution Failed: {}".format(except_msg))
+                        datetime.now() - self.cur_time).microseconds, is_error=True, msg="Execution Failed: {}".format(except_msg))
                 return
             else:
                 self.single_run_stats['success_query_num'] += 1
@@ -611,7 +609,7 @@ class PSQLRunner(CLIRunner):
                                re.sub(r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
                     self.sql.append(
                         "\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1].strip()))
-                # it is a copy from stdin, no need to change
+                    # it is a copy from stdin, no need to change
                 elif type(record) == Statement or type(record) == Query:
                     self.sql.append(sql + ';\n' + record.input_data + '\n')
                 continue

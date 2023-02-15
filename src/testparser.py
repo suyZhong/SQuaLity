@@ -618,16 +618,16 @@ class CDBTParser(SLTParser):
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
 
-            cols = len(record.data_type)
-            if 'error' != record.data_type and cols > 1:
-                record.result = record.result.strip('\t').strip('\n')
-                record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split(' ') if value not in ['', '\n', '\t', ' '])
-
             if 'error' != record.data_type:
                 record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
                 record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
-
+                record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split(' ') if value not in ['', '\n', '\t', ' '])
             record.set_resformat(ResultFormat.ROW_WISE)
+
+            cols = len(record.data_type)
+            if 'error' != record.data_type and cols > 1 and record.sort == SortType.NO_SORT:
+                record.set_resformat(ResultFormat.VALUE_WISE)
+
             self.records.append(record)
             self.record_id += 1
         else:
