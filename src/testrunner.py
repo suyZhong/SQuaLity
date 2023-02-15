@@ -71,6 +71,17 @@ class Runner():
             db_name (str): For embedded DB, it is the filepath. For C/S DB, it is the database name
         """
 
+    def start(self):
+        """Start the test runner, preprocess some data
+        """        
+        self.single_run_stats = {}.fromkeys(Running_Stats, 0)
+        self.records_log = []
+        self.bug_dumper.reset_schema()
+        
+        # count the records that should be executed
+        self.single_run_stats['total_sql'] += len([record for record in self.records if type(record) == Query or type(record) == Statement])
+
+
     def run(self):
         """The core logic of the test runner
         """
@@ -99,7 +110,8 @@ class Runner():
         print("Testing DBMS: %s" %
               type(self).__name__.lower().removesuffix("runner"))
         print("Test Case: %s" % test_name)
-        print("Total execute SQL: ", stats['total_sql'])
+        print("Total SQL:", stats["total_sql"])
+        print("Total executed SQL: ", stats['total_executed_sql'])
         print("Total execution time: %ds" % running_time)
         print("Total SQL statement: ", stats['statement_num'])
         print("Total SQL query: ", stats['query_num'])
@@ -188,15 +200,10 @@ class PyDBCRunner(Runner):
                 logging.error("No such file or directory: %s", self.db)
 
     def run(self):
+        self.start()
         class_name = type(self).__name__
         dbms_name = class_name.lower().removesuffix("runner")
-        # TODO make here more elegant
-        if dbms_name == 'psql':
-            dbms_name = 'postgresql'
-        self.single_run_stats = {}.fromkeys(Running_Stats, 0)
-        self.records_log = []
         self.exec_time = datetime.now()
-        self.bug_dumper.reset_schema()
         self.labels = {}
         for record in self.records:
             self.cur_time = datetime.now()
@@ -238,7 +245,7 @@ class PyDBCRunner(Runner):
         pass
 
     def _single_run(self, record):
-        self.single_run_stats['total_sql'] += 1
+        self.single_run_stats['total_executed_sql'] += 1
         if type(record) is Statement:
             self.single_run_stats['statement_num'] += 1
             status = True
@@ -541,7 +548,7 @@ class CLIRunner(Runner):
             actually_result = convert_postgres_result(result.strip('\n'))
             actually_status = not bool(re.match(r'^ERROR:', actually_result))
 
-            self.single_run_stats['total_sql'] += 1
+            self.single_run_stats['total_executed_sql'] += 1
             if type(record) == Statement:
                 self.single_run_stats['statement_num'] += 1
                 if actually_status:
@@ -565,8 +572,7 @@ class CLIRunner(Runner):
                     self.handle_wrong_query(record, actually_result)
 
     def run(self):
-        self.single_run_stats = {}.fromkeys(Running_Stats, 0)
-        self.records_log = []
+        self.start()
         self.extract_sql()
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
