@@ -101,6 +101,8 @@ class Runner():
             test_name (_type_): Test case name
             running_time (_type_): the running time of the execution
         """
+        for key in self.single_run_stats:
+            self.all_run_stats[key] += self.single_run_stats[key]
         if test_name == "ALL":
             stats = self.all_run_stats
 
@@ -229,8 +231,6 @@ class PyDBCRunner(Runner):
                 self.bug_dumper.save_state(self.records_log, record, str(True),
                                            execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(exec_time))
                 break
-        for key in self.single_run_stats:
-            self.all_run_stats[key] += self.single_run_stats[key]
 
     def execute_stmt(self, sql):
         pass
@@ -589,9 +589,6 @@ class CLIRunner(Runner):
             output_list) == i + 1, "The length of result list should be equal to the commands have executed"
         self.handle_results(output_list)
         self.cli.terminate()
-        
-        for key in self.single_run_stats:
-            self.all_run_stats[key] += self.single_run_stats[key]
 
 
 class PSQLRunner(CLIRunner):
