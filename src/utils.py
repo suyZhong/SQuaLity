@@ -47,7 +47,8 @@ DBMS_Set = set(['mysql', 'sqlite', 'postgresql',
 Suite_Set = set(['mysql', 'sqlite', 'postgresql',
                 'duckdb', 'cockroachdb', 'squality'])
 
-Running_Stats = ['total_sql',
+Running_Stats = ['success_file_num',
+                 'total_sql',
                  'total_executed_sql',
                  'failed_statement_num',
                  'success_query_num',

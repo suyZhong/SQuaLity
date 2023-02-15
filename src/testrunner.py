@@ -33,7 +33,7 @@ class Runner():
 
     def test_setup(self):
         """set up the test environment
-        """        
+        """
 
     def set_db(self, db_name: str):
         """Set up the Database that this test run should use
@@ -73,14 +73,14 @@ class Runner():
 
     def start(self):
         """Start the test runner, preprocess some data
-        """        
+        """
         self.single_run_stats = {}.fromkeys(Running_Stats, 0)
         self.records_log = []
         self.bug_dumper.reset_schema()
-        
-        # count the records that should be executed
-        self.single_run_stats['total_sql'] += len([record for record in self.records if type(record) == Query or type(record) == Statement])
 
+        # count the records that should be executed
+        self.single_run_stats['total_sql'] += len(
+            [record for record in self.records if type(record) == Query or type(record) == Statement])
 
     def run(self):
         """The core logic of the test runner
@@ -101,17 +101,22 @@ class Runner():
             test_name (_type_): Test case name
             running_time (_type_): the running time of the execution
         """
+        if self.allright:
+            self.single_run_stats['success_file_num'] += 1
+        # add the single run stats to the all run stats
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
+
+        # if the test name is ALL, then the stats should be the all run stats
         if test_name == "ALL":
             stats = self.all_run_stats
-
         else:
             stats = self.single_run_stats
         print("-------------------------------------------")
         print("Testing DBMS: %s" %
               type(self).__name__.lower().removesuffix("runner"))
         print("Test Case: %s" % test_name)
+        print("Success test files: %d" % stats["success_file_num"])
         print("Total SQL:", stats["total_sql"])
         print("Total executed SQL: ", stats['total_executed_sql'])
         print("Total execution time: %ds" % running_time)
@@ -132,6 +137,9 @@ class Runner():
         """
         self.dump_all = dump_all
         self.bug_dumper = BugDumper(self.dbms_name, dump_all)
+
+    def not_allright(self):
+        self.allright = False
 
     def dump(self, mode='a'):
         """Dump the results and logs
@@ -173,7 +181,6 @@ class Runner():
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
     MAX_RUNTIME_PERSQL = 10
-
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
@@ -274,14 +281,12 @@ class PyDBCRunner(Runner):
                 self.commit()
                 self.bug_dumper.save_state(self.records_log, record, str(False), (
                     datetime.now()-self.cur_time).microseconds, is_error=True, msg="Execution Failed: {}".format(except_msg))
+                self.allright = False
                 return
             else:
                 self.single_run_stats['success_query_num'] += 1
             # print(results)
             self.handle_query_result(results, record)
-
-    def not_allright(self):
-        self.allright = False
 
     def handle_control(self, action: RunnerAction, record: Record):
         if action == RunnerAction.HALT:
@@ -328,7 +333,8 @@ class PyDBCRunner(Runner):
                     results, record, hash_threshold)
             # Currently it is only for DuckDB records
             elif record.res_format == ResultFormat.ROW_WISE:
-                cmp_flag, result_string = helper.row_wise_compare(results, record)
+                cmp_flag, result_string = helper.row_wise_compare(
+                    results, record)
             elif record.res_format == ResultFormat.HASH:
                 result_string = '\n'.join(['\n'.join(
                     [str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'
@@ -533,7 +539,7 @@ class CLIRunner(Runner):
 
     def get_env(self):
         """get the environment variable
-        """        
+        """
 
     def extract_sql(self):
         self.sql = []
@@ -559,7 +565,8 @@ class CLIRunner(Runner):
                         self.bug_dumper.save_state(
                             self.records_log, record, str(record.status), 0, msg=actually_result)
                 else:
-                    self.handle_wrong_stmt(record, actually_status, err_msg = actually_result)
+                    self.handle_wrong_stmt(
+                        record, actually_status, err_msg=actually_result)
             elif type(record) == Query:
                 self.single_run_stats['query_num'] += 1
                 if expected_result == actually_result:
@@ -597,7 +604,7 @@ class PSQLRunner(CLIRunner):
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
-    
+
     def extract_sql(self):
         self.sql = []
         for record in self.records:
@@ -607,37 +614,40 @@ class PSQLRunner(CLIRunner):
                 # if the backend is docker, the file will be missing
                 # So we transform COPY to \copy in psql
                 # psql \copy don't support variable substitude so we transform it to command
-                if sql.find(":'filename'") >=0 :
-                    sql_cmd = [s.replace("\\", "\\\\").replace("'", "\\'") for s in re.sub(r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
-                    self.sql.append("\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(sql_cmd[0], sql_cmd[1].strip()))
-                # it is a copy from stdin, no need to change 
+                if sql.find(":'filename'") >= 0:
+                    sql_cmd = [s.replace("\\", "\\\\").replace("'", "\\'") for s in re.sub(
+                        r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
+                    self.sql.append("\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(
+                        sql_cmd[0], sql_cmd[1].strip()))
+                # it is a copy from stdin, no need to change
                 elif type(record) == Statement or type(record) == Query:
-                    self.sql.append(sql + ';\n' +record.input_data + '\n')
+                    self.sql.append(sql + ';\n' + record.input_data + '\n')
                 continue
             if sql.startswith('\\'):
                 self.sql.append(sql + '\n')
             else:
                 self.sql.append(sql + ';\n')
-    
-    
+
     # TODO make here more elegant
+
     def get_env(self):
         self.env['PG_LIBDIR'] = subprocess.run(
             ['pg_config', '--pkglibdir'], capture_output=True, encoding='utf-8').stdout.strip()
-        self.env['PG_ABS_SRCDIR'] = os.path.abspath(TESTCASE_PATH['postgresql'])
+        self.env['PG_ABS_SRCDIR'] = os.path.abspath(
+            TESTCASE_PATH['postgresql'])
         self.env['PG_DLSUFFIX'] = '.so'
         self.env['PG_ABS_BUILDDIR'] = os.path.abspath(OUTPUT_PATH['base'])
 
     def test_setup(self):
         self.get_env()
         my_debug('setup total {} test cases'.format(len(self.setup_records)))
-        if len(self.setup_records) > 0: 
+        if len(self.setup_records) > 0:
             self.records = self.setup_records
             db_name = 'testdb'
             # set the env variable
             for env_name in self.env:
                 os.environ[env_name] = self.env[env_name]
-                
+
             # init a test database
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
                 'postgres'), '-X', '-a', '-q', '-c']
@@ -649,10 +659,10 @@ class PSQLRunner(CLIRunner):
                 self.execute_stmt(stmt)
             self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
                 db_name), '-X', '-q']
-            
+
             # run the test_setup.sql
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
+                                        stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
             self.extract_sql()
             for i, sql in enumerate(self.sql):
                 self.cli.stdin.write(self.echo.format(self.res_delimiter))
@@ -663,7 +673,6 @@ class PSQLRunner(CLIRunner):
             my_debug(output)
             my_debug(err)
             self.cli.terminate()
-            
 
     def set_db(self, db_name: str):
         # if the test suites have some setup records, then don't set up db when each test
