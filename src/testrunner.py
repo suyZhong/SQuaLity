@@ -325,13 +325,7 @@ class PyDBCRunner(Runner):
         else:
             if record.res_format == ResultFormat.VALUE_WISE:
                 cmp_flag, result_string = helper.value_wise_compare(
-                    results, record, self.hash_threshold)
-            elif record.sort != SortType.NO_SORT:
-                # If it has sort type, then it must be value wise
-                hash_threshold = record.res_format == ResultFormat.HASH
-                cmp_flag, result_string = helper.value_wise_compare(
-                    results, record, hash_threshold)
-            # Currently it is only for DuckDB records
+                    results, record, self.hash_threshold, record.is_hash)
             elif record.res_format == ResultFormat.ROW_WISE:
                 cmp_flag, result_string = helper.row_wise_compare(
                     results, record)
