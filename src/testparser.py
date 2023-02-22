@@ -42,7 +42,7 @@ class Parser:
             with open(filename, 'r', encoding='windows-1252') as f:
                 content = f.read()
         return content
-
+    
     def get_file_name(self, filename):
         self.filename = filename
 
@@ -549,6 +549,7 @@ class DTParser(SLTParser):
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
             record.suite = 'duckdb'
+            record.is_hash = False
 
             if record.sql.split()[0].upper() == 'EXPLAIN':
                 record.set_execute_db(set())
@@ -558,19 +559,21 @@ class DTParser(SLTParser):
             if record.result.find("values hashing to") > 0:
                 record.set_resformat(ResultFormat.HASH)
                 my_debug("hash")
+                record.is_hash = True
                 self.records.append(record)
                 self.record_id += 1
             else:
-                # If DuckDB make the result value wise, convert it to row wise
                 cols = len(record.data_type)
-                if cols > 1:
-                    result_lines = record.result.split('\n')
-                    if result_lines[0].find('\t') < 0:
+                # If the result has a sort type, then it is value wise
+                if record.sort == SortType.NO_SORT:
+                    if cols > 1:
+                        result_lines = record.result.split('\n')
+                        # If DuckDB make the result value wise, convert it to row wiseif result_lines[0].find('\t') < 0:
                         # change the value wise into row wise
                         # First split the result_lines into cols chunks
                         # Then join them together by "\t" and then by "\n"
                         record.result = '\n'.join(['\t'.join(row) for row in [
-                            result_lines[i:i + cols] for i in range(0, len(result_lines), cols)]])
+                            result_lines[i:i + cols] for i in range(0, len(result_lines), cols)]])record.set_resformat(ResultFormat.ROW_WISE)
 
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
@@ -579,7 +582,6 @@ class DTParser(SLTParser):
                 # record.result = record.result.replace('(empty)', '')
                 # if record.result == 'true' or record.result == 'false':
                 #     record.result = record.result.capitalize()
-                record.set_resformat(ResultFormat.ROW_WISE)
                 self.records.append(record)
                 self.record_id += 1
         else:

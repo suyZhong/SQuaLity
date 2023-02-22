@@ -48,7 +48,9 @@ DBMS_Set = set(['mysql', 'sqlite', 'postgresql',
 Suite_Set = set(['mysql', 'sqlite', 'postgresql',
                 'duckdb', 'cockroachdb', 'squality'])
 
-Running_Stats = ['total_sql',
+Running_Stats = ['success_file_num',
+                 'total_sql',
+                 'total_executed_sql',
                  'failed_statement_num',
                  'success_query_num',
                  'failed_query_num',
@@ -116,11 +118,12 @@ class Statement(Record):
 
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
-                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE,input_data="", **kwargs) -> None:
-        super().__init__(sql=sql, result=result,input_data=input_data, **kwargs)
+                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="",is_hash = True, **kwargs) -> None:
+        super().__init__(sql=sql, result=result, input_data=input_data, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label
+        self.is_hash = is_hash
         self.res_format = res_format
 
     def set_resformat(self, res_format: ResultFormat):
@@ -266,7 +269,7 @@ class ResultHelper():
         # myDebug(result_flat)
         return ''.join(result_flat)
 
-    def value_wise_compare(self, results, record, hash_threshold):
+    def value_wise_compare(self, results, record, hash_threshold, is_hash = True):
         result_string = ""
         if results:
             result_len = len(results) * len(results[0])
@@ -279,7 +282,7 @@ class ResultHelper():
                 results_fmt, sort_type=record.sort)
         else:
             result_len = 0
-        if hash_threshold and result_len > hash_threshold:
+        if is_hash and result_len > hash_threshold:
             result_string = self.hash_results(result_string)
             result_string = str(result_len) + \
                 " values hashing to " + result_string
