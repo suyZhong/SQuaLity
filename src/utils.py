@@ -11,6 +11,7 @@ class SortType(Enum):
     NO_SORT = 1
     ROW_SORT = 2
     VALUE_SORT = 3
+    COLUMN_NAMES = 4
 
 
 class ResultFormat(Enum):
@@ -298,7 +299,9 @@ class ResultHelper():
             cmp_flag = False
         else:
             for i, row in enumerate(expected_result_list):
-                items = row.strip().split('\t')
+                items = re.split("[\s+|\t]", row.strip())
+                #To remove empty strings from items
+                items = list(filter(None, items))
                 for j, item in enumerate(items):
                     # direct comparison
                     rvalue = actually_result_list[i][j]

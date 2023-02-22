@@ -42,7 +42,7 @@ class Parser:
             with open(filename, 'r', encoding='windows-1252') as f:
                 content = f.read()
         return content
-    
+
     def get_file_name(self, filename):
         self.filename = filename
 
@@ -112,6 +112,10 @@ class SLTParser(Parser):
                       'rowsort': SortType.ROW_SORT,
                       'valuesort': SortType.VALUE_SORT}
 
+    alternate_sort_mode_dict = {
+        'colnames': SortType.COLUMN_NAMES
+    }
+
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.scripts = []
@@ -121,7 +125,9 @@ class SLTParser(Parser):
         # A query record begins with a line of the following form:
         #       query <type-string> <sort-mode> <label>
         data_type = ''
+        colnames = False
         sort_mode = SortType.NO_SORT
+        alternate_sort_mode = SortType.NO_SORT
         label = ''
         # pop out 'query'
         tokens.pop(0)
@@ -131,9 +137,18 @@ class SLTParser(Parser):
         # pop out <sort-mode>
         if tokens:
             sort_token = tokens.pop(0)
-            try:
+            if ',' in sort_token:
+                sort_tokens = sort_token.split(',')
+                sort_token = sort_tokens[1]
+                alternate_sort_mode = self.alternate_sort_mode_dict[sort_tokens[0]]
+
+            if sort_token in self.sort_mode_dict.keys():
                 sort_mode = self.sort_mode_dict[sort_token]
-            except KeyError:
+            elif sort_token in self.alternate_sort_mode_dict.keys():
+                alternate_sort_mode = self.alternate_sort_mode_dict[sort_token]
+                print("sort mode %s not implemented, change to nosort, but alternate sort mode found" %
+                      sort_token)
+            else:
                 print("sort mode %s not implemented, change to nosort" %
                       sort_token)
         if tokens:
@@ -150,7 +165,10 @@ class SLTParser(Parser):
                 break
         sql = '\n'.join(lines[1:ind])
         result = ""
+
         if ind != len(lines):
+            if alternate_sort_mode == SortType.COLUMN_NAMES:
+                ind+=1
             result = '\n'.join(lines[ind + 1:])
         record = Query(sql=sql, result=result, data_type=data_type,
                        sort=sort_mode, label=label, id=self.record_id)
@@ -423,7 +441,7 @@ class PGTParser(Parser):
                 result = ""
             else:
                 for j in range(ind, len(result_lines)):
-                    if result_lines[j] .strip(';') == next_line:
+                    if result_lines[j].strip(';') == next_line:
                         result = '\n'.join(result_lines[ind:j])
                         ind = j
                         break
@@ -462,11 +480,13 @@ class PGTParser(Parser):
             return Statement(sql=record.sql, id=record.id, input_data=record.input_data)
         # Statement error
         elif converted_result.startswith("ERROR"):
-            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id, input_data=record.input_data)
+            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id,
+                             input_data=record.input_data)
         # Query
         elif converted_result:
             data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
-            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type, input_data=record.input_data)
+            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE,
+                         data_type=data_type, input_data=record.input_data)
 
         return converted_record
 
@@ -517,7 +537,7 @@ class DTParser(SLTParser):
         if record_type == 'statement':
             status = (tokens[1] == 'ok')
             statements = ("".join([strip_comment_suffix(line)
-                          for line in lines[1:]])).strip().split(';\n')
+                                   for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
                 record = Statement(sql=stmt.rstrip(';'), result=str(
@@ -550,7 +570,7 @@ class DTParser(SLTParser):
                         # First split the result_lines into cols chunks
                         # Then join them together by "\t" and then by "\n"
                         record.result = '\n'.join(['\t'.join(row) for row in [
-                                                  result_lines[i:i+cols] for i in range(0, len(result_lines), cols)]])
+                            result_lines[i:i + cols] for i in range(0, len(result_lines), cols)]])
 
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
@@ -578,7 +598,7 @@ class CDBTParser(SLTParser):
     def testfile_dialect_handler(self, *args, **kwargs):
         record_type = kwargs['record_type']
         lines = kwargs['lines']
-        if record_type in ('loop', 'require', 'user', ):
+        if record_type in ('loop', 'require', 'user',):
             logging.warning("This script has not implement: %s", lines)
             return Control(action=RunnerAction.HALT, id=self.record_id)
         return super().testfile_dialect_handler(*args, **kwargs)
@@ -599,7 +619,7 @@ class CDBTParser(SLTParser):
         self.dbms_set = set(['cockroach'])
 
         tokens = lines[0].split()
-        if tokens[1] == 'error':
+        if len(tokens) > 2 and tokens[1] == 'error':
             record_type = 'statement'
         else:
             record_type = tokens[0]
@@ -608,7 +628,7 @@ class CDBTParser(SLTParser):
         if record_type == 'statement':
             status = (tokens[1] == 'ok') if len(tokens) > 1 else True
             statements = ("".join([strip_comment_suffix(line)
-                          for line in lines[1:]])).strip().split(';\n')
+                                   for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
                 record = Statement(sql=stmt, result=" ".join(
@@ -618,15 +638,18 @@ class CDBTParser(SLTParser):
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
 
+
             if 'error' != record.data_type:
                 record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
                 record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
-                record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split(' ') if value not in ['', '\n', '\t', ' '])
+                record.result = re.sub(r'NaN', r'NULL', record.result)
+                record.result = re.sub(r'Infinity', r'inf', record.result)
+                #record.result = re.sub(r'\s+', r'\t', record.result)
+
+                # record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split('\t') if
+                #                           value not in ['', '\n', '\t', ' '])
             record.set_resformat(ResultFormat.ROW_WISE)
 
-            cols = len(record.data_type)
-            if 'error' != record.data_type and cols > 1 and record.sort == SortType.NO_SORT:
-                record.set_resformat(ResultFormat.VALUE_WISE)
 
             self.records.append(record)
             self.record_id += 1
