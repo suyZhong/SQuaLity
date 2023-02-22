@@ -311,6 +311,8 @@ class ResultHelper():
                     # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
                     cmp_flag = item is rvalue
                     cmp_flag = item == str(rvalue) or cmp_flag
+                    # cockroach db
+                    cmp_flag = (item == 'NULL' and rvalue is None) or cmp_flag
                     # if DuckDB
                     cmp_flag = item == '(empty)' and rvalue == '' or cmp_flag
                     if not cmp_flag:
@@ -323,6 +325,8 @@ class ResultHelper():
                         if type(lvalue) is float and type(rvalue) is float:
                             cmp_flag = math.isclose(
                                 lvalue, rvalue) or cmp_flag
+                        if type(lvalue) is set and type(rvalue) is list:
+                            cmp_flag = list(lvalue) == rvalue or cmp_flag
                 if not cmp_flag:
                     break
         result_string = '\n'.join(['\t'.join(

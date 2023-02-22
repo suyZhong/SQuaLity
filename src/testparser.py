@@ -645,8 +645,8 @@ class CDBTParser(SLTParser):
             if 'error' != record.data_type:
                 record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
                 record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
-                record.result = re.sub(r'NaN', r'NULL', record.result)
-                record.result = re.sub(r'Infinity', r'inf', record.result)
+                #record.result = re.sub(r'NaN', r'NULL', record.result)
+                #record.result = re.sub(r'Infinity', r'inf', record.result)
                 #record.result = re.sub(r'\s+', r'\t', record.result)
 
                 # record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split('\t') if
