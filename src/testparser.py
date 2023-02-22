@@ -573,7 +573,8 @@ class DTParser(SLTParser):
                         # First split the result_lines into cols chunks
                         # Then join them together by "\t" and then by "\n"
                         record.result = '\n'.join(['\t'.join(row) for row in [
-                            result_lines[i:i + cols] for i in range(0, len(result_lines), cols)]])record.set_resformat(ResultFormat.ROW_WISE)
+                            result_lines[i:i + cols] for i in range(0, len(result_lines), cols)]])
+                        record.set_resformat(ResultFormat.ROW_WISE)
 
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
