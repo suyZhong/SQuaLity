@@ -343,7 +343,7 @@ class PyDBCRunner(Runner):
             if self.dump_all:
                 self.bug_dumper.save_state(
                     self.records_log, record, result_string, (datetime.now()-self.cur_time).microseconds)
-        elif record.label != '':
+        elif record.label != '' and record.result == '':
             self.handle_wrong_query(
                 query=record, result=result_string, label=record.label)
         else:
