@@ -162,7 +162,7 @@ class Runner():
             #               query.result.strip(), result.strip())
         self.allright = False
         self.bug_dumper.save_state(self.records_log, query, result, (datetime.now(
-        )-self.cur_time).microseconds, is_error=True)
+        )-self.cur_time).microseconds, is_error=True, msg="Result MisMatch")
         # self.bug_dumper.print_state()
 
     def handle_wrong_stmt(self, stmt: Statement, status: str, **kwargs):

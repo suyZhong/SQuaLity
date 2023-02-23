@@ -6,6 +6,10 @@ from tqdm import tqdm
 from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH
 
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+
+
 class TestCaseAnalyzer():
     def __init__(self) -> None:
         self.test_cases = pd.DataFrame(columns=TestCaseColumns)
@@ -73,17 +77,19 @@ class TestCaseAnalyzer():
         return queries
 
 
+
 class TestResultAnalyzer():
     def __init__(self) -> None:
         self.results = pd.DataFrame(columns=ResultColumns)
         self.logs = pd.DataFrame([])
+        self.errors = pd.DataFrame([])
         self.attributes = set(ResultColumns)
         self.result_num = 0
 
     def load_results(self, dbms: str):
         self.results = pd.read_csv(
-            OUTPUT_PATH['execution_result'].format(dbms))
-        self.logs = pd.read_csv(OUTPUT_PATH['execution_log'].format(dbms))
+            OUTPUT_PATH['execution_result'].format(dbms), na_filter=False)
+        self.logs = pd.read_csv(OUTPUT_PATH['execution_log'].format(dbms), na_filter=False)
         self.result_num = len(self.results)
 
     def get_result_cols(self, df: pd.DataFrame = None, column=[], length: int = -1, rand: bool = False):
@@ -104,4 +110,17 @@ class TestResultAnalyzer():
         return self.results[column].loc[ind: ind + length]
 
     def get_error_rows(self):
-        return self.results.loc[self.results.IS_ERROR == True]
+        self.errors = self.results[self.results['IS_ERROR']]
+        return self.errors
+    
+    def cluster_error_reasons(self, n_clusters=8, n_init=10, max_iter=300):
+
+        vectorizer = TfidfVectorizer(stop_words='english')
+        error_messages = self.results[self.results['IS_ERROR']
+                                         == True]['ERROR_MSG']
+        X = vectorizer.fit_transform(error_messages)
+        kmeans = KMeans(n_clusters=n_clusters, n_init=n_init,
+                        max_iter=max_iter)
+        kmeans.fit(X)
+        self.results.loc[self.results['IS_ERROR'],'CLUSTER'] = kmeans.labels_
+        return kmeans.labels_
