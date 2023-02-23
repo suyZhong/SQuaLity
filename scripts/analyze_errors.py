@@ -10,6 +10,7 @@ from src import analyzer
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
 
 # os get dir name
 print(SCRIPDIR)
@@ -29,6 +30,17 @@ error_messages = errors_df['ERROR_MSG'].tolist()
 vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(error_messages)
 
-# cluster X and return the cluster labels
-print(X)
-# print(list(zip(X, error_messages)))
+# use Kmeans to cluster X and return the cluster labels
+kmeans = KMeans(n_clusters=6, random_state=0).fit(X)
+
+groups = {}
+for i, label in enumerate(kmeans.labels_):
+    if label not in groups:
+        groups[label] = []
+    groups[label].append(error_messages[i])
+
+for label, messages in groups.items():
+    print("Group {}".format(label))
+    for message in messages:
+        if message:
+            print(message)
