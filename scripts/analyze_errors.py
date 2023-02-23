@@ -14,12 +14,14 @@ import pandas as pd
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dbms', choices={'sqlite', 'duckdb', 'cockroachdb', 'all', 'postgresql', 'psql'}, default='all')
+    parser.add_argument('-d', '--dbms', choices={'sqlite', 'mysql','duckdb', 'cockroachdb', 'all', 'postgresql', 'psql'}, default='all')
+    parser.add_argument('-f', '--folder', default=None)
     
     args = parser.parse_args()
     dbms_name = args.dbms
+    dir = args.folder
     res_analyzer = testanalyzer.TestResultAnalyzer()
-    res_analyzer.load_results(dbms_name)
+    res_analyzer.load_results(dbms_name, dir)
     
     print(res_analyzer.results.info())
     print(res_analyzer.logs.info())

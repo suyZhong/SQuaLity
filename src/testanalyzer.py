@@ -86,10 +86,15 @@ class TestResultAnalyzer():
         self.attributes = set(ResultColumns)
         self.result_num = 0
 
-    def load_results(self, dbms: str):
-        self.results = pd.read_csv(
-            OUTPUT_PATH['execution_result'].format(dbms), na_filter=False)
-        self.logs = pd.read_csv(OUTPUT_PATH['execution_log'].format(dbms), na_filter=False)
+    def load_results(self, dbms: str, dir_name: str = ""):
+        if dir_name:
+            results_path = os.path.join(dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
+            logs_path =os.path.join( dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
+        else:
+            results_path = OUTPUT_PATH['execution_result'].format(dbms)
+            logs_path = OUTPUT_PATH['execution_log'].format(dbms)
+        self.results = pd.read_csv(results_path, na_filter=False)
+        self.logs = pd.read_csv(logs_path, na_filter=False)
         self.result_num = len(self.results)
 
     def get_result_cols(self, df: pd.DataFrame = None, column=[], length: int = -1, rand: bool = False):
