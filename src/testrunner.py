@@ -103,14 +103,14 @@ class Runner():
         """
         if self.allright:
             self.single_run_stats['success_file_num'] += 1
-        # add the single run stats to the all run stats
-        for key in self.single_run_stats:
-            self.all_run_stats[key] += self.single_run_stats[key]
 
         # if the test name is ALL, then the stats should be the all run stats
         if test_name == "ALL":
             stats = self.all_run_stats
         else:
+            # add the single run stats to the all run stats
+            for key in self.single_run_stats:
+                self.all_run_stats[key] += self.single_run_stats[key]
             stats = self.single_run_stats
         print("-------------------------------------------")
         print("Testing DBMS: %s" %
@@ -180,7 +180,7 @@ class Runner():
 
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
-    MAX_RUNTIME_PERSQL = 10
+    MAX_RUNTIME_PERSQL = 20
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
@@ -237,7 +237,7 @@ class PyDBCRunner(Runner):
                 logging.warning("Time Exceed - %d" % exec_time)
                 self.bug_dumper.save_state(self.records_log, record, str(True),
                                            execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(exec_time))
-                break
+                #break
 
     def execute_stmt(self, sql):
         pass

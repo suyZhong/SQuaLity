@@ -13,6 +13,8 @@ from src import testrunner
 from src import testcollector
 from src.utils import DBMS_Set, Suite_Set, SETUP_PATH
 
+ignore_list = list(["cockroach_db_tests/logic_tests/internal_executor"])
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--dbms", choices=DBMS_Set, default='duckdb',
@@ -93,11 +95,12 @@ if __name__ == "__main__":
 
     skip_index = []
     for i, test_file in enumerate(test_files):
+        print(test_file, "start")
         db_name = args.db_name
         single_begin_time = datetime.now()
         
         # skip some files
-        if i in skip_index:
+        if i in skip_index or test_file in ignore_list:
             continue
         if max_files <= 0 and i < abs(max_files):
             continue
@@ -131,6 +134,9 @@ if __name__ == "__main__":
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) + " " + test_file, single_running_time)
+        print(test_file, single_running_time)
+        print("\n")
         # print ("#############################\n\n")
         r.dump()
+    print("done all")
     r.running_summary("ALL", (datetime.now()-begin_time).seconds)

@@ -140,7 +140,9 @@ class SLTParser(Parser):
             if ',' in sort_token:
                 sort_tokens = sort_token.split(',')
                 sort_token = sort_tokens[1]
-                alternate_sort_mode = self.alternate_sort_mode_dict[sort_tokens[0]]
+                if sort_tokens[0] in self.alternate_sort_mode_dict:
+                    alternate_sort_mode = self.alternate_sort_mode_dict[sort_tokens[0]]
+
 
             if sort_token in self.sort_mode_dict.keys():
                 sort_mode = self.sort_mode_dict[sort_token]
@@ -628,8 +630,12 @@ class CDBTParser(SLTParser):
             record_type = tokens[0]
         record = Statement(id=self.record_id)
 
+        #Skip crdb_internal.force_retry queries because they take up a lot of time
+        if "crdb_internal.force_retry" in script:
+            record_type = 'halt'
+
         if record_type == 'statement':
-            status = (tokens[1] == 'ok') if len(tokens) > 1 else True
+            status = (tokens[1] == 'ok' or tokens[1] == 'count') if len(tokens) > 1 else True
             statements = ("".join([strip_comment_suffix(line)
                                    for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
