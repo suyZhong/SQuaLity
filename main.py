@@ -13,7 +13,7 @@ from src import testrunner
 from src import testcollector
 from src.utils import DBMS_Set, Suite_Set, SETUP_PATH
 
-ignore_list = list(["cockroach_db_tests/logic_tests/internal_executor"])
+ignore_list = list(["cockroachdb_tests/logic_test/internal_executor"])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

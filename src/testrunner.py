@@ -237,7 +237,7 @@ class PyDBCRunner(Runner):
                 logging.warning("Time Exceed - %d" % exec_time)
                 self.bug_dumper.save_state(self.records_log, record, str(True),
                                            execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(exec_time))
-                #break
+                break
 
     def execute_stmt(self, sql):
         pass

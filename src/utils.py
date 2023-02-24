@@ -1,3 +1,5 @@
+import string
+from collections.abc import Iterable
 from enum import Enum
 import logging
 import re
@@ -110,15 +112,16 @@ class Record:
 
 class Statement(Record):
     def __init__(self, sql="", result="", status=True,
-                 affected_rows=0, input_data="",  **kwargs) -> None:
-        super().__init__(sql, result, input_data=input_data, ** kwargs)
+                 affected_rows=0, input_data="", **kwargs) -> None:
+        super().__init__(sql, result, input_data=input_data, **kwargs)
         self.status = status
         self.affected_rows = affected_rows
 
 
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
-                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="",is_hash = True, **kwargs) -> None:
+                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="", is_hash=True,
+                 **kwargs) -> None:
         super().__init__(sql=sql, result=result, input_data=input_data, **kwargs)
         self.data_type = data_type
         self.sort = sort
@@ -174,7 +177,7 @@ def convert_postgres_result(result: str):
             ['False' if elem == 'f' else elem for elem in row] for row in row_wise_result_list]
 
         row_wise_result = '\n'.join(['\t'.join(row)
-                                    for row in row_wise_result_list])
+                                     for row in row_wise_result_list])
         if result_rows > 0:
             return row_wise_result
         else:
@@ -256,20 +259,20 @@ class ResultHelper():
             results.sort()
             for row in results:
                 for item in row:
-                    result_flat.append(item+'\n')
+                    result_flat.append(item + '\n')
         elif sort_type == SortType.VALUE_SORT:
             for row in results:
                 for item in row:
-                    result_flat.append(str(item)+'\n')
+                    result_flat.append(str(item) + '\n')
             result_flat.sort()
         else:
             for row in results:
                 for item in row:
-                    result_flat.append(str(item)+'\n')
+                    result_flat.append(str(item) + '\n')
         # myDebug(result_flat)
         return ''.join(result_flat)
 
-    def value_wise_compare(self, results, record, hash_threshold, is_hash = True):
+    def value_wise_compare(self, results, record, hash_threshold, is_hash=True):
         result_string = ""
         if results:
             result_len = len(results) * len(results[0])
@@ -302,8 +305,12 @@ class ResultHelper():
             cmp_flag = False
         else:
             for i, row in enumerate(expected_result_list):
-                items = re.split("[\s+|\t]", row.strip())
-                #To remove empty strings from items
+                # cockroach db does not produce tabs, but only multiple spaces. check for atleast 2 spaces because
+                # strings like these need to be split by more than
+                # one space: 'c           c_bar_key        UNIQUE       UNIQUE (bar ASC)      true       NULL'
+                regex = '\\s{2,}|\\t'
+                items = re.split(regex, row.strip())
+                # To remove empty strings from items
                 items = list(filter(None, items))
                 for j, item in enumerate(items):
                     # direct comparison
@@ -331,7 +338,25 @@ class ResultHelper():
                     break
         result_string = '\n'.join(['\t'.join(
             [str(item) if item != None else 'NULL' for item in row]) for row in results])
+
+        if not cmp_flag:
+            #One last attempt to string compare everything
+            cmp_flag = self.complete_string_compare(results, record)
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):
         return [row.replace(old, new) for row in results]
+
+    def complete_string_compare(self, results, record: Record):
+        expected_result_string = record.result.strip().translate({ord(c): None for c in string.whitespace})
+        actual_result_string = ''
+        try:
+            for item in results:
+                if isinstance(item, Iterable):
+                    for i in item:
+                        actual_result_string += str(i).strip().translate({ord(c): None for c in string.whitespace})
+                else:
+                    actual_result_string += str(item).strip().translate({ord(c): None for c in string.whitespace})
+        except TypeError:
+            pass
+        return expected_result_string == actual_result_string

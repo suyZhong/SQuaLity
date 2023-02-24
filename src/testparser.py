@@ -597,6 +597,8 @@ class DTParser(SLTParser):
 
 
 class CDBTParser(SLTParser):
+    only_cockroach = {"crdb_internal"}
+    db_name = "cockroachdb"
     def __init__(self, filename='') -> None:
         super().__init__(filename)
 
@@ -611,6 +613,8 @@ class CDBTParser(SLTParser):
     def get_query(self, tokens, lines):
         tokens_copy = tokens.copy()
         query = super().get_query(tokens, lines)
+        if any(x in query.sql for x in self.only_cockroach):
+            query.set_execute_db(set(self.db_name))
         if query.data_type == 'error':
             query.result = ' '.join(tokens_copy[2:])
         return query
@@ -637,11 +641,13 @@ class CDBTParser(SLTParser):
         if record_type == 'statement':
             status = (tokens[1] == 'ok' or tokens[1] == 'count') if len(tokens) > 1 else True
             statements = ("".join([strip_comment_suffix(line)
-                                   for line in lines[1:]])).strip().split(';\n')
+                                   for line in lines[1:]])).strip().split(';')
             statements = list(filter(None, statements))
             for stmt in statements:
                 record = Statement(sql=stmt, result=" ".join(
                     tokens[2:]), status=status, id=self.record_id)
+                if any(x in record.sql for x in self.only_cockroach):
+                    record.set_execute_db(set(self.db_name))
                 self.records.append(record)
                 self.record_id += 1
         elif record_type == 'query':
@@ -649,8 +655,8 @@ class CDBTParser(SLTParser):
 
 
             if 'error' != record.data_type:
-                record.result = re.sub(r'true(\t|\n|$)', r'True\1', record.result)
-                record.result = re.sub(r'false(\t|\n|$)', r'False\1', record.result)
+                record.result = re.sub(r'true(\t|\n|$|\s)', r'True\1', record.result)
+                record.result = re.sub(r'false(\t|\n|$|\s)', r'False\1', record.result)
                 #record.result = re.sub(r'NaN', r'NULL', record.result)
                 #record.result = re.sub(r'Infinity', r'inf', record.result)
                 #record.result = re.sub(r'\s+', r'\t', record.result)
@@ -658,8 +664,6 @@ class CDBTParser(SLTParser):
                 # record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split('\t') if
                 #                           value not in ['', '\n', '\t', ' '])
             record.set_resformat(ResultFormat.ROW_WISE)
-
-
             self.records.append(record)
             self.record_id += 1
         else:
