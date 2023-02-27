@@ -39,3 +39,18 @@ if __name__ == "__main__":
         print(f"------------------- Cluster {i}: {len(errors[errors['CLUSTER'] == i])} errors --------------------")
         print(results[results['CLUSTER'] == i][['TESTFILE_PATH', 'SQL', 'ERROR_MSG']])
     
+    # compute the similarity between the actual result and the expected result for each error
+    res_analyzer.cluster_result_mismatch(n_clusters=clusters)
+    errors = res_analyzer.get_error_rows()
+    results = res_analyzer.results
+    for i in range(100, clusters + 100):
+        print(f"------------------- Cluster {i}: {len(errors[errors['CLUSTER'] == i])} errors --------------------")
+        error_rows = results[results['CLUSTER'] == i]
+        # iteratively print the rows
+        for _, row in error_rows.iterrows():
+            print(row['TESTFILE_PATH'])
+            print(row['SQL'])
+            print(row['ERROR_MSG'])
+            print(row['ACTUAL_RESULT'])
+            print(row['EXPECTED_RESULT'])
+            print('-----------------')

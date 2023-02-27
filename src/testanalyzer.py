@@ -8,7 +8,11 @@ from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
+from fuzzywuzzy import fuzz
 
+def compute_similarity( a: str, b: str):
+   # use fuzzywuzzy to compute similarity
+   return fuzz.ratio(a, b)
 
 class TestCaseAnalyzer():
     def __init__(self) -> None:
@@ -128,4 +132,18 @@ class TestResultAnalyzer():
                         max_iter=max_iter)
         kmeans.fit(X)
         self.results.loc[self.results['IS_ERROR'],'CLUSTER'] = kmeans.labels_
+        return kmeans.labels_
+    
+    def cluster_result_mismatch(self, n_clusters=8, n_init=10, max_iter=300):
+
+        rm_error_index = self.results['ERROR_MSG'] == 'Result MisMatch'
+        rm_errors = self.results[rm_error_index]
+        assert len(rm_errors) > 0
+        res_similarities = rm_errors.apply(lambda row: compute_similarity(
+            row['ACTUAL_RESULT'], row['EXPECTED_RESULT']), axis=1)
+        kmeans = KMeans(n_clusters=n_clusters, n_init=n_init,
+                        max_iter=max_iter)
+        kmeans.fit(res_similarities.values.reshape(-1, 1))
+        print(kmeans.labels_)
+        self.results.loc[rm_error_index,'CLUSTER'] = kmeans.labels_ + 100
         return kmeans.labels_
