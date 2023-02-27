@@ -112,10 +112,6 @@ class SLTParser(Parser):
                       'rowsort': SortType.ROW_SORT,
                       'valuesort': SortType.VALUE_SORT}
 
-    alternate_sort_mode_dict = {
-        'colnames': SortType.COLUMN_NAMES
-    }
-
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.scripts = []
@@ -137,19 +133,8 @@ class SLTParser(Parser):
         # pop out <sort-mode>
         if tokens:
             sort_token = tokens.pop(0)
-            if ',' in sort_token:
-                sort_tokens = sort_token.split(',')
-                sort_token = sort_tokens[1]
-                if sort_tokens[0] in self.alternate_sort_mode_dict:
-                    alternate_sort_mode = self.alternate_sort_mode_dict[sort_tokens[0]]
-
-
             if sort_token in self.sort_mode_dict.keys():
                 sort_mode = self.sort_mode_dict[sort_token]
-            elif sort_token in self.alternate_sort_mode_dict.keys():
-                alternate_sort_mode = self.alternate_sort_mode_dict[sort_token]
-                print("sort mode %s not implemented, change to nosort, but alternate sort mode found" %
-                      sort_token)
             else:
                 print("sort mode %s not implemented, change to nosort" %
                       sort_token)
@@ -599,6 +584,10 @@ class DTParser(SLTParser):
 class CDBTParser(SLTParser):
     only_cockroach = {"crdb_internal"}
     db_name = "cockroachdb"
+    alternate_sort_mode_dict = {
+        'colnames': SortType.COLUMN_NAMES
+    }
+
     def __init__(self, filename='') -> None:
         super().__init__(filename)
 
@@ -611,13 +600,62 @@ class CDBTParser(SLTParser):
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def get_query(self, tokens, lines):
-        tokens_copy = tokens.copy()
-        query = super().get_query(tokens, lines)
-        if any(x in query.sql for x in self.only_cockroach):
-            query.set_execute_db(set(self.db_name))
-        if query.data_type == 'error':
-            query.result = ' '.join(tokens_copy[2:])
-        return query
+        # A query record begins with a line of the following form:
+        #       query <type-string> <sort-mode> <label>
+        data_type = ''
+        colnames = False
+        sort_mode = SortType.NO_SORT
+        alternate_sort_mode = SortType.NO_SORT
+        label = ''
+        # pop out 'query'
+        tokens.pop(0)
+        # pop out <type-string>
+        if tokens:
+            data_type = tokens.pop(0)
+
+        # pop out <sort-mode>
+        if tokens:
+            sort_token = tokens.pop(0)
+            if ',' in sort_token:
+                sort_tokens = sort_token.split(',')
+                sort_token = sort_tokens[1]
+                if sort_tokens[0] in self.alternate_sort_mode_dict:
+                    alternate_sort_mode = self.alternate_sort_mode_dict[sort_tokens[0]]
+
+            if sort_token in self.sort_mode_dict.keys():
+                sort_mode = self.sort_mode_dict[sort_token]
+            elif sort_token in self.alternate_sort_mode_dict.keys():
+                alternate_sort_mode = self.alternate_sort_mode_dict[sort_token]
+                print("sort mode %s not implemented, change to nosort, but alternate sort mode found" %
+                      sort_token)
+            else:
+                print("sort mode %s not implemented, change to nosort" %
+                      sort_token)
+        if tokens:
+            label = tokens.pop(0)
+        # The SQL for the query is found on second an subsequent lines
+        # of the record up to first line of the form "----" or until the
+        # end of the record. Lines following the "----" are expected results of the query,
+        # one value per line. If the "----" and/or the results are omitted, then the query
+        # is expected to return an empty set.
+        ind = len(lines)
+        for i, line in enumerate(lines):
+            if line == '----':
+                ind = i
+                break
+        sql = '\n'.join(lines[1:ind])
+        result = ""
+
+        if ind != len(lines):
+            if alternate_sort_mode == SortType.COLUMN_NAMES:
+                ind += 1
+            result = '\n'.join(lines[ind + 1:])
+        record = Query(sql=sql, result=result, data_type=data_type,
+                       sort=sort_mode, label=label, id=self.record_id)
+        if any(x in record.sql for x in self.only_cockroach):
+            record.set_execute_db(set(self.db_name))
+
+        return record
 
     def parse_script(self, script: str):
         script = strip_hash_comment_lines(script)
