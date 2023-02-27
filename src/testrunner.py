@@ -267,7 +267,7 @@ class PyDBCRunner(Runner):
                     "Statement %s execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record, except_msg)
             self.commit()
-            if status == record.status:
+            if status:
                 self.records_log.append(record)
         elif type(record) is Query:
             self.single_run_stats['query_num'] += 1
