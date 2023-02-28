@@ -140,6 +140,10 @@ def my_debug(mystr: str, *args):
     logging.debug(mystr, *args)
 
 
+def convert_testfile_name(path:str, dbms:str):
+    return "-".join(path.removeprefix(
+        "{}_tests/".format(dbms)).replace(".test", ".csv").replace(".sql", ".csv").split('/'))
+
 def convert_postgres_result(result: str):
     '''
     The function convert the expected result in postgres to the more general form in SQuaLity.
