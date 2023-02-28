@@ -157,7 +157,7 @@ class Runner():
         Args:
             filter_file (str): The path of the filter file
         """
-        if filter_flag:
+        if not filter_flag:
             self.filter_dict = {}
             return
         path = SETUP_PATH['filter']
