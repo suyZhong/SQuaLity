@@ -3,7 +3,8 @@ import logging
 import random
 import pandas as pd
 from tqdm import tqdm
-from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH
+from copy import copy
+from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH, convert_testfile_name, DBMS_MAPPING
 
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -88,9 +89,11 @@ class TestResultAnalyzer():
         self.logs = pd.DataFrame([])
         self.errors = pd.DataFrame([])
         self.attributes = set(ResultColumns)
+        self.dbms_suite = ""
         self.result_num = 0
 
     def load_results(self, dbms: str, dir_name: str = ""):
+        self.dbms_suite = DBMS_MAPPING[dbms]
         if dir_name:
             results_path = os.path.join(dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
             logs_path =os.path.join( dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
@@ -147,3 +150,8 @@ class TestResultAnalyzer():
         print(kmeans.labels_)
         self.results.loc[rm_error_index,'CLUSTER'] = kmeans.labels_ + 100
         return kmeans.labels_
+    
+    def dump_errors(self, path:str = 'data/flaky'):
+        errors = copy(self.get_error_rows())
+        errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(lambda x: convert_testfile_name(x, self.dbms_suite))
+        errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv", columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)

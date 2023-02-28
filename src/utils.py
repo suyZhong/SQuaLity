@@ -57,7 +57,9 @@ Running_Stats = ['success_file_num',
                  'wrong_stmt_num',
                  'statement_num',
                  'query_num',
-                 'control_num']
+                 'control_num',
+                 'filter_sql',
+                 ]
 
 
 TestCaseColumns = ['INDEX',  # testcase index
@@ -81,8 +83,20 @@ TESTCASE_PATH = {
     'postgresql': 'postgresql_tests/regress/'
 }
 
+DBMS_MAPPING = {
+    'mysql': 'mysql',
+    'sqlite': 'sqlite',
+    'duckdb': 'duckdb',
+    'cockroach': 'cockroachdb',
+    'cockroachdb': 'cockroachdb',
+    'postgres': 'postgresql',
+    'postgresql': 'postgresql',
+    'psql': 'postgresql',
+}
+
 SETUP_PATH = {
-    'postgresql': 'postgresql_tests/regress/sql/test_setup.sql'
+    'postgresql': 'postgresql_tests/regress/sql/test_setup.sql',
+    'filter': 'data/flaky',
 }
 
 OUTPUT_PATH = {

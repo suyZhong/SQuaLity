@@ -54,3 +54,6 @@ if __name__ == "__main__":
             print(row['ACTUAL_RESULT'])
             print(row['EXPECTED_RESULT'])
             print('-----------------')
+            
+    # dump the errors to a csv file
+    res_analyzer.dump_errors()
