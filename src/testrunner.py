@@ -153,7 +153,8 @@ class Runner():
         self.single_run_stats['wrong_query_num'] += 1
         if 'label' in kwargs:
             logging.error(
-                "Query %s does not return expected result. The Expected result is not equal to %s's result", query.sql, query.label)
+                "Query %s does not return expected result. The Expected result is not equal to %s's result", query.sql,
+                query.label)
         else:
             logging.error(
                 "Query %s does not return expected result. \nExpected: %s\nActually: %s",
@@ -162,7 +163,7 @@ class Runner():
             #               query.result.strip(), result.strip())
         self.allright = False
         self.bug_dumper.save_state(self.records_log, query, result, (datetime.now(
-        )-self.cur_time).microseconds, is_error=True)
+        ) - self.cur_time).microseconds, is_error=True)
         # self.bug_dumper.print_state()
 
     def handle_wrong_stmt(self, stmt: Statement, status: str, **kwargs):
@@ -172,10 +173,10 @@ class Runner():
         self.allright = False
         if 'err_msg' in kwargs:
             self.bug_dumper.save_state(self.records_log, stmt, str(status), (datetime.now(
-            )-self.cur_time).microseconds, is_error=True, msg=kwargs['err_msg'])
+            ) - self.cur_time).microseconds, is_error=True, msg=kwargs['err_msg'])
         else:
             self.bug_dumper.save_state(self.records_log, stmt, str(
-                status), (datetime.now()-self.cur_time).microseconds, is_error=True)
+                status), (datetime.now() - self.cur_time).microseconds, is_error=True)
 
 
 class PyDBCRunner(Runner):
@@ -208,6 +209,9 @@ class PyDBCRunner(Runner):
             except:
                 logging.error("No such file or directory: %s", self.db)
 
+    def remove_all_dbs(self):
+        pass
+
     def run(self):
         self.start()
         class_name = type(self).__name__
@@ -230,13 +234,14 @@ class PyDBCRunner(Runner):
 
             self._single_run(record)
             self.end_time = datetime.now()
-            exec_time = (self.end_time-self.cur_time).seconds
+            exec_time = (self.end_time - self.cur_time).seconds
 
             # If some SQL query too slow
             if exec_time > self.MAX_RUNTIME_PERSQL:
                 logging.warning("Time Exceed - %d" % exec_time)
                 self.bug_dumper.save_state(self.records_log, record, str(True),
-                                           execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(exec_time))
+                                           execution_time=(self.end_time - self.cur_time).microseconds, is_error=True,
+                                           msg="Time Exceed - {}".format(exec_time))
                 break
 
     def execute_stmt(self, sql):
@@ -277,10 +282,11 @@ class PyDBCRunner(Runner):
             except self.db_error as except_msg:
                 self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query %s execution error: %s",
-                             record.sql, except_msg)
+                              record.sql, except_msg)
                 self.commit()
                 self.bug_dumper.save_state(self.records_log, record, str(False), (
-                        datetime.now() - self.cur_time).microseconds, is_error=True, msg="Execution Failed: {}".format(except_msg))
+                        datetime.now() - self.cur_time).microseconds, is_error=True,
+                                           msg="Execution Failed: {}".format(except_msg))
                 self.allright = False
                 return
             else:
@@ -302,7 +308,7 @@ class PyDBCRunner(Runner):
             logging.debug(record.sql + " Success")
             if self.dump_all:
                 self.bug_dumper.save_state(self.records_log, record, str(
-                    status), (datetime.now()-self.cur_time).microseconds, msg=str(err_msg))
+                    status), (datetime.now() - self.cur_time).microseconds, msg=str(err_msg))
             return True
         else:
             self.handle_wrong_stmt(
@@ -408,6 +414,9 @@ class CockroachDBRunner(PyDBCRunner):
         self.cur = None
         # self.db_error(psycopg2.ProgrammingError)
 
+    default_dbs = list(["defaultdb", "postgres", "squalitytest", "system", "\"", "test"])
+    default_users = list(["admin", "root"])
+
     def set_db(self, db_name):
         self.db = "postgresql://root@localhost:26257/defaultdb?sslmode=disable"
         self.connect("defaultdb")
@@ -427,6 +436,39 @@ class CockroachDBRunner(PyDBCRunner):
         self.commit()
         self.close()
 
+    def remove_all_dbs(self, db_name):
+        sqlQuery = "SELECT datname FROM pg_database WHERE datistemplate = false;"
+        usersQuery = "show users";
+        # Execute the query statement
+        self.execute_stmt(sqlQuery)
+        # Retrieve all the rows from the cursor
+        rows = self.cur.fetchall()
+        for row in rows:
+            if row[0] not in self.default_dbs:
+                self.execute_stmt("DROP DATABASE IF EXISTS \"%s\" CASCADE" % row[0])
+                self.commit()
+
+        self.execute_stmt(usersQuery)
+        rows = self.cur.fetchall()
+        try:
+            for row in rows:
+                if row[0] not in self.default_users:
+                    self.execute_stmt("REVOKE ALL PRIVILEGES ON %s.* FROM \"%s\";" % (db_name, row[0]))
+                    self.commit()
+        except psycopg2.InternalError as e:
+            print(e)
+            self.commit()
+
+        try:
+            for row in rows:
+                if row[0] not in self.default_users:
+                    self.execute_stmt("DROP USER \"%s\" " % row[0])
+                    self.commit()
+        except psycopg2.InternalError as e:
+            print(e)
+            self.commit()
+
+
     def connect(self, db_name):
         logging.info("connect to db %s", db_name)
 
@@ -445,6 +487,9 @@ class CockroachDBRunner(PyDBCRunner):
 
     def commit(self):
         self.con.commit()
+
+    def reset(self, filename):
+        self.con.execute(filename)
 
 
 class MySQLRunner(PyDBCRunner):
@@ -611,10 +656,10 @@ class PSQLRunner(CLIRunner):
                 if sql.find(":'filename'") >= 0:
                     sql_cmd = [s.replace("\\", "\\\\").replace("'", "\\'") for s in
                                re.sub(
-                        r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
+                                   r'^(?i)COPY', r'\\copy', sql).split(":'filename'")]
                     self.sql.append(
                         "\\set cp_cmd '{}':'filename''{}'\n:cp_cmd\n".format(
-                        sql_cmd[0], sql_cmd[1].strip()))
+                            sql_cmd[0], sql_cmd[1].strip()))
                     # it is a copy from stdin, no need to change
                 elif type(record) == Statement or type(record) == Query:
                     self.sql.append(sql + ';\n' + record.input_data + '\n')

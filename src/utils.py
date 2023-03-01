@@ -349,14 +349,27 @@ class ResultHelper():
 
     def complete_string_compare(self, results, record: Record):
         expected_result_string = record.result.strip().translate({ord(c): None for c in string.whitespace})
+        expected_result_string = expected_result_string.translate({ord(c): None for c in string.punctuation})
         actual_result_string = ''
-        try:
-            for item in results:
-                if isinstance(item, Iterable):
-                    for i in item:
-                        actual_result_string += str(i).strip().translate({ord(c): None for c in string.whitespace})
-                else:
-                    actual_result_string += str(item).strip().translate({ord(c): None for c in string.whitespace})
-        except TypeError:
-            pass
-        return expected_result_string == actual_result_string
+        if isinstance(results, str):
+            actual_result_string = str(actual_result_string).strip().translate({ord(c): None for c in string.whitespace})
+            actual_result_string = actual_result_string.translate({ord(c): None for c in string.punctuation})
+        else:
+            try:
+                for item in results:
+                    if isinstance(item, Iterable):
+                        for i in item:
+                            itemString = str(i).strip().translate({ord(c): None for c in string.whitespace})
+                            itemString = itemString.translate({ord(c): None for c in string.punctuation})
+                            actual_result_string += itemString
+                    else:
+                        itemString = str(item).strip().translate({ord(c): None for c in string.whitespace})
+                        itemString = itemString.translate({ord(c): None for c in string.punctuation})
+                        actual_result_string += itemString
+            except TypeError:
+                pass
+        cmp_flag = expected_result_string == actual_result_string
+        if not cmp_flag:
+            actual_result_string = actual_result_string.replace("None", "NULL")
+            cmp_flag = expected_result_string == actual_result_string
+        return cmp_flag

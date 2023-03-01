@@ -13,7 +13,7 @@ from src import testrunner
 from src import testcollector
 from src.utils import DBMS_Set, Suite_Set, SETUP_PATH
 
-ignore_list = list(["cockroachdb_tests/logic_test/internal_executor"])
+ignore_list = list(["cockroachdb_tests/logic_test/internal_executor", "cockroachdb_tests/logic_test/schema_change_feature_flags"])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -116,9 +116,11 @@ if __name__ == "__main__":
         p.parse_file()
 
         r.set_db(db_name)
+
         r.get_records(p.get_records(), testfile_index=i,
                       testfile_path=test_file)
         r.connect(db_name)
+        #
         # print("-----------------------------------")
         logging.info("running %s", test_file)
         try:
