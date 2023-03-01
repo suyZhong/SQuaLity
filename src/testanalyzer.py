@@ -90,17 +90,18 @@ class TestResultAnalyzer():
         self.errors = pd.DataFrame([])
         self.attributes = set(ResultColumns)
         self.dbms_suite = ""
+        self.result_path = ""
         self.result_num = 0
 
     def load_results(self, dbms: str, dir_name: str = ""):
         self.dbms_suite = DBMS_MAPPING[dbms]
         if dir_name:
-            results_path = os.path.join(dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
+            self.results_path = os.path.join(dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
             logs_path =os.path.join( dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
         else:
-            results_path = OUTPUT_PATH['execution_result'].format(dbms)
+            self.results_path = OUTPUT_PATH['execution_result'].format(dbms)
             logs_path = OUTPUT_PATH['execution_log'].format(dbms)
-        self.results = pd.read_csv(results_path, na_filter=False)
+        self.results = pd.read_csv(self.results_path, na_filter=False)
         self.logs = pd.read_csv(logs_path, na_filter=False)
         self.result_num = len(self.results)
 
@@ -155,3 +156,6 @@ class TestResultAnalyzer():
         errors = copy(self.get_error_rows())
         errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(lambda x: convert_testfile_name(x, self.dbms_suite))
         errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv", columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
+        
+    def dump_results(self):
+        self.results.to_csv(f"{self.results_path}_clustered.csv", index=False)

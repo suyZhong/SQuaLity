@@ -46,14 +46,9 @@ if __name__ == "__main__":
     for i in range(100, clusters + 100):
         print(f"------------------- Cluster {i}: {len(errors[errors['CLUSTER'] == i])} errors --------------------")
         error_rows = results[results['CLUSTER'] == i]
-        # iteratively print the rows
-        for _, row in error_rows.iterrows():
-            print(row['TESTFILE_PATH'])
-            print(row['SQL'])
-            print(row['ERROR_MSG'])
-            print(row['ACTUAL_RESULT'])
-            print(row['EXPECTED_RESULT'])
-            print('-----------------')
             
     # dump the errors to a csv file
     res_analyzer.dump_errors()
+    
+    # dump the clustered results to a csv file
+    res_analyzer.dump_results()
