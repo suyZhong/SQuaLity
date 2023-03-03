@@ -13,6 +13,7 @@ def test_run_test(tmp_path, caplog):
 
     runner = testrunner.DuckDBRunner()
     runner.init_dumper()
+    runner.init_filter()
 
     for file in files:
         compression = 'zip' if file.endswith('.zip') else None

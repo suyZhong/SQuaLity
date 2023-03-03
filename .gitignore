@@ -10,3 +10,4 @@ demo/*
 .vscode
 data/*
 scripts/*
+!scripts/analyze_errors.py
