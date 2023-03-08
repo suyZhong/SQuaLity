@@ -649,7 +649,7 @@ class PSQLRunner(CLIRunner):
                 elif type(record) == Statement or type(record) == Query:
                     self.sql.append(sql + ';\n' + record.input_data + '\n')
                 continue
-            if sql.startswith('\\'):
+            if sql.startswith('\\') or sql.endswith('\\gset'):
                 self.sql.append(sql + '\n')
             else:
                 self.sql.append(sql + ';\n')
