@@ -94,6 +94,10 @@ if __name__ == "__main__":
     r.init_filter(filter_flaky)
     skip_index = []
     for i, test_file in enumerate(test_files):
+        # if test_file == "postgresql_tests/regress/sql/select.sql":
+        #     logging.getLogger().setLevel(logging.DEBUG)
+        # else:
+        #     logging.getLogger().setLevel(getattr(logging, log_level.upper()))
         db_name = args.db_name
         single_begin_time = datetime.now()
         

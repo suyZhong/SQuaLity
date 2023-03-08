@@ -574,6 +574,7 @@ class CLIRunner(Runner):
 
     def handle_results(self, output: List[str]):
         for i, result in enumerate(output):
+            # TODO add valuewise compare ... here
             record = self.records[i]
             expected_result = record.result
             actually_result = convert_postgres_result(result.strip('\n'))
