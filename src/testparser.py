@@ -421,6 +421,14 @@ class PGTParser(Parser):
                 result = '\n'.join(result_lines[ind: len(result_lines)])
             elif result_lines[ind].strip(';') == next_line:
                 result = ""
+                # there would be something like this:
+                # --
+                # (1 row)
+                # Which would cause comment line to match --
+                if next_line == "--":
+                    if result_lines[ind + 1].strip(';') == "(1 row)":
+                        result = "--\n(1 row)\n"
+                        ind += 2
             else:
                 for j in range(ind, len(result_lines)):
                     if result_lines[j] .strip(';') == next_line:
