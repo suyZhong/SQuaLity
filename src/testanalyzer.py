@@ -3,8 +3,17 @@ import logging
 import random
 import pandas as pd
 from tqdm import tqdm
-from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH
+from copy import copy
+from .utils import TestCaseColumns, ResultColumns, OUTPUT_PATH, convert_testfile_name, DBMS_MAPPING
 
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+from fuzzywuzzy import fuzz
+
+def compute_similarity( a: str, b: str):
+   # use fuzzywuzzy to compute similarity
+   return fuzz.ratio(a, b)
 
 class TestCaseAnalyzer():
     def __init__(self) -> None:
@@ -73,17 +82,27 @@ class TestCaseAnalyzer():
         return queries
 
 
+
 class TestResultAnalyzer():
     def __init__(self) -> None:
         self.results = pd.DataFrame(columns=ResultColumns)
         self.logs = pd.DataFrame([])
+        self.errors = pd.DataFrame([])
         self.attributes = set(ResultColumns)
+        self.dbms_suite = ""
+        self.result_path = ""
         self.result_num = 0
 
-    def load_results(self, dbms: str):
-        self.results = pd.read_csv(
-            OUTPUT_PATH['execution_result'].format(dbms))
-        self.logs = pd.read_csv(OUTPUT_PATH['execution_log'].format(dbms))
+    def load_results(self, dbms: str, dir_name: str = ""):
+        self.dbms_suite = DBMS_MAPPING[dbms]
+        if dir_name:
+            self.results_path = os.path.join(dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
+            logs_path =os.path.join( dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
+        else:
+            self.results_path = OUTPUT_PATH['execution_result'].format(dbms)
+            logs_path = OUTPUT_PATH['execution_log'].format(dbms)
+        self.results = pd.read_csv(self.results_path, na_filter=False)
+        self.logs = pd.read_csv(logs_path, na_filter=False)
         self.result_num = len(self.results)
 
     def get_result_cols(self, df: pd.DataFrame = None, column=[], length: int = -1, rand: bool = False):
@@ -104,4 +123,39 @@ class TestResultAnalyzer():
         return self.results[column].loc[ind: ind + length]
 
     def get_error_rows(self):
-        return self.results.loc[self.results.IS_ERROR == True]
+        self.errors = self.results[self.results['IS_ERROR']]
+        return self.errors
+    
+    def cluster_error_reasons(self, n_clusters=8, n_init=10, max_iter=300):
+
+        vectorizer = TfidfVectorizer(stop_words='english')
+        error_messages = self.results[self.results['IS_ERROR']
+                                         == True]['ERROR_MSG']
+        X = vectorizer.fit_transform(error_messages)
+        kmeans = KMeans(n_clusters=n_clusters, n_init=n_init,
+                        max_iter=max_iter)
+        kmeans.fit(X)
+        self.results.loc[self.results['IS_ERROR'],'CLUSTER'] = kmeans.labels_
+        return kmeans.labels_
+    
+    def cluster_result_mismatch(self, n_clusters=8, n_init=10, max_iter=300):
+
+        rm_error_index = self.results['ERROR_MSG'] == 'Result MisMatch'
+        rm_errors = self.results[rm_error_index]
+        assert len(rm_errors) > 0
+        res_similarities = rm_errors.apply(lambda row: compute_similarity(
+            row['ACTUAL_RESULT'], row['EXPECTED_RESULT']), axis=1)
+        kmeans = KMeans(n_clusters=n_clusters, n_init=n_init,
+                        max_iter=max_iter)
+        kmeans.fit(res_similarities.values.reshape(-1, 1))
+        print(kmeans.labels_)
+        self.results.loc[rm_error_index,'CLUSTER'] = kmeans.labels_ + 100
+        return kmeans.labels_
+    
+    def dump_errors(self, path:str = 'data/flaky'):
+        errors = copy(self.get_error_rows())
+        errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(lambda x: convert_testfile_name(x, self.dbms_suite))
+        errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv", columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
+        
+    def dump_results(self):
+        self.results.to_csv(f"{self.results_path}_clustered.csv", index=False)

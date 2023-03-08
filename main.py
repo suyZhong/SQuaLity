@@ -30,6 +30,8 @@ if __name__ == "__main__":
                         help="Enter the Dabase url")
     parser.add_argument('--log', type=str, default="DEBUG",
                         help="logging level")
+    parser.add_argument('--filter', action='store_true',
+                        help="If added, it would filter the testcases in data/flaky.csv")
     parser.add_argument("--max_files", type=int, default=0,
                         help="Max test files it run. Negative value means skipping the absolute number of test files")
     parser.add_argument('--dump_all', action='store_true',
@@ -41,6 +43,7 @@ if __name__ == "__main__":
     max_files = args.max_files
     db_url = args.db_url
     db_name = args.db_name
+    filter_flaky = args.filter
     test_file = args.test_file
     log_level = args.log
     if test_file:
@@ -92,7 +95,7 @@ if __name__ == "__main__":
     else:
         sys.exit("Not implement yet")
     r.init_dumper(dump_all=args.dump_all)
-
+    r.init_filter(filter_flaky)
     skip_index = []
     for i, test_file in enumerate(test_files):
         print(test_file, "start")

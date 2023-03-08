@@ -60,7 +60,9 @@ Running_Stats = ['success_file_num',
                  'wrong_stmt_num',
                  'statement_num',
                  'query_num',
-                 'control_num']
+                 'control_num',
+                 'filter_sql',
+                 ]
 
 
 TestCaseColumns = ['INDEX',  # testcase index
@@ -84,8 +86,20 @@ TESTCASE_PATH = {
     'postgresql': 'postgresql_tests/regress/'
 }
 
+DBMS_MAPPING = {
+    'mysql': 'mysql',
+    'sqlite': 'sqlite',
+    'duckdb': 'duckdb',
+    'cockroach': 'cockroachdb',
+    'cockroachdb': 'cockroachdb',
+    'postgres': 'postgresql',
+    'postgresql': 'postgresql',
+    'psql': 'postgresql',
+}
+
 SETUP_PATH = {
-    'postgresql': 'postgresql_tests/regress/sql/test_setup.sql'
+    'postgresql': 'postgresql_tests/regress/sql/test_setup.sql',
+    'filter': 'data/flaky',
 }
 
 OUTPUT_PATH = {
@@ -143,6 +157,10 @@ class Control(Record):
 def my_debug(mystr: str, *args):
     logging.debug(mystr, *args)
 
+
+def convert_testfile_name(path:str, dbms:str):
+    return "-".join(path.removeprefix(
+        "{}_tests/".format(dbms)).replace(".test", ".csv").replace(".sql", ".csv").split('/'))
 
 def convert_postgres_result(result: str):
     '''
