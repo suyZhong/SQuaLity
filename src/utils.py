@@ -46,9 +46,9 @@ class DBEngineExcetion(Exception):
 
 
 DBMS_Set = set(['mysql', 'sqlite', 'postgresql',
-               'duckdb', 'cockroachdb', 'psql'])
+                'duckdb', 'cockroachdb', 'psql'])
 Suite_Set = set(['mysql', 'sqlite', 'postgresql',
-                'duckdb', 'cockroachdb', 'squality'])
+                 'duckdb', 'cockroachdb', 'squality'])
 
 Running_Stats = ['success_file_num',
                  'total_sql',
@@ -64,7 +64,6 @@ Running_Stats = ['success_file_num',
                  'filter_sql',
                  ]
 
-
 TestCaseColumns = ['INDEX',  # testcase index
                    'TYPE',  # Enum Type: Statement, Query and Control
                    'SQL',  # SQL string
@@ -74,8 +73,8 @@ TestCaseColumns = ['INDEX',  # testcase index
                    'SUITE',  # The suite that original test case came from
                    'DATA_TYPE',  # Query only, store the require result type
                    'SORT_TYPE',  # Query only, store the required sort methods
-                   'LABEL',      # Query only, store the result label
-                   'RES_FORM',   # Query only, store the result format
+                   'LABEL',  # Query only, store the result label
+                   'RES_FORM',  # Query only, store the result format
                    ]
 
 ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
@@ -158,9 +157,10 @@ def my_debug(mystr: str, *args):
     logging.debug(mystr, *args)
 
 
-def convert_testfile_name(path:str, dbms:str):
+def convert_testfile_name(path: str, dbms: str):
     return "-".join(path.removeprefix(
         "{}_tests/".format(dbms)).replace(".test", ".csv").replace(".sql", ".csv").split('/'))
+
 
 def convert_postgres_result(result: str):
     '''
@@ -306,14 +306,13 @@ class ResultHelper():
         if is_hash and result_len > hash_threshold:
             result_string = self.hash_results(result_string)
             result_string = str(result_len) + \
-                " values hashing to " + result_string
+                            " values hashing to " + result_string
         cmp_flag = result_string.strip() == record.result.strip()
         return cmp_flag, result_string
 
     def row_wise_compare(self, results, record: Record):
         expected_result_list = record.result.strip().split('\n') if record.result else []
         # expected_result_list.sort()
-        NULL = None
         actually_result_list = copy(results)
         # actually_result_list.sort()
         my_debug("%s, %s", actually_result_list, expected_result_list)
@@ -347,10 +346,10 @@ class ResultHelper():
                             continue
                         cmp_flag = lvalue == rvalue or cmp_flag
                         # if numeric (No, even data type is I, still would have float type
-                        if type(lvalue) is float and type(rvalue) is float:
+                        if isinstance(lvalue, float) and isinstance(rvalue, float):
                             cmp_flag = math.isclose(
                                 lvalue, rvalue) or cmp_flag
-                        if type(lvalue) is set and type(rvalue) is list:
+                        if isinstance(lvalue, set) and isinstance(rvalue, list):
                             cmp_flag = list(lvalue) == rvalue or cmp_flag
                 if not cmp_flag:
                     break
@@ -358,7 +357,7 @@ class ResultHelper():
             [str(item) if item != None else 'NULL' for item in row]) for row in results])
 
         if not cmp_flag:
-            #One last attempt to string compare everything
+            # One last attempt to string compare everything
             cmp_flag = self.complete_string_compare(results, record)
         return cmp_flag, result_string
 
@@ -366,24 +365,33 @@ class ResultHelper():
         return [row.replace(old, new) for row in results]
 
     def complete_string_compare(self, results, record: Record):
+        """
+        :param results: result obtained from execution
+        :type results: object
+        :param record: record testcase that we are trying to run
+        :type record: Record
+        :return: true if there is no string diff between the actual and expected result, false otherwise
+        :rtype: bool
+        """
         expected_result_string = record.result.strip().translate({ord(c): None for c in string.whitespace})
         expected_result_string = expected_result_string.translate({ord(c): None for c in string.punctuation})
         actual_result_string = ''
         if isinstance(results, str):
-            actual_result_string = str(actual_result_string).strip().translate({ord(c): None for c in string.whitespace})
+            actual_result_string = str(actual_result_string).strip().translate(
+                {ord(c): None for c in string.whitespace})
             actual_result_string = actual_result_string.translate({ord(c): None for c in string.punctuation})
         else:
             try:
                 for item in results:
                     if isinstance(item, Iterable):
                         for i in item:
-                            itemString = str(i).strip().translate({ord(c): None for c in string.whitespace})
-                            itemString = itemString.translate({ord(c): None for c in string.punctuation})
-                            actual_result_string += itemString
+                            item_string = str(i).strip().translate({ord(c): None for c in string.whitespace})
+                            item_string = item_string.translate({ord(c): None for c in string.punctuation})
+                            actual_result_string += item_string
                     else:
-                        itemString = str(item).strip().translate({ord(c): None for c in string.whitespace})
-                        itemString = itemString.translate({ord(c): None for c in string.punctuation})
-                        actual_result_string += itemString
+                        item_string = str(item).strip().translate({ord(c): None for c in string.whitespace})
+                        item_string = item_string.translate({ord(c): None for c in string.punctuation})
+                        actual_result_string += item_string
             except TypeError:
                 pass
         cmp_flag = expected_result_string == actual_result_string
