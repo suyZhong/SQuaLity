@@ -16,7 +16,7 @@ def strip_dash_comment_lines(code: str):
 
 
 def strip_comment_suffix(code: str):
-    return re.sub(r'--.*', '', code)
+    return re.sub(r'-- .*', '', code)
 
 
 class Parser:
@@ -460,7 +460,7 @@ class PGTParser(Parser):
                 # break
             else:
                 self.records.append(
-                    Record(sql=pure_commands[i].strip(';'), id=i - num_input, result=result))
+                    Record(sql=strip_comment_suffix(pure_commands[i]).strip(';'), id=i - num_input, result=result))
         if psql_flag:
             self.meta_data['psql_files'] += 1
 
