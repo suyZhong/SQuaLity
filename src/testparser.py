@@ -481,10 +481,10 @@ class PGTParser(Parser):
         elif converted_result.startswith("ERROR"):
             return Statement(sql=record.sql, result=converted_result, status=False, id=record.id, input_data=record.input_data)
         # Query
-        elif converted_result:
+        elif converted_result or is_query:
             data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
             return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type, input_data=record.input_data)
-
+        logging.warning("Unknown result: %s", converted_result)
         return converted_record
 
     def convert_records(self):
