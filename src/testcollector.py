@@ -34,6 +34,7 @@ class TestcaseCollector():
             self.record_row['DBMS'] = ",".join(record.db)
             self.record_row['RESULT'] = record.result
             self.record_row['SUITE'] = record.suite
+            self.record_row['INPUT_DATA'] = record.input_data
             if record_type is Statement:
                 self.record_row['STATUS'] = str(record.status)
             elif record_type is Query:
@@ -43,6 +44,7 @@ class TestcaseCollector():
                 self.record_row['STATUS'] = str(True)
                 self.record_row['RES_FORM'] = record.res_format.value
                 self.record_row['LABEL'] = record.label
+                self.record_row['IS_HASH'] = record.is_hash
             elif record_type is Control:
                 self.record_row['SQL'] = str(record.action.value)
 

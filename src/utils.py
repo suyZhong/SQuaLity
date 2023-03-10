@@ -69,10 +69,12 @@ TestCaseColumns = ['INDEX',  # testcase index
                    'RESULT',  # SQL execution result. For Statement it's error msg if fail
                    'DBMS',  # The dbms that can execute this test case
                    'SUITE',  # The suite that original test case came from
+                   'INPUT_DATA',  # The input data for this test case
                    'DATA_TYPE',  # Query only, store the require result type
                    'SORT_TYPE',  # Query only, store the required sort methods
                    'LABEL',      # Query only, store the result label
                    'RES_FORM',   # Query only, store the result format
+                   'IS_HASH',    # Query only, store the result is hash or not
                    ]
 
 ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
