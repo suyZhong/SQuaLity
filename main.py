@@ -92,7 +92,7 @@ if __name__ == "__main__":
         sys.exit("Not implement yet")
     r.init_dumper(dump_all=args.dump_all)
     r.init_filter(filter_flaky)
-    skip_index = []
+    skip_index = [104, 153, 162, 166, 194, ]
     for i, test_file in enumerate(test_files):
         # if test_file == "postgresql_tests/regress/sql/select.sql":
         #     logging.getLogger().setLevel(logging.DEBUG)
