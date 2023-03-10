@@ -11,9 +11,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from fuzzywuzzy import fuzz
 
-def compute_similarity( a: str, b: str):
-   # use fuzzywuzzy to compute similarity
-   return fuzz.ratio(a, b)
+
+def compute_similarity(a: str, b: str):
+    # use fuzzywuzzy to compute similarity
+    return fuzz.ratio(a, b)
+
 
 class TestCaseAnalyzer():
     def __init__(self) -> None:
@@ -82,7 +84,6 @@ class TestCaseAnalyzer():
         return queries
 
 
-
 class TestResultAnalyzer():
     def __init__(self) -> None:
         self.results = pd.DataFrame(columns=ResultColumns)
@@ -96,8 +97,10 @@ class TestResultAnalyzer():
     def load_results(self, dbms: str, dir_name: str = ""):
         self.dbms_suite = DBMS_MAPPING[dbms]
         if dir_name:
-            self.results_path = os.path.join(dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
-            logs_path =os.path.join( dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
+            self.results_path = os.path.join(
+                dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
+            logs_path = os.path.join(
+                dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
         else:
             self.results_path = OUTPUT_PATH['execution_result'].format(dbms)
             logs_path = OUTPUT_PATH['execution_log'].format(dbms)
@@ -125,19 +128,19 @@ class TestResultAnalyzer():
     def get_error_rows(self):
         self.errors = self.results[self.results['IS_ERROR']]
         return self.errors
-    
+
     def cluster_error_reasons(self, n_clusters=8, n_init=10, max_iter=300):
 
         vectorizer = TfidfVectorizer(stop_words='english')
         error_messages = self.results[self.results['IS_ERROR']
-                                         == True]['ERROR_MSG']
+                                      == True]['ERROR_MSG']
         X = vectorizer.fit_transform(error_messages)
         kmeans = KMeans(n_clusters=n_clusters, n_init=n_init,
                         max_iter=max_iter)
         kmeans.fit(X)
-        self.results.loc[self.results['IS_ERROR'],'CLUSTER'] = kmeans.labels_
+        self.results.loc[self.results['IS_ERROR'], 'CLUSTER'] = kmeans.labels_
         return kmeans.labels_
-    
+
     def cluster_result_mismatch(self, n_clusters=8, n_init=10, max_iter=300):
 
         rm_error_index = self.results['ERROR_MSG'] == 'Result MisMatch'
@@ -149,13 +152,15 @@ class TestResultAnalyzer():
                         max_iter=max_iter)
         kmeans.fit(res_similarities.values.reshape(-1, 1))
         print(kmeans.labels_)
-        self.results.loc[rm_error_index,'CLUSTER'] = kmeans.labels_ + 100
+        self.results.loc[rm_error_index, 'CLUSTER'] = kmeans.labels_ + 100
         return kmeans.labels_
-    
-    def dump_errors(self, path:str = 'data/flaky'):
+
+    def dump_errors(self, path: str = 'data/flaky'):
         errors = copy(self.get_error_rows())
-        errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(lambda x: convert_testfile_name(x, self.dbms_suite))
-        errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv", columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
-        
+        errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(
+            lambda x: convert_testfile_name(x, self.dbms_suite))
+        errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv",
+                      columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
+
     def dump_results(self):
         self.results.to_csv(f"{self.results_path}_clustered.csv", index=False)

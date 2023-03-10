@@ -45,3 +45,5 @@ wcwidth==0.2.5
 wheel==0.37.1
 sqlparse==0.4.3
 tqdm==4.64.1
+fuzzywuzzy==0.18.0
+scikit-learn==1.2.1

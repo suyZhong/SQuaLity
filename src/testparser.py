@@ -42,7 +42,7 @@ class Parser:
             with open(filename, 'r', encoding='windows-1252') as f:
                 content = f.read()
         return content
-    
+
     def get_file_name(self, filename):
         self.filename = filename
 
@@ -396,7 +396,8 @@ class PGTParser(Parser):
         pure_commands = [strip_dash_comment_lines(
             command) for command in commands]
 
-        result_lines = [line for line in self.result_content.splitlines() if line != '']
+        result_lines = [
+            line for line in self.result_content.splitlines() if line != '']
 
         # Compare with the commands parsed by sqlparse
         # split the diff according to the line number
@@ -413,7 +414,8 @@ class PGTParser(Parser):
                 next_command = commands[k + 1] if k < num_command - 1 else "\n"
                 if not next_command.endswith('\\.;'):
                     break
-            next_line = next_command.strip(';').splitlines()[0] if next_command != ';' else ''
+            next_line = next_command.strip(';').splitlines()[
+                0] if next_command != ';' else ''
 
             if command_lines[0] == result_lines[ind].strip(';'):
                 ind += len(command.split('\n'))
