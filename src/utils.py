@@ -169,13 +169,15 @@ def convert_postgres_result(result: str):
     # print(result)
     rows_regex = re.compile(r"\(\s*[0-9]+\s*rows?\)")
     result_lines = result.rstrip().split('\n')
+    is_query = False
     # if it is an error
     if result == "":
-        return result
+        return result, is_query
     if result_lines[0].strip().startswith('ERROR'):
-        return "\n".join(result_lines)
+        return "\n".join(result_lines), is_query
     elif re.match(rows_regex, result_lines[-1]):
         # print(result_lines)
+        is_query = True
         result_rows = int(
             re.search(r"[0-9]+", result_lines[-1]).group())
         value_table = result_lines[-result_rows - 1:-1]
@@ -196,12 +198,12 @@ def convert_postgres_result(result: str):
         row_wise_result = '\n'.join(['\t'.join(row)
                                     for row in row_wise_result_list])
         if result_rows > 0:
-            return row_wise_result
+            return row_wise_result, is_query
         else:
-            return ""
+            return "", is_query
     else:
         # logging.warning("Parsing result warning: while parsing {}".format(result))
-        return result
+        return result, is_query
 
 
 class ResultHelper():

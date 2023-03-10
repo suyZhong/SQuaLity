@@ -469,13 +469,13 @@ class PGTParser(Parser):
         The function convert the expected result in postgres to the more general form in SQuaLity.
         '''
         # if record is control, skip
-        converted_result = convert_postgres_result(record.result)
+        converted_result, is_query = convert_postgres_result(record.result)
         if type(record) == Control:
             record.result = converted_result
             return record
         converted_record = Statement(id=record.id)
         # Statement ok
-        if converted_result == "":
+        if converted_result == "" and not is_query:
             return Statement(sql=record.sql, id=record.id, input_data=record.input_data)
         # Statement error
         elif converted_result.startswith("ERROR"):

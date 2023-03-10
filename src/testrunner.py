@@ -580,7 +580,7 @@ class CLIRunner(Runner):
             # TODO add valuewise compare ... here
             record = self.records[i]
             expected_result = record.result
-            actually_result = convert_postgres_result(result.strip('\n'))
+            actually_result, _ = convert_postgres_result(result.strip('\n'))
             actually_status = not bool(re.match(r'^ERROR:', actually_result))
 
             self.single_run_stats['total_executed_sql'] += 1
@@ -744,6 +744,6 @@ class PSQLRunner(CLIRunner):
         if psql_proc.stderr:
             raise DBEngineExcetion(psql_proc.stderr)
         else:
-            result_string = convert_postgres_result(
+            result_string, _ = convert_postgres_result(
                 "\n".join(psql_proc.stdout.split('\n')[len(sql.split('\n')): -1]))
             return result_string
