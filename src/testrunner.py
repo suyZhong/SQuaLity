@@ -67,10 +67,12 @@ class Runner():
     def filter_records(self):
         """Filter the records that should be executed
         """
-        test_name = convert_testfile_name(self.testfile_path, DBMS_MAPPING[self.dbms_name])
+        test_name = convert_testfile_name(
+            self.testfile_path, DBMS_MAPPING[self.dbms_name])
         if test_name in self.filter_dict:
             test_cases = dict(self.filter_dict[test_name])
-            self.records = [record for record in self.records if record.id not in test_cases]
+            self.records = [
+                record for record in self.records if record.id not in test_cases]
             self.single_run_stats['filter_sql'] += len(test_cases)
 
     def connect(self, db_name: str):
@@ -90,7 +92,7 @@ class Runner():
         # count the records that should be executed
         self.single_run_stats['total_sql'] += len(
             [record for record in self.records if type(record) == Query or type(record) == Statement])
-        
+
         # filter the records that are not suitable
         self.filter_records()
 
@@ -161,11 +163,12 @@ class Runner():
             self.filter_dict = {}
             return
         path = SETUP_PATH['filter']
-        # read all csv files under the path 
+        # read all csv files under the path
         filter_df = pd.concat([pd.read_csv(f"{path}/{file}") for file in os.listdir(
             path) if file.endswith('.csv')], ignore_index=True)
-        filter_df[['TESTCASE_INDEX', 'CLUSTER']] = filter_df[['TESTCASE_INDEX', 'CLUSTER']].astype(int)
-        # Convert the dataframe to a dict where the key is the first column and the value are the rest columns 
+        filter_df[['TESTCASE_INDEX', 'CLUSTER']] = filter_df[[
+            'TESTCASE_INDEX', 'CLUSTER']].astype(int)
+        # Convert the dataframe to a dict where the key is the first column and the value are the rest columns
         self.filter_dict = filter_df.groupby(filter_df.columns[0]).apply(
             lambda x: x[filter_df.columns[1:]].values.tolist()).to_dict()
 

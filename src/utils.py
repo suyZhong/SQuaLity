@@ -133,7 +133,7 @@ class Statement(Record):
 
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
-                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="",is_hash = True, **kwargs) -> None:
+                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="", is_hash=True, **kwargs) -> None:
         super().__init__(sql=sql, result=result, input_data=input_data, **kwargs)
         self.data_type = data_type
         self.sort = sort
@@ -156,9 +156,10 @@ def my_debug(mystr: str, *args):
     logging.debug(mystr, *args)
 
 
-def convert_testfile_name(path:str, dbms:str):
+def convert_testfile_name(path: str, dbms: str):
     return "-".join(path.removeprefix(
         "{}_tests/".format(dbms)).replace(".test", ".csv").replace(".sql", ".csv").split('/'))
+
 
 def convert_postgres_result(result: str):
     '''
@@ -288,7 +289,7 @@ class ResultHelper():
         # myDebug(result_flat)
         return ''.join(result_flat)
 
-    def value_wise_compare(self, results, record, hash_threshold, is_hash = True):
+    def value_wise_compare(self, results, record, hash_threshold, is_hash=True):
         result_string = ""
         if results:
             result_len = len(results) * len(results[0])
