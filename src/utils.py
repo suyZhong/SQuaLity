@@ -211,8 +211,7 @@ class ResultHelper():
         self.results = results
         self.record = record
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-            self.debug("""WHERE (c<=d-2 OR c>=d+2)
-   AND (a>b-2 AND a<b+2)""")
+            self.debug("""@#$%""")
         
     def debug(self, ptrn:str):
         if self.record.sql.find(ptrn) != -1:
@@ -245,7 +244,7 @@ class ResultHelper():
     def int_format(self, item):
         if isinstance(item, int):
             return str(item)
-        elif isinstance(item, str):
+        elif isinstance(item, str) or isinstance(item, float):
             try:
                 return str(int(item))
             except ValueError:
@@ -285,7 +284,7 @@ class ResultHelper():
     #     return str(item)
 
     def text_format(self, item):
-        return str(item) if item else "NULL"
+        return str(item) if item != None else "NULL"
 
     # def format_results(self, results, datatype: str):
     #     cols = list(datatype)
