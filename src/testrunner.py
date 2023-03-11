@@ -526,6 +526,10 @@ class MySQLRunner(PyDBCRunner):
         return
 
     def commit(self):
+        results = self.cur.fetchall()
+        if results:
+            logging.info("There's unread results, please fetch them first.")
+            my_debug(str(results))
         self.con.commit()
 
 

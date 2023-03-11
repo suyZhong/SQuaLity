@@ -130,9 +130,11 @@ if __name__ == "__main__":
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
             logging.info(traceback.format_exc())
             r.not_allright()
-        r.close()
-        if log_level != "DEBUG":
-            r.remove_db(db_name)
+            r.close()
+        else:
+            r.close()
+            if log_level != "DEBUG":
+                r.remove_db(db_name)
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) + " " + test_file, single_running_time)
