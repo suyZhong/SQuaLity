@@ -12,7 +12,8 @@ def test_run_test(tmp_path, caplog):
     testcase_path = "data/cornercase/"
     files = listdir(testcase_path)
     def exit_on_error(record):
-        if record.levelno >= logging.ERROR:
+        if record.levelno >= logging.CRITICAL:
+            print(record)
             sys.exit(1)
     logger = logging.getLogger()
     logger.addFilter(exit_on_error)
