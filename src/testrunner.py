@@ -118,9 +118,6 @@ class Runner():
         """
         if self.allright:
             self.single_run_stats['success_file_num'] += 1
-        # add the single run stats to the all run stats
-        for key in self.single_run_stats:
-            self.all_run_stats[key] += self.single_run_stats[key]
 
         # if the test name is ALL, then the stats should be the all run stats
         if test_name == "ALL":
@@ -144,6 +141,9 @@ class Runner():
         print("Wrong SQL statement: ", stats['wrong_stmt_num'])
         print("Wrong SQL query: ", stats['wrong_query_num'])
         print("-------------------------------------------", flush=True)
+        # add the single run stats to the all run stats
+        for key in self.single_run_stats:
+            self.all_run_stats[key] += self.single_run_stats[key]
 
     def init_dumper(self, dump_all=False):
         """init the bug dumper in the test runner
