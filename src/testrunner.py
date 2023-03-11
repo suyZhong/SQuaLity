@@ -586,7 +586,7 @@ class CLIRunner(Runner):
         cmp_flag = False
         helper = ResultHelper(results, record)
         if record.res_format == ResultFormat.VALUE_WISE:
-            result_list = [row.split('\t') for row in results.split('\n')]
+            result_list = [row.split('\t') for row in results.split('\n')] if results else ""
             cmp_flag, results = helper.value_wise_compare(result_list, record, self.hash_threshold)
         elif record.res_format == ResultFormat.ROW_WISE:
             cmp_flag, results = helper.row_wise_compare()
