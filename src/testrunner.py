@@ -29,6 +29,7 @@ class Runner():
         self.end_time = datetime.now()
         self.db = ":memory:"
         self.env = {}
+        self.hash_threshold = 8
         self.test_setup()
 
     def test_setup(self):
@@ -218,7 +219,6 @@ class PyDBCRunner(Runner):
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
-        self.hash_threshold = 8
         self.allright = True
         self.db_error = Exception
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
@@ -568,6 +568,7 @@ class CLIRunner(Runner):
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
+        self.cli_limit = 100
 
     def get_env(self):
         """get the environment variable
@@ -578,6 +579,27 @@ class CLIRunner(Runner):
         for record in self.records:
             sql = record.sql
             self.sql.append(sql + ';\n')
+            
+    def handle_query_result(self, results: str, record: Query):
+        """handle the query result
+        """
+        cmp_flag = False
+        helper = ResultHelper(results, record)
+        if record.res_format == ResultFormat.VALUE_WISE:
+            result_list = [row.split('\t') for row in results.split('\n')]
+            cmp_flag, results = helper.value_wise_compare(result_list, record, self.hash_threshold)
+        elif record.res_format == ResultFormat.ROW_WISE:
+            cmp_flag, results = helper.row_wise_compare()
+        else:
+            logging.error("Result format unsupported for this Runner: %s", record.res_format)
+        if cmp_flag:
+            # print("True!")
+            my_debug("Query %s Success", record.sql)
+            if self.dump_all:
+                self.bug_dumper.save_state(
+                    self.records_log, record, results, (datetime.now()-self.cur_time).microseconds)
+        else:
+            self.handle_wrong_query(record, results)
 
     def handle_results(self, output: List[str]):
         for i, result in enumerate(output):
@@ -602,32 +624,30 @@ class CLIRunner(Runner):
                         record, actually_status, err_msg=actually_result)
             elif type(record) == Query:
                 self.single_run_stats['query_num'] += 1
-                if expected_result == actually_result:
-                    my_debug("Query {} Success".format(record.sql))
-                    if self.dump_all:
-                        self.bug_dumper.save_state(
-                            self.records_log, record, actually_result, 0)
-                else:
-                    # TODO we should know if the query success or failed.
-                    self.handle_wrong_query(record, actually_result)
+                self.handle_query_result(actually_result, record)
 
     def run(self):
         self.start()
         self.extract_sql()
-        self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
         i = 0
-        for i, sql in enumerate(self.sql):
-            self.cli.stdin.write(self.echo.format(self.res_delimiter))
-            self.cli.stdin.write(sql)
-            result = self.records[i].result
-            self.cli.stdin.flush()
-        output, _ = self.cli.communicate()
-        output_list = output.split(self.res_delimiter)[1:]
-        my_debug(output)
-        assert len(
-            output_list) == i + 1, "The length of result list should be equal to the commands have executed"
-        self.handle_results(output_list)
+        # split sqls into groups of limit
+        sql_lists = [self.sql[i:i + self.cli_limit] for i in range(0, len(self.sql), self.cli_limit)]
+        whole_output_list = []
+        for sql_list in sql_lists:
+            self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
+            for i, sql in enumerate(sql_list):
+                self.cli.stdin.write(self.echo.format(self.res_delimiter))
+                self.cli.stdin.write(sql)
+                result = self.records[i].result
+                self.cli.stdin.flush()
+            output, _ = self.cli.communicate()
+            output_list = output.split(self.res_delimiter)[1:]
+            my_debug(output)
+            assert len(
+                output_list) == i + 1, "The length of result list should be equal to the commands have executed"
+            whole_output_list += output_list
+        self.handle_results(whole_output_list)
         self.cli.terminate()
 
 

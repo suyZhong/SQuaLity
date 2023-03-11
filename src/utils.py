@@ -312,6 +312,12 @@ class ResultHelper():
         return cmp_flag, result_string
 
     def row_wise_compare(self, results, record: Record):
+        # the result is just what we want.
+        if type(results) == str:
+            if results == record.result:
+                return True, results
+            else:
+                return False, results
         expected_result_list = record.result.strip().split('\n') if record.result else []
         # expected_result_list.sort()
         NULL = None
