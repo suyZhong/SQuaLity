@@ -66,7 +66,7 @@ def find_local_tests(db_name: str):
     elif db_name == "mysql":
         test_suite_dir += 'r'
     elif db_name == "postgresql":
-        test_suite_dir += 'regress/sql'
+        return get_postgresql_schedule_test()
     elif db_name == "sqlite":
         test_suite_dir += ''
     else:
@@ -93,3 +93,14 @@ def find_local_duckdb_test():
         tests_files += [os.path.join(path, file_name)
                         for file_name in file_list if re.match(duckdb_test_regex, file_name)]
     return tests_files
+
+def get_postgresql_schedule_test():
+    test_suite_dir = 'postgresql_tests/'
+    schedule_tests_fn = test_suite_dir + 'regress/parallel_schedule'
+    all_tests = []
+    with open(schedule_tests_fn, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.startswith('test: '):
+                all_tests += line.split()[1:]
+    return [f"{test_suite_dir}regress/sql/{test}.sql" for test in all_tests]

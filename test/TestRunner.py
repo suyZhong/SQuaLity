@@ -1,6 +1,7 @@
 from os import listdir
 from src import testrunner
 import pandas as pd
+import sys
 
 from src.utils import Query, Statement, Control, RunnerAction, SortType, ResultFormat
 import logging
@@ -10,7 +11,12 @@ import logging
 def test_run_test(tmp_path, caplog):
     testcase_path = "data/cornercase/"
     files = listdir(testcase_path)
-
+    def exit_on_error(record):
+        if record.levelno >= logging.CRITICAL:
+            print(record)
+            sys.exit(1)
+    logger = logging.getLogger()
+    logger.addFilter(exit_on_error)
     runner = testrunner.DuckDBRunner()
     runner.init_dumper()
     runner.init_filter()

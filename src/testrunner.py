@@ -29,6 +29,7 @@ class Runner():
         self.end_time = datetime.now()
         self.db = ":memory:"
         self.env = {}
+        self.hash_threshold = 8
         self.test_setup()
 
     def test_setup(self):
@@ -71,9 +72,14 @@ class Runner():
             self.testfile_path, DBMS_MAPPING[self.dbms_name])
         if test_name in self.filter_dict:
             test_cases = dict(self.filter_dict[test_name])
-            self.records = [
-                record for record in self.records if record.id not in test_cases]
-            self.single_run_stats['filter_sql'] += len(test_cases)
+            if -1 in test_cases:
+                self.single_run_stats['filter_sql'] += len(self.records)
+                self.records = []
+            else:
+                self.records = [
+                    record for record in self.records if record.id not in test_cases]
+                self.single_run_stats['filter_sql'] += len(test_cases)
+
 
     def connect(self, db_name: str):
         """connect to the database instance by the file path or the database name
@@ -115,7 +121,7 @@ class Runner():
             test_name (_type_): Test case name
             running_time (_type_): the running time of the execution
         """
-        if self.allright:
+        if self.allright and self.records != []:
             self.single_run_stats['success_file_num'] += 1
 
         # if the test name is ALL, then the stats should be the all run stats
@@ -171,6 +177,10 @@ class Runner():
         # Convert the dataframe to a dict where the key is the first column and the value are the rest columns
         self.filter_dict = filter_df.groupby(filter_df.columns[0]).apply(
             lambda x: x[filter_df.columns[1:]].values.tolist()).to_dict()
+        # check if there's -1 in TESTCASE_INDEX, if so, then it means all the test cases should be filtered
+        if filter_df['TESTCASE_INDEX'].isin([-1]).any():
+            for filename in filter_df[filter_df['TESTCASE_INDEX'] == -1]['TESTFILE_NAME'].values.tolist():
+                self.filter_dict[filename].append([-1, -1])
 
     def not_allright(self):
         self.allright = False
@@ -218,7 +228,6 @@ class PyDBCRunner(Runner):
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
-        self.hash_threshold = 8
         self.allright = True
         self.db_error = Exception
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
@@ -526,6 +535,10 @@ class MySQLRunner(PyDBCRunner):
         return
 
     def commit(self):
+        results = self.cur.fetchall()
+        if results:
+            logging.info("There's unread results, please fetch them first.")
+            my_debug(str(results))
         self.con.commit()
 
 
@@ -564,6 +577,7 @@ class CLIRunner(Runner):
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
+        self.cli_limit = 1000 # shouldn't be too low, otherwise the cli will be very slow and the result for psql would not match
 
     def get_env(self):
         """get the environment variable
@@ -574,12 +588,34 @@ class CLIRunner(Runner):
         for record in self.records:
             sql = record.sql
             self.sql.append(sql + ';\n')
+            
+    def handle_query_result(self, results: str, record: Query):
+        """handle the query result
+        """
+        cmp_flag = False
+        helper = ResultHelper(results, record)
+        if record.res_format == ResultFormat.VALUE_WISE:
+            result_list = [row.split('\t') for row in results.split('\n')] if results else ""
+            cmp_flag, results = helper.value_wise_compare(result_list, record, self.hash_threshold)
+        elif record.res_format == ResultFormat.ROW_WISE:
+            cmp_flag, results = helper.row_wise_compare(results, record)
+        else:
+            logging.error("Result format unsupported for this Runner: %s", record.res_format)
+        if cmp_flag:
+            # print("True!")
+            my_debug("Query %s Success", record.sql)
+            if self.dump_all:
+                self.bug_dumper.save_state(
+                    self.records_log, record, results, (datetime.now()-self.cur_time).microseconds)
+        else:
+            self.handle_wrong_query(record, results)
 
     def handle_results(self, output: List[str]):
         for i, result in enumerate(output):
+            # TODO add valuewise compare ... here
             record = self.records[i]
             expected_result = record.result
-            actually_result = convert_postgres_result(result.strip('\n'))
+            actually_result, _ = convert_postgres_result(result.strip('\n'))
             actually_status = not bool(re.match(r'^ERROR:', actually_result))
 
             self.single_run_stats['total_executed_sql'] += 1
@@ -597,32 +633,38 @@ class CLIRunner(Runner):
                         record, actually_status, err_msg=actually_result)
             elif type(record) == Query:
                 self.single_run_stats['query_num'] += 1
-                if expected_result == actually_result:
-                    my_debug("Query {} Success".format(record.sql))
-                    if self.dump_all:
-                        self.bug_dumper.save_state(
-                            self.records_log, record, actually_result, 0)
-                else:
-                    # TODO we should know if the query success or failed.
-                    self.handle_wrong_query(record, actually_result)
+                self.handle_query_result(actually_result, record)
 
     def run(self):
         self.start()
         self.extract_sql()
-        self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
         i = 0
-        for i, sql in enumerate(self.sql):
-            self.cli.stdin.write(self.echo.format(self.res_delimiter))
-            self.cli.stdin.write(sql)
-            result = self.records[i].result
-            self.cli.stdin.flush()
-        output, _ = self.cli.communicate()
-        output_list = output.split(self.res_delimiter)[1:]
-        my_debug(output)
-        assert len(
-            output_list) == i + 1, "The length of result list should be equal to the commands have executed"
-        self.handle_results(output_list)
+        # split sqls into groups of limit
+        if len(self.sql) == 0:
+            return
+        sql_lists = [self.sql[i:i + self.cli_limit] for i in range(0, len(self.sql), self.cli_limit)]
+        whole_output_list = []
+        for sql_list in sql_lists:
+            self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
+            my_debug("Running %d sqls" % len(sql_list))
+            input_string = ""
+            for i, sql in enumerate(sql_list):
+                # my_debug(sql)
+                result = self.records[i].result
+                # self.cli.stdin.write(self.echo.format(self.res_delimiter))
+                # self.cli.stdin.write(sql)
+                # self.cli.stdin.flush()
+                input_string += self.echo.format(self.res_delimiter)
+                input_string += sql
+            output, _ = self.cli.communicate(input=input_string)
+            output_list = output.split(self.res_delimiter)[1:]
+            if  self.cli_limit > len(self.sql):
+                my_debug(output)
+            assert len(
+                output_list) == i + 1, "The length of result list should be equal to the commands have executed"
+            whole_output_list += output_list
+        self.handle_results(whole_output_list)
         self.cli.terminate()
 
 
@@ -651,7 +693,7 @@ class PSQLRunner(CLIRunner):
                 elif type(record) == Statement or type(record) == Query:
                     self.sql.append(sql + ';\n' + record.input_data + '\n')
                 continue
-            if sql.startswith('\\'):
+            if sql.startswith('\\') or sql.endswith('\\gset'):
                 self.sql.append(sql + '\n')
             else:
                 self.sql.append(sql + ';\n')
@@ -720,7 +762,7 @@ class PSQLRunner(CLIRunner):
 
     def remove_db(self, db_name: str):
         # return
-        if len(self.records) > 0:
+        if len(self.records) >= 0:
             return
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
@@ -743,6 +785,6 @@ class PSQLRunner(CLIRunner):
         if psql_proc.stderr:
             raise DBEngineExcetion(psql_proc.stderr)
         else:
-            result_string = convert_postgres_result(
+            result_string, _ = convert_postgres_result(
                 "\n".join(psql_proc.stdout.split('\n')[len(sql.split('\n')): -1]))
             return result_string
