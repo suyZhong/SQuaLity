@@ -568,7 +568,7 @@ class CLIRunner(Runner):
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
-        self.cli_limit = 400
+        self.cli_limit = 1000 # shouldn't be too low, otherwise the cli will be very slow and the result for psql would not match
 
     def get_env(self):
         """get the environment variable
@@ -589,7 +589,7 @@ class CLIRunner(Runner):
             result_list = [row.split('\t') for row in results.split('\n')] if results else ""
             cmp_flag, results = helper.value_wise_compare(result_list, record, self.hash_threshold)
         elif record.res_format == ResultFormat.ROW_WISE:
-            cmp_flag, results = helper.row_wise_compare()
+            cmp_flag, results = helper.row_wise_compare(results, record)
         else:
             logging.error("Result format unsupported for this Runner: %s", record.res_format)
         if cmp_flag:
