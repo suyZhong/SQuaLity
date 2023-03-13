@@ -72,9 +72,13 @@ class Runner():
             self.testfile_path, DBMS_MAPPING[self.dbms_name])
         if test_name in self.filter_dict:
             test_cases = dict(self.filter_dict[test_name])
-            self.records = [
-                record for record in self.records if record.id not in test_cases]
-            self.single_run_stats['filter_sql'] += len(test_cases)
+            if -1 in test_cases:
+                self.single_run_stats['filter_sql'] += len(self.records)
+                self.records = []
+            else:
+                self.records = [
+                    record for record in self.records if record.id not in test_cases]
+                self.single_run_stats['filter_sql'] += len(test_cases)
 
     def connect(self, db_name: str):
         """connect to the database instance by the file path or the database name
@@ -116,7 +120,7 @@ class Runner():
             test_name (_type_): Test case name
             running_time (_type_): the running time of the execution
         """
-        if self.allright:
+        if self.allright and self.records != []:
             self.single_run_stats['success_file_num'] += 1
 
         # if the test name is ALL, then the stats should be the all run stats
@@ -172,6 +176,10 @@ class Runner():
         # Convert the dataframe to a dict where the key is the first column and the value are the rest columns
         self.filter_dict = filter_df.groupby(filter_df.columns[0]).apply(
             lambda x: x[filter_df.columns[1:]].values.tolist()).to_dict()
+        # check if there's -1 in TESTCASE_INDEX, if so, then it means all the test cases should be filtered
+        if filter_df['TESTCASE_INDEX'].isin([-1]).any():
+            for filename in filter_df[filter_df['TESTCASE_INDEX'] == -1]['TESTFILE_NAME'].values.tolist():
+                self.filter_dict[filename].append([-1, -1])
 
     def not_allright(self):
         self.allright = False
@@ -631,6 +639,8 @@ class CLIRunner(Runner):
         self.extract_sql()
         i = 0
         # split sqls into groups of limit
+        if len(self.sql) == 0:
+            return
         sql_lists = [self.sql[i:i + self.cli_limit] for i in range(0, len(self.sql), self.cli_limit)]
         whole_output_list = []
         for sql_list in sql_lists:
@@ -751,7 +761,7 @@ class PSQLRunner(CLIRunner):
 
     def remove_db(self, db_name: str):
         # return
-        if len(self.records) > 0:
+        if len(self.records) >= 0:
             return
         self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
             'postgres'), '-X', '-a', '-q', '-c']
