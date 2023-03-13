@@ -80,6 +80,7 @@ class Runner():
                     record for record in self.records if record.id not in test_cases]
                 self.single_run_stats['filter_sql'] += len(test_cases)
 
+
     def connect(self, db_name: str):
         """connect to the database instance by the file path or the database name
 
