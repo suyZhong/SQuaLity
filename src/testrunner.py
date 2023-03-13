@@ -568,7 +568,7 @@ class CLIRunner(Runner):
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
-        self.cli_limit = 100
+        self.cli_limit = 400
 
     def get_env(self):
         """get the environment variable
@@ -635,15 +635,21 @@ class CLIRunner(Runner):
         whole_output_list = []
         for sql_list in sql_lists:
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True)
+                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
+            my_debug("Running %d sqls" % len(sql_list))
+            input_string = ""
             for i, sql in enumerate(sql_list):
-                self.cli.stdin.write(self.echo.format(self.res_delimiter))
-                self.cli.stdin.write(sql)
+                # my_debug(sql)
                 result = self.records[i].result
-                self.cli.stdin.flush()
-            output, _ = self.cli.communicate()
+                # self.cli.stdin.write(self.echo.format(self.res_delimiter))
+                # self.cli.stdin.write(sql)
+                # self.cli.stdin.flush()
+                input_string += self.echo.format(self.res_delimiter)
+                input_string += sql
+            output, _ = self.cli.communicate(input=input_string)
             output_list = output.split(self.res_delimiter)[1:]
-            my_debug(output)
+            if  self.cli_limit > len(self.sql):
+                my_debug(output)
             assert len(
                 output_list) == i + 1, "The length of result list should be equal to the commands have executed"
             whole_output_list += output_list
