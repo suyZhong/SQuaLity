@@ -16,7 +16,7 @@ def strip_dash_comment_lines(code: str):
 
 
 def strip_comment_suffix(code: str):
-    return re.sub(r'--.*', '', code)
+    return re.sub(r'-- .*', '', code)
 
 
 class Parser:
@@ -42,7 +42,7 @@ class Parser:
             with open(filename, 'r', encoding='windows-1252') as f:
                 content = f.read()
         return content
-    
+
     def get_file_name(self, filename):
         self.filename = filename
 
@@ -381,8 +381,15 @@ class PGTParser(Parser):
     def split_file(self):
         test_content = self.test_content
         test_content = '\n'.join([line if not line.startswith(
-            '\\') else line.strip('; \n') + ';\n' for line in self.test_content.splitlines(keepends=True)])
+            '\\') and not line.endswith('\\gset\n') else line.strip('; \n') + ';\n' for line in self.test_content.splitlines(keepends=True)])
         commands = sqlparse.split(test_content)
+        # we need to do a special handling for the case that we have \if \endif psql commands
+        for i in range(0, len(commands)):
+            if commands[i] == "\\endif;":
+                commands[i - 2] = "".join(commands[i - 2: i + 1]).replace(';', '\n')
+                commands.pop(i - 1)
+                commands.pop(i - 1)
+                break
         return commands
 
     def parse_file_by_split(self):
@@ -394,7 +401,8 @@ class PGTParser(Parser):
         pure_commands = [strip_dash_comment_lines(
             command) for command in commands]
 
-        result_lines = [line for line in self.result_content.splitlines() if line != '']
+        result_lines = [
+            line for line in self.result_content.splitlines() if line != '']
 
         # Compare with the commands parsed by sqlparse
         # split the diff according to the line number
@@ -411,7 +419,8 @@ class PGTParser(Parser):
                 next_command = commands[k + 1] if k < num_command - 1 else "\n"
                 if not next_command.endswith('\\.;'):
                     break
-            next_line = next_command.strip(';').splitlines()[0] if next_command != ';' else ''
+            next_line = next_command.strip(';').splitlines()[
+                0] if next_command != ';' else ''
 
             if command_lines[0] == result_lines[ind].strip(';'):
                 ind += len(command.split('\n'))
@@ -426,6 +435,14 @@ class PGTParser(Parser):
                 result = '\n'.join(result_lines[ind: len(result_lines)])
             elif result_lines[ind].strip(';') == next_line:
                 result = ""
+                # there would be something like this:
+                # --
+                # (1 row)
+                # Which would cause comment line to match --
+                if next_line == "--":
+                    if result_lines[ind + 1].strip(';') == "(1 row)":
+                        result = "--\n(1 row)\n"
+                        ind += 2
             else:
                 for j in range(ind, len(result_lines)):
                     if result_lines[j].strip(';') == next_line:
@@ -448,7 +465,7 @@ class PGTParser(Parser):
                 # break
             else:
                 self.records.append(
-                    Record(sql=pure_commands[i].strip(';'), id=i - num_input, result=result))
+                    Record(sql=strip_comment_suffix(pure_commands[i]).strip(';'), id=i - num_input, result=result))
         if psql_flag:
             self.meta_data['psql_files'] += 1
 
@@ -457,24 +474,24 @@ class PGTParser(Parser):
         The function convert the expected result in postgres to the more general form in SQuaLity.
         '''
         # if record is control, skip
-        converted_result = convert_postgres_result(record.result)
+        converted_result, is_query = convert_postgres_result(record.result)
         if type(record) == Control:
             record.result = converted_result
             return record
         converted_record = Statement(id=record.id)
         # Statement ok
-        if converted_result == "":
+        if converted_result == "" and not is_query:
             return Statement(sql=record.sql, id=record.id, input_data=record.input_data)
         # Statement error
         elif converted_result.startswith("ERROR"):
             return Statement(sql=record.sql, result=converted_result, status=False, id=record.id,
                              input_data=record.input_data)
         # Query
-        elif converted_result:
+        elif converted_result or is_query:
             data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
             return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE,
                          data_type=data_type, input_data=record.input_data)
-
+        logging.warning("Unknown result: %s", converted_result)
         return converted_record
 
     def convert_records(self):

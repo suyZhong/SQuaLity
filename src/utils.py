@@ -71,10 +71,12 @@ TestCaseColumns = ['INDEX',  # testcase index
                    'RESULT',  # SQL execution result. For Statement it's error msg if fail
                    'DBMS',  # The dbms that can execute this test case
                    'SUITE',  # The suite that original test case came from
+                   'INPUT_DATA',  # The input data for this test case
                    'DATA_TYPE',  # Query only, store the require result type
                    'SORT_TYPE',  # Query only, store the required sort methods
                    'LABEL',  # Query only, store the result label
                    'RES_FORM',  # Query only, store the result format
+                   'IS_HASH',    # Query only, store the result is hash or not
                    ]
 
 ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
@@ -170,13 +172,15 @@ def convert_postgres_result(result: str):
     # print(result)
     rows_regex = re.compile(r"\(\s*[0-9]+\s*rows?\)")
     result_lines = result.rstrip().split('\n')
+    is_query = False
     # if it is an error
     if result == "":
-        return result
+        return result, is_query
     if result_lines[0].strip().startswith('ERROR'):
-        return "\n".join(result_lines)
+        return "\n".join(result_lines), is_query
     elif re.match(rows_regex, result_lines[-1]):
         # print(result_lines)
+        is_query = True
         result_rows = int(
             re.search(r"[0-9]+", result_lines[-1]).group())
         value_table = result_lines[-result_rows - 1:-1]
@@ -197,18 +201,26 @@ def convert_postgres_result(result: str):
         row_wise_result = '\n'.join(['\t'.join(row)
                                      for row in row_wise_result_list])
         if result_rows > 0:
-            return row_wise_result
+            return row_wise_result, is_query
         else:
-            return ""
+            return "", is_query
     else:
         # logging.warning("Parsing result warning: while parsing {}".format(result))
-        return result
+        return result, is_query
 
 
 class ResultHelper():
     def __init__(self, results, record: Record) -> None:
         self.results = results
         self.record = record
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            self.debug("""@#$%""")
+
+    def debug(self, ptrn:str):
+        if self.record.sql.find(ptrn) != -1:
+            my_debug(self.record.sql)
+            my_debug(self.record.result)
+            my_debug(self.results)
 
     def hash_results(self, results: str):
         """hash the result string
@@ -221,47 +233,82 @@ class ResultHelper():
             """
         return hashlib.md5(results.encode(encoding='utf-8')).hexdigest()
 
+    # def int_format(self, item):
+    #     try:
+    #         item = int(item)
+    #     except ValueError:
+    #         if pd.isna(item):
+    #             return "NULL"
+    #         item = 0
+    #     except TypeError:  # when the element is None
+    #         return "NULL"
+    #     return "%d" % item
+
     def int_format(self, item):
-        try:
-            item = int(item)
-        except ValueError:
-            if pd.isna(item):
-                return "NULL"
-            item = 0
-        except TypeError:  # when the element is None
+        if isinstance(item, int):
+            return str(item)
+        elif isinstance(item, str) or isinstance(item, float):
+            try:
+                return str(int(item))
+            except ValueError:
+                return "0"
+        elif item == None:
             return "NULL"
-        return "%d" % item
+        else:
+            return "0"
+
+    # def float_format(self, item):
+    #     if pd.isna(item):
+    #         return "NULL"
+    #     try:
+    #         item = float(item)
+    #     except ValueError:  # When the element is long string
+    #         item = 0.0
+    #     except TypeError:  # when the element is None
+    #         return "NULL"
+    #     return "%.3f" % item
 
     def float_format(self, item):
-        if pd.isna(item):
+        if isinstance(item, float):
+            return "%.3f" % item
+        elif isinstance(item, str):
+            try:
+                return "%.3f" % float(item)
+            except:
+                return "0.000"
+        elif item == None:
             return "NULL"
-        try:
-            item = float(item)
-        except ValueError:  # When the element is long string
-            item = 0.0
-        except TypeError:  # when the element is None
-            return "NULL"
-        return "%.3f" % item
+        else:
+            return "0.000"
+
+    # def text_format(self, item):
+    #     if pd.isna(item):
+    #         return 'NULL'
+    #     return str(item)
 
     def text_format(self, item):
-        if pd.isna(item):
-            return 'NULL'
-        return str(item)
+        return str(item) if item != None else "NULL"
+
+    # def format_results(self, results, datatype: str):
+    #     cols = list(datatype)
+    #     tmp_results = pd.DataFrame(results)
+    #     # tmp_results = tmp_results.fillna('NULL')
+    #     for i, col in enumerate(cols):
+    #         if col == "I":
+    #             tmp_results[i] = tmp_results[i].apply(self.int_format)
+    #         elif col == "R":
+    #             tmp_results[i] = tmp_results[i].apply(self.float_format)
+    #         elif col == "T":
+    #             tmp_results[i] = tmp_results[i].apply(self.text_format)
+    #         else:
+    #             logging.warning("Datatype not support")
+    #     return tmp_results.values.tolist()
 
     def format_results(self, results, datatype: str):
         cols = list(datatype)
-        tmp_results = pd.DataFrame(results)
-        # tmp_results = tmp_results.fillna('NULL')
-        for i, col in enumerate(cols):
-            if col == "I":
-                tmp_results[i] = tmp_results[i].apply(self.int_format)
-            elif col == "R":
-                tmp_results[i] = tmp_results[i].apply(self.float_format)
-            elif col == "T":
-                tmp_results[i] = tmp_results[i].apply(self.text_format)
-            else:
-                logging.warning("Datatype not support")
-        return tmp_results.values.tolist()
+        format_func = {'I': self.int_format, 'R': self.float_format, 'T': self.text_format}
+        results = [[format_func[col](item) for col, item in zip(cols, row)] for row in results]
+        return results
 
     def sort_result(self, results, sort_type=SortType.ROW_SORT):
         """sort the result (rows of the results)
@@ -311,6 +358,12 @@ class ResultHelper():
         return cmp_flag, result_string
 
     def row_wise_compare(self, results, record: Record):
+        # the result is just what we want.
+        if type(results) == str:
+            if results == record.result:
+                return True, results
+            else:
+                return False, results
         expected_result_list = record.result.strip().split('\n') if record.result else []
         # expected_result_list.sort()
         actually_result_list = copy(results)

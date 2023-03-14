@@ -98,7 +98,10 @@ if __name__ == "__main__":
     r.init_filter(filter_flaky)
     skip_index = []
     for i, test_file in enumerate(test_files):
-        print(test_file, "start")
+        # if test_file == "postgresql_tests/regress/sql/select.sql":
+        #     logging.getLogger().setLevel(logging.DEBUG)
+        # else:
+        #     logging.getLogger().setLevel(getattr(logging, log_level.upper()))
         db_name = args.db_name
         single_begin_time = datetime.now()
         
@@ -133,9 +136,11 @@ if __name__ == "__main__":
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
             logging.info(traceback.format_exc())
             r.not_allright()
-        r.close()
-        if log_level != "DEBUG":
-            r.remove_db(db_name)
+            r.close()
+        else:
+            r.close()
+            if log_level != "DEBUG":
+                r.remove_db(db_name)
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) + " " + test_file, single_running_time)

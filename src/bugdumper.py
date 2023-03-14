@@ -49,30 +49,30 @@ class BugDumper():
         self.testfile_index = kwargs['testfile_index']
         # self.testfile_content = kwargs['testfile_content']
 
-    def init_bugDB(self):
-        for table in self.tables:
-            self.cur.execute('DROP TABLE IF EXISTS ' + table)
-        for view in self.views:
-            self.cur.execute('DROP VIEW IF EXISTS ' + view)
-        self.cur.execute("""
-        CREATE TABLE DBMS_BUGS (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        DATABASE STRING,
-        DATE STRING,
-        TEST STRING,
-        TRIGGER_BUG_LINE STRING,
-        UNIQUE_BUG STRING,
-        SEVERITY STRING,
-        URL_EMAIL STRING,
-        URL_BUGTRACKER STRING,
-        URL_FIX STRING
-        );
-        """)
+    # def init_bugDB(self):
+    #     for table in self.tables:
+    #         self.cur.execute('DROP TABLE IF EXISTS ' + table)
+    #     for view in self.views:
+    #         self.cur.execute('DROP VIEW IF EXISTS ' + view)
+    #     self.cur.execute("""
+    #     CREATE TABLE DBMS_BUGS (
+    #     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #     DATABASE STRING,
+    #     DATE STRING,
+    #     TEST STRING,
+    #     TRIGGER_BUG_LINE STRING,
+    #     UNIQUE_BUG STRING,
+    #     SEVERITY STRING,
+    #     URL_EMAIL STRING,
+    #     URL_BUGTRACKER STRING,
+    #     URL_FIX STRING
+    #     );
+    #     """)
 
     def recover_db(self):
         pass
 
-    def save_state(self, logs: List[Statement], record: Record, result:str, execution_time: int, is_error=False, msg:str=''):
+    def save_state(self, logs: List[Statement], record: Record, result: str, execution_time: int, is_error=False, msg: str = ''):
         # record the log
         temp_log = ";\n".join([log.sql for log in logs])
         new_log_flag = (temp_log != self.logs_single_row['LOGS'])

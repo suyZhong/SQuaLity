@@ -34,6 +34,7 @@ class TestcaseCollector():
             self.record_row['DBMS'] = ",".join(record.db)
             self.record_row['RESULT'] = record.result
             self.record_row['SUITE'] = record.suite
+            self.record_row['INPUT_DATA'] = record.input_data
             if record_type is Statement:
                 self.record_row['STATUS'] = str(record.status)
             elif record_type is Query:
@@ -43,6 +44,7 @@ class TestcaseCollector():
                 self.record_row['STATUS'] = str(True)
                 self.record_row['RES_FORM'] = record.res_format.value
                 self.record_row['LABEL'] = record.label
+                self.record_row['IS_HASH'] = record.is_hash
             elif record_type is Control:
                 self.record_row['SQL'] = str(record.action.value)
 
@@ -64,7 +66,7 @@ def find_local_tests(db_name: str):
     elif db_name == "mysql":
         test_suite_dir += 'r'
     elif db_name == "postgresql":
-        test_suite_dir += 'regress/sql'
+        return get_postgresql_schedule_test()
     elif db_name == "sqlite":
         test_suite_dir += ''
     else:
@@ -91,3 +93,14 @@ def find_local_duckdb_test():
         tests_files += [os.path.join(path, file_name)
                         for file_name in file_list if re.match(duckdb_test_regex, file_name)]
     return tests_files
+
+def get_postgresql_schedule_test():
+    test_suite_dir = 'postgresql_tests/'
+    schedule_tests_fn = test_suite_dir + 'regress/parallel_schedule'
+    all_tests = []
+    with open(schedule_tests_fn, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.startswith('test: '):
+                all_tests += line.split()[1:]
+    return [f"{test_suite_dir}regress/sql/{test}.sql" for test in all_tests]
