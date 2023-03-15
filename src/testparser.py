@@ -375,9 +375,15 @@ class PGTParser(Parser):
 
     def split_file(self):
         test_content = self.test_content
-        test_content = '\n'.join([line if not line.startswith(
+        test_content = ''.join([line if not line.startswith(
             '\\') and not line.endswith('\\gset\n') else line.strip('; \n') + ';\n' for line in self.test_content.splitlines(keepends=True)])
         commands = sqlparse.split(test_content)
+        # currently do a hack here
+        if self.testfile.endswith('gin.sql'):
+            a = commands[:-1]
+            b = [command for command in commands[-1].split(';\n')]
+            commands = commands[:-1] + [command.strip(';\n') + ';\n' for command in commands[-1].split(';\n')]
+        
         # we need to do a special handling for the case that we have \if \endif psql commands
         for i in range(0, len(commands)):
             if commands[i] == "\\endif;":
