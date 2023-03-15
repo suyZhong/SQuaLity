@@ -113,13 +113,14 @@ OUTPUT_PATH = {
 
 class Record:
 
-    def __init__(self, sql="", result="", suite="", input_data="", **kwargs) -> None:
+    def __init__(self, sql="", result="", suite="", input_data="", user="root", **kwargs) -> None:
         self.sql = sql
         self.result = result
         self.db = DBMS_Set
         self.id = kwargs['id']
         self.suite = suite
         self.input_data = input_data
+        self.user = user
 
     def set_execute_db(self, db: set):
         self.db = db
@@ -127,8 +128,8 @@ class Record:
 
 class Statement(Record):
     def __init__(self, sql="", result="", status=True,
-                 affected_rows=0, input_data="", **kwargs) -> None:
-        super().__init__(sql, result, input_data=input_data, **kwargs)
+                 affected_rows=0, input_data="", user="root", **kwargs) -> None:
+        super().__init__(sql, result, input_data=input_data, user = user, **kwargs)
         self.status = status
         self.affected_rows = affected_rows
 
@@ -136,8 +137,9 @@ class Statement(Record):
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
                  sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="", is_hash=True,
+                 user="root",
                  **kwargs) -> None:
-        super().__init__(sql=sql, result=result, input_data=input_data, **kwargs)
+        super().__init__(sql=sql, result=result, input_data=input_data, user=user, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label

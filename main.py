@@ -13,7 +13,17 @@ from src import testrunner
 from src import testcollector
 from src.utils import DBMS_Set, Suite_Set, SETUP_PATH
 
-ignore_list = list(["cockroachdb_tests/logic_test/internal_executor", "cockroachdb_tests/logic_test/schema_change_feature_flags"])
+ignore_list = list(["cockroachdb_tests/logic_test/internal_executor",
+                    "cockroachdb_tests/logic_test/schema_change_feature_flags",
+                    "cockroachdb_tests/logic_test/set_time_zone",
+                    "cockroachdb_tests/logic_test/show_source",
+                    "cockroachdb_tests/logic_test/datetime",
+                    "cockroachdb_tests/logic_test/serializable_eager_restart",
+                    # duckdb SIGSEVS
+                    "cockroachdb_tests/logic_test/array",
+                    "cockroachdb_tests/logic_test/virtual_columns",
+                    "cockroachdb_tests/logic_test/window"
+                    ])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -120,7 +130,8 @@ if __name__ == "__main__":
         p.get_file_name(test_file)
         p.get_file_content()
         p.parse_file()
-
+        x = str.split(test_file, '/')
+        #r.set_db("output/" + x[2] + ".db")
         r.set_db(db_name)
 
         r.get_records(p.get_records(), testfile_index=i,
@@ -136,11 +147,13 @@ if __name__ == "__main__":
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
             logging.info(traceback.format_exc())
             r.not_allright()
-            r.close()
         else:
-            r.close()
             if log_level != "DEBUG":
                 r.remove_db(db_name)
+        finally:
+            r.remove_all_dbs()
+            r.drop_users()
+            r.disconnect()
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) + " " + test_file, single_running_time)

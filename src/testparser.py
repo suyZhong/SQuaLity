@@ -116,6 +116,7 @@ class SLTParser(Parser):
         super().__init__(filename)
         self.scripts = []
         self.dbms_set = DBMS_Set
+        self.user = "root"
 
     def get_query(self, tokens, lines):
         # A query record begins with a line of the following form:
@@ -158,7 +159,7 @@ class SLTParser(Parser):
                 ind+=1
             result = '\n'.join(lines[ind + 1:])
         record = Query(sql=sql, result=result, data_type=data_type,
-                       sort=sort_mode, label=label, id=self.record_id)
+                       sort=sort_mode, label=label, id=self.record_id, user = self.user)
         return record
 
     def _parse_script_lines(self, lines: list):
@@ -170,13 +171,16 @@ class SLTParser(Parser):
         record_type = tokens[0]
         record = Statement(id=self.record_id)
 
+        if record_type == 'user':
+            self.user = tokens[1]
+            return
         if record_type == 'statement':
             # assert (line_num <= 2), 'statement too long: ' + '\n'.join(lines)
             status = (tokens[1] == 'ok')
             # Only a single SQL command is allowed per statement
             # r = Statement(sql=lines[1], status=status)
             record = Statement(sql="".join(lines[1:]), result=str(
-                status), status=status, id=self.record_id)
+                status), status=status, id=self.record_id, user = self.user)
             self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
@@ -233,6 +237,8 @@ class SLTParser(Parser):
     def parse_file(self):
         """ parse the file by double \\n into a list\n. Then call parse_script() 
         """
+        #reset user for every new file
+        self.user = "root"
         self.scripts = [script.strip()
                         for script in self.test_content.strip().split('\n\n') if script != '']
         # print(self.scripts)
@@ -668,7 +674,7 @@ class CDBTParser(SLTParser):
                 ind += 1
             result = '\n'.join(lines[ind + 1:])
         record = Query(sql=sql, result=result, data_type=data_type,
-                       sort=sort_mode, label=label, id=self.record_id)
+                       sort=sort_mode, label=label, id=self.record_id, user= self.user)
         if any(x in record.sql for x in self.only_cockroach):
             record.set_execute_db(set(self.db_name))
 

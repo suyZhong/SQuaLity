@@ -232,6 +232,7 @@ class PyDBCRunner(Runner):
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
+        self.transaction = False
         self.allright = True
         self.db_error = Exception
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
@@ -302,43 +303,49 @@ class PyDBCRunner(Runner):
     def commit(self):
         pass
 
+    def handle_statement(self, record):
+        self.single_run_stats['statement_num'] += 1
+        status = True
+        except_msg = None
+        try:
+            self.execute_stmt(record.sql)
+        except self.db_error as e:
+            status = False
+            self.single_run_stats['failed_statement_num'] += 1
+            except_msg = str(e)
+            logging.debug(
+                "Statement %s execution error: %s", record.sql, e)
+        self.handle_stmt_result(status, record, except_msg)
+        self.commit()
+        if status:
+            self.records_log.append(record)
+
+    def handle_query(self, record):
+        self.single_run_stats['query_num'] += 1
+        results = []
+        try:
+            results = self.execute_query(record.sql)
+        except self.db_error as except_msg:
+            self.single_run_stats['failed_query_num'] += 1
+            logging.debug("Query %s execution error: %s",
+                          record.sql, except_msg)
+            self.commit()
+            self.bug_dumper.save_state(self.records_log, record, str(False), (
+                    datetime.now() - self.cur_time).microseconds, is_error=True,
+                                       msg="Execution Failed: {}".format(except_msg))
+            self.allright = False
+            return
+        else:
+            self.single_run_stats['success_query_num'] += 1
+        # print(results)
+        self.handle_query_result(results, record)
+
     def _single_run(self, record):
         self.single_run_stats['total_executed_sql'] += 1
         if type(record) is Statement:
-            self.single_run_stats['statement_num'] += 1
-            status = True
-            except_msg = None
-            try:
-                self.execute_stmt(record.sql)
-            except self.db_error as e:
-                status = False
-                self.single_run_stats['failed_statement_num'] += 1
-                except_msg = str(e)
-                logging.debug(
-                    "Statement %s execution error: %s", record.sql, e)
-            self.handle_stmt_result(status, record, except_msg)
-            self.commit()
-            if status:
-                self.records_log.append(record)
+            self.handle_statement(record)
         elif type(record) is Query:
-            self.single_run_stats['query_num'] += 1
-            results = []
-            try:
-                results = self.execute_query(record.sql)
-            except self.db_error as except_msg:
-                self.single_run_stats['failed_query_num'] += 1
-                logging.debug("Query %s execution error: %s",
-                              record.sql, except_msg)
-                self.commit()
-                self.bug_dumper.save_state(self.records_log, record, str(False), (
-                        datetime.now() - self.cur_time).microseconds, is_error=True,
-                                           msg="Execution Failed: {}".format(except_msg))
-                self.allright = False
-                return
-            else:
-                self.single_run_stats['success_query_num'] += 1
-            # print(results)
-            self.handle_query_result(results, record)
+            self.handle_query(record)
 
     def handle_control(self, action: RunnerAction, record: Record):
         if action == RunnerAction.HALT:
@@ -456,17 +463,18 @@ class DuckDBRunner(PyDBCRunner):
 class CockroachDBRunner(PyDBCRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
+        self.user = "root"
         self.con = None
         self.cur = None
         # self.db_error(psycopg2.ProgrammingError)
 
     default_dbs = list(["defaultdb", "postgres", "squalitytest", "system", "\"", "test"])
-    default_users = list(["admin", "root"])
+    default_users = list(["admin", "root", "\""])
 
     def set_db(self, db_name):
         self.db = "postgresql://root@localhost:26257/defaultdb?sslmode=disable"
         self.connect("defaultdb")
-
+        self.connect_again()
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
         self.execute_stmt("CREATE DATABASE %s" % db_name)
         self.execute_stmt("USE %s" % db_name)
@@ -476,63 +484,170 @@ class CockroachDBRunner(PyDBCRunner):
         self.db = dsn
 
     def remove_db(self, db_name):
-        self.db = "postgresql://root@localhost:26257/defaultdb?sslmode=disable"
-        self.connect("defaultdb")
-        self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
-        self.commit()
-        self.close()
+        pass
 
-    def remove_all_dbs(self, db_name):
-        sqlQuery = "SELECT datname FROM pg_database WHERE datistemplate = false;"
-        usersQuery = "show users";
-        # Execute the query statement
-        self.execute_stmt(sqlQuery)
-        # Retrieve all the rows from the cursor
-        rows = self.cur.fetchall()
-        for row in rows:
-            if row[0] not in self.default_dbs:
-                self.execute_stmt("DROP DATABASE IF EXISTS \"%s\" CASCADE" % row[0])
-                self.commit()
-
+    def remove_all_users_from_db(self, db_name):
+        usersQuery = "SHOW USERS;"
         self.execute_stmt(usersQuery)
         rows = self.cur.fetchall()
-        try:
-            for row in rows:
-                if row[0] not in self.default_users:
-                    self.execute_stmt("REVOKE ALL PRIVILEGES ON %s.* FROM \"%s\";" % (db_name, row[0]))
-                    self.commit()
-        except psycopg2.InternalError as e:
-            print(e)
-            self.commit()
+        for row in rows:
+            if row[0] not in self.default_users:
+                try:
+                    self.execute_stmt("USE \"%s\"" % db_name);
+                    self.execute_stmt(
+                        "ALTER DEFAULT PRIVILEGES FOR ROLE \"%s\" REVOKE ALL ON FUNCTIONS FROM \"%s\";" % (
+                        row[0], row[0]))
+                    self.execute_stmt("REVOKE ALL PRIVILEGES ON \"%s\".* FROM \"%s\";" % (db_name, row[0]))
+                except psycopg2.Error as e:
+                    print(e)
+                    print(row[0], " ", db_name)
 
-        try:
-            for row in rows:
+        return rows
+
+    def drop_users(self, users=None):
+        if users is None:
+            try:
+                users_query = "SHOW USERS;"
+                self.execute_stmt(users_query)
+                users = self.cur.fetchall()
+            except psycopg2.InternalError as e:
+                print(e)
+                self.disconnect()
+                return
+
+        for row in users:
+            try:
                 if row[0] not in self.default_users:
                     self.execute_stmt("DROP USER \"%s\" " % row[0])
-                    self.commit()
-        except psycopg2.InternalError as e:
+            except psycopg2.InternalError as e:
+                self.disconnect()
+                print(e)
+
+    def remove_all_dbs(self):
+        self.connect("defaultdb")
+        self.connect_again()
+        sqlQuery = "SELECT datname FROM pg_database WHERE datistemplate = false;"
+        # Execute the query statement
+        try:
+            self.execute_stmt(sqlQuery)
+            # Retrieve all the rows from the cursor
+            rows = self.cur.fetchall()
+        except psycopg2.Error as e:
             print(e)
-            self.commit()
+            return
+
+        for row in rows:
+            try:
+                if row[0] not in self.default_dbs:
+                    self.remove_all_users_from_db(row[0])
+                    self.execute_stmt("DROP DATABASE IF EXISTS \"%s\" CASCADE" % row[0])
+            except psycopg2.Error as e:
+                print(e)
 
 
     def connect(self, db_name):
+        self.user = "root"
         logging.info("connect to db %s", db_name)
+        # self.con = psycopg2.connect(dsn=self.db)
+        # self.cur = self.con.cursor()
 
-        self.con = psycopg2.connect(dsn=self.db)
-        self.cur = self.con.cursor()
+    def close_cursor(self):
+        if self.cur is not None:
+            self.cur.close()
 
     def close(self):
-        self.con.close()
+        if self.con is not None:
+            self.con.close()
 
     def execute_query(self, sql):
+        self.connect_again()
+        if self.cur is None:
+            self.cur = self.con.cursor
         self.cur.execute(sql)
         return self.cur.fetchall()
 
     def execute_stmt(self, sql):
+        self.connect_again()
+        if self.cur is None:
+            self.cur = self.con.cursor
         self.cur.execute(sql)
 
     def commit(self):
-        self.con.commit()
+        if self.con is not None:
+            self.con.commit()
+
+    def connect_again(self, autocommit: bool = True, force=False):
+        if force or self.con is None or self.user != self.con.info.user:
+            self.db = f"postgresql://{self.user}@localhost:26257/defaultdb?sslmode=disable"
+            self.con = psycopg2.connect(dsn=self.db)
+            self.con.autocommit = autocommit
+            self.cur = self.con.cursor()
+
+    def disconnect(self):
+        if self.con is not None:
+            self.close_cursor()
+            self.close()
+            self.con = None
+            self.cur = None
+
+    def handle_statement(self, record):
+        self.single_run_stats['statement_num'] += 1
+        status = True
+        except_msg = None
+        self.user = record.user
+        try:
+            if record.sql == "BEGIN":
+                self.transaction = True
+                self.disconnect()
+                self.connect_again(autocommit=False, force=True)
+            elif record.sql == "COMMIT":
+                self.commit()
+                self.disconnect()
+                self.transaction = False
+            elif record.sql == "ROLLBACK":
+                self.con.rollback()
+                self.transaction = False
+                self.disconnect()
+            else:
+                self.connect_again(autocommit=True)
+                self.execute_stmt(record.sql)
+        except self.db_error as e:
+            status = False
+            self.single_run_stats['failed_statement_num'] += 1
+            except_msg = str(e)
+            logging.debug(
+                "Statement %s execution error: %s", record.sql, e)
+        self.handle_stmt_result(status, record, except_msg)
+
+        if status:
+            self.records_log.append(record)
+
+    def handle_query(self, record):
+        self.single_run_stats['query_num'] += 1
+        self.user = record.user
+        try:
+            if self.transaction:
+                # If it is a transaction , use the same connection
+                results = self.execute_query(record.sql)
+            else:
+                self.connect_again(autocommit=True)
+                results = self.execute_query(record.sql)
+        except self.db_error as except_msg:
+            self.single_run_stats['failed_query_num'] += 1
+            logging.debug("Query %s execution error: %s",
+                          record.sql, except_msg)
+            self.bug_dumper.save_state(self.records_log, record, str(False), (
+                    datetime.now() - self.cur_time).microseconds, is_error=True,
+                                       msg="Execution Failed: {}".format(except_msg))
+            self.allright = False
+            return
+        else:
+            self.single_run_stats['success_query_num'] += 1
+        finally:
+            if not self.transaction:
+                self.commit()
+                self.disconnect()
+        self.handle_query_result(results, record)
 
     def reset(self, filename):
         self.con.execute(filename)
@@ -625,7 +740,7 @@ class CLIRunner(Runner):
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
-        self.cli_limit = 1000 # shouldn't be too low, otherwise the cli will be very slow and the result for psql would not match
+        self.cli_limit = 1000  # shouldn't be too low, otherwise the cli will be very slow and the result for psql would not match
 
     def get_env(self):
         """get the environment variable
@@ -654,7 +769,7 @@ class CLIRunner(Runner):
             my_debug("Query %s Success", record.sql)
             if self.dump_all:
                 self.bug_dumper.save_state(
-                    self.records_log, record, results, (datetime.now()-self.cur_time).microseconds)
+                    self.records_log, record, results, (datetime.now() - self.cur_time).microseconds)
         else:
             self.handle_wrong_query(record, results)
 
@@ -694,7 +809,8 @@ class CLIRunner(Runner):
         whole_output_list = []
         for sql_list in sql_lists:
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
+                                        stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True,
+                                        bufsize=2 << 15)
             my_debug("Running %d sqls" % len(sql_list))
             input_string = ""
             for i, sql in enumerate(sql_list):
@@ -707,7 +823,7 @@ class CLIRunner(Runner):
                 input_string += sql
             output, _ = self.cli.communicate(input=input_string)
             output_list = output.split(self.res_delimiter)[1:]
-            if  self.cli_limit > len(self.sql):
+            if self.cli_limit > len(self.sql):
                 my_debug(output)
             assert len(
                 output_list) == i + 1, "The length of result list should be equal to the commands have executed"
