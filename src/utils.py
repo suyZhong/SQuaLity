@@ -362,21 +362,23 @@ class ResultHelper():
             else:
                 return False, results
         expected_result_list = record.result.strip().split('\n') if record.result else []
-        # expected_result_list.sort()
+        expected_result_list.sort()
         NULL = None
-        actually_result_list = copy(results)
+        actual_result_list = copy(results)
         # actually_result_list.sort()
-        my_debug("%s, %s", actually_result_list, expected_result_list)
-        if len(expected_result_list) == len(actually_result_list) == 0:
+        # sort the actual result list based on the string
+        actual_result_list = sorted(actual_result_list, key=str)
+        my_debug("%s, %s", actual_result_list, expected_result_list)
+        if len(expected_result_list) == len(actual_result_list) == 0:
             cmp_flag = True
-        elif len(expected_result_list) != len(actually_result_list):
+        elif len(expected_result_list) != len(actual_result_list):
             cmp_flag = False
         else:
             for i, row in enumerate(expected_result_list):
                 items = row.strip().split('\t')
                 for j, item in enumerate(items):
                     # direct comparison
-                    rvalue = actually_result_list[i][j]
+                    rvalue = actual_result_list[i][j]
                     # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
                     cmp_flag = item is rvalue
                     cmp_flag = item == str(rvalue) or cmp_flag
