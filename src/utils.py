@@ -81,7 +81,7 @@ TestCaseColumns = ['INDEX',  # testcase index
 
 ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
                  'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT',
-                 'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'ERROR_MSG', 'LOGS_INDEX']
+                 'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'ERROR_MSG','USER', 'LOGS_INDEX']
 
 TESTCASE_PATH = {
     'postgresql': 'postgresql_tests/regress/'
@@ -361,6 +361,8 @@ class ResultHelper():
 
     def row_wise_compare(self, results, record: Record):
         # the result is just what we want.
+        if record.id == 62:
+            print("hello")
         if type(results) == str:
             if results == record.result:
                 return True, results

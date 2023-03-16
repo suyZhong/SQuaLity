@@ -19,6 +19,7 @@ ignore_list = list(["cockroachdb_tests/logic_test/internal_executor",
                     "cockroachdb_tests/logic_test/show_source",
                     "cockroachdb_tests/logic_test/datetime",
                     "cockroachdb_tests/logic_test/serializable_eager_restart",
+                    "cockroachdb_tests/logic_test/cursor",
                     # duckdb SIGSEVS
                     "cockroachdb_tests/logic_test/array",
                     "cockroachdb_tests/logic_test/virtual_columns",
@@ -36,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', "--db_name", type=str, default="output/tempdb",
                         help="Enter the database name. For embedded database it's the file path.")
     parser.add_argument('-u', "--db_url", type=str,
-                        default="postgresql://root@localhost:26257/defaultdb?sslmode=disable",
+                        default="postgresql://root@localhost:26257/test?sslmode=disable",
                         help="Enter the Dabase url")
     parser.add_argument('--log', type=str, default="DEBUG",
                         help="logging level")
@@ -161,5 +162,4 @@ if __name__ == "__main__":
         print("\n")
         # print ("#############################\n\n")
         r.dump()
-    print("done all")
     r.running_summary("ALL", (datetime.now()-begin_time).seconds)

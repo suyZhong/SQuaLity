@@ -171,9 +171,6 @@ class SLTParser(Parser):
         record_type = tokens[0]
         record = Statement(id=self.record_id)
 
-        if record_type == 'user':
-            self.user = tokens[1]
-            return
         if record_type == 'statement':
             # assert (line_num <= 2), 'statement too long: ' + '\n'.join(lines)
             status = (tokens[1] == 'ok')
@@ -698,6 +695,10 @@ class CDBTParser(SLTParser):
         #Skip crdb_internal.force_retry queries because they take up a lot of time
         if "crdb_internal.force_retry" in script:
             record_type = 'halt'
+
+        if record_type == 'user':
+            self.user = tokens[1]
+            return
 
         if record_type == 'statement':
             status = (tokens[1] == 'ok' or tokens[1] == 'count') if len(tokens) > 1 else True

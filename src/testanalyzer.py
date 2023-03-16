@@ -160,7 +160,7 @@ class TestResultAnalyzer():
         errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(
             lambda x: convert_testfile_name(x, self.dbms_suite))
         errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv",
-                      columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
+                      columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False, mode = 'a')
 
     def dump_results(self):
-        self.results.to_csv(f"{self.results_path}_clustered.csv", index=False)
+        self.results.to_csv(f"{self.results_path}_clustered.csv", index=False, mode = 'a')

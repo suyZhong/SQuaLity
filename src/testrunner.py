@@ -128,9 +128,6 @@ class Runner():
         if test_name == "ALL":
             stats = self.all_run_stats
         else:
-            # add the single run stats to the all run stats
-            for key in self.single_run_stats:
-                self.all_run_stats[key] += self.single_run_stats[key]
             stats = self.single_run_stats
         print("-------------------------------------------")
         print("Testing DBMS: %s" %
@@ -259,6 +256,9 @@ class PyDBCRunner(Runner):
     def remove_all_dbs(self):
         pass
 
+    def drop_users(self, users=None):
+        pass
+
     def run(self):
         self.start()
         class_name = type(self).__name__
@@ -301,6 +301,9 @@ class PyDBCRunner(Runner):
         return [()]
 
     def commit(self):
+        pass
+
+    def disconnect(self):
         pass
 
     def handle_statement(self, record):
@@ -350,6 +353,7 @@ class PyDBCRunner(Runner):
     def handle_control(self, action: RunnerAction, record: Record):
         if action == RunnerAction.HALT:
             logging.warning("halt the rest of the test cases")
+            logging.warning("sql: " + record.sql)
             self.allright = False
             raise StopRunnerException
         elif action == RunnerAction.ECHO:
@@ -463,24 +467,26 @@ class DuckDBRunner(PyDBCRunner):
 class CockroachDBRunner(PyDBCRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
+        self.db_name = None
         self.user = "root"
         self.con = None
         self.cur = None
         # self.db_error(psycopg2.ProgrammingError)
 
-    default_dbs = list(["defaultdb", "postgres", "squalitytest", "system", "\"", "test"])
+    default_dbs = list(["postgres", "squalitytest", "system", "\""])
     default_users = list(["admin", "root", "\""])
 
     def set_db(self, db_name):
-        self.db = "postgresql://root@localhost:26257/defaultdb?sslmode=disable"
-        self.connect("defaultdb")
+        self.db_name = db_name
+        self.db = f"postgresql://root@localhost:26257/{db_name}?sslmode=disable"
+        self.connect(db_name)
         self.connect_again()
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
         self.execute_stmt("CREATE DATABASE %s" % db_name)
         self.execute_stmt("USE %s" % db_name)
         self.commit()
         self.close()
-        dsn = "postgresql://root@localhost:26257/%s?sslmode=disable" % db_name
+        dsn = f"postgresql://root@localhost:26257/{db_name}?sslmode=disable"
         self.db = dsn
 
     def remove_db(self, db_name):
@@ -510,7 +516,7 @@ class CockroachDBRunner(PyDBCRunner):
                 users_query = "SHOW USERS;"
                 self.execute_stmt(users_query)
                 users = self.cur.fetchall()
-            except psycopg2.InternalError as e:
+            except psycopg2.Error as e:
                 print(e)
                 self.disconnect()
                 return
@@ -519,12 +525,12 @@ class CockroachDBRunner(PyDBCRunner):
             try:
                 if row[0] not in self.default_users:
                     self.execute_stmt("DROP USER \"%s\" " % row[0])
-            except psycopg2.InternalError as e:
+            except psycopg2.Error as e:
                 self.disconnect()
                 print(e)
 
     def remove_all_dbs(self):
-        self.connect("defaultdb")
+        self.connect("test")
         self.connect_again()
         sqlQuery = "SELECT datname FROM pg_database WHERE datistemplate = false;"
         # Execute the query statement
@@ -547,6 +553,7 @@ class CockroachDBRunner(PyDBCRunner):
 
     def connect(self, db_name):
         self.user = "root"
+        self.db_name = db_name
         logging.info("connect to db %s", db_name)
         # self.con = psycopg2.connect(dsn=self.db)
         # self.cur = self.con.cursor()
@@ -578,8 +585,9 @@ class CockroachDBRunner(PyDBCRunner):
 
     def connect_again(self, autocommit: bool = True, force=False):
         if force or self.con is None or self.user != self.con.info.user:
-            self.db = f"postgresql://{self.user}@localhost:26257/defaultdb?sslmode=disable"
-            self.con = psycopg2.connect(dsn=self.db)
+            self.db = f"postgresql://{self.user}@localhost:26257/{self.db_name}?sslmode=disable"
+            logging.warning(f"Connecting as {self.user} to {self.db_name}")
+            self.con = psycopg2.connect(dsn=self.db, password= "root")
             self.con.autocommit = autocommit
             self.cur = self.con.cursor()
 
