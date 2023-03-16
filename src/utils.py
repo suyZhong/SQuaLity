@@ -331,6 +331,7 @@ class ResultHelper():
                 # cockroach db does not produce tabs, but only multiple spaces. check for atleast 2 spaces because
                 # strings like these need to be split by more than
                 # one space: 'c           c_bar_key        UNIQUE       UNIQUE (bar ASC)      true       NULL'
+                #todo: do this in parser
                 regex = '\\s{2,}|\\t'
                 items = re.split(regex, row.strip())
                 # To remove empty strings from items

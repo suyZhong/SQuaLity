@@ -617,7 +617,7 @@ class CockroachDBRunner(PyDBCRunner):
                 self.transaction = False
                 self.disconnect()
             else:
-                self.connect_again(autocommit=True)
+                self.connect_again()
                 self.execute_stmt(record.sql)
         except self.db_error as e:
             status = False

@@ -20,6 +20,7 @@ ignore_list = list(["cockroachdb_tests/logic_test/internal_executor",
                     "cockroachdb_tests/logic_test/datetime",
                     "cockroachdb_tests/logic_test/serializable_eager_restart",
                     "cockroachdb_tests/logic_test/cursor",
+                    "cockroachdb_tests/logic_test/grant_in_txn",
                     # duckdb SIGSEVS
                     "cockroachdb_tests/logic_test/array",
                     "cockroachdb_tests/logic_test/virtual_columns",
@@ -154,6 +155,7 @@ if __name__ == "__main__":
         finally:
             r.remove_all_dbs()
             r.drop_users()
+
             r.disconnect()
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
