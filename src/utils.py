@@ -380,14 +380,14 @@ class ResultHelper():
         # actually_result_list.sort()
         # sort the actual result list based on the string
         my_debug("%s, %s", actual_result_list, expected_result_list)
-        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list)
+        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list, record)
         # if the result is same, just end here
         if cmp_flag:
             return cmp_flag, result_string
         # if not, try to sort the result and do again
         expected_result_list.sort()
         actual_result_list = sorted(actual_result_list, key=str)
-        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list)
+        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list, record)
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):
