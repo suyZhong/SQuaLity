@@ -235,17 +235,6 @@ class ResultHelper():
             """
         return hashlib.md5(results.encode(encoding='utf-8')).hexdigest()
 
-    # def int_format(self, item):
-    #     try:
-    #         item = int(item)
-    #     except ValueError:
-    #         if pd.isna(item):
-    #             return "NULL"
-    #         item = 0
-    #     except TypeError:  # when the element is None
-    #         return "NULL"
-    #     return "%d" % item
-
     def int_format(self, item):
         if isinstance(item, int):
             return str(item)
@@ -259,16 +248,6 @@ class ResultHelper():
         else:
             return "0"
 
-    # def float_format(self, item):
-    #     if pd.isna(item):
-    #         return "NULL"
-    #     try:
-    #         item = float(item)
-    #     except ValueError:  # When the element is long string
-    #         item = 0.0
-    #     except TypeError:  # when the element is None
-    #         return "NULL"
-    #     return "%.3f" % item
 
     def float_format(self, item):
         if isinstance(item, float):
@@ -283,28 +262,10 @@ class ResultHelper():
         else:
             return "0.000"
 
-    # def text_format(self, item):
-    #     if pd.isna(item):
-    #         return 'NULL'
-    #     return str(item)
 
     def text_format(self, item):
         return str(item) if item != None else "NULL"
 
-    # def format_results(self, results, datatype: str):
-    #     cols = list(datatype)
-    #     tmp_results = pd.DataFrame(results)
-    #     # tmp_results = tmp_results.fillna('NULL')
-    #     for i, col in enumerate(cols):
-    #         if col == "I":
-    #             tmp_results[i] = tmp_results[i].apply(self.int_format)
-    #         elif col == "R":
-    #             tmp_results[i] = tmp_results[i].apply(self.float_format)
-    #         elif col == "T":
-    #             tmp_results[i] = tmp_results[i].apply(self.text_format)
-    #         else:
-    #             logging.warning("Datatype not support")
-    #     return tmp_results.values.tolist()
 
     def format_results(self, results, datatype: str):
         cols = list(datatype)
@@ -359,26 +320,14 @@ class ResultHelper():
         cmp_flag = result_string.strip() == record.result.strip()
         return cmp_flag, result_string
 
-    def row_wise_compare(self, results, record: Record):
-        # the result is just what we want.
-        if record.id == 62:
-            print("hello")
-        if type(results) == str:
-            if results == record.result:
-                return True, results
-            else:
-                return False, results
-        expected_result_list = record.result.strip().split('\n') if record.result else []
-        # expected_result_list.sort()
-        actually_result_list = copy(results)
-        # actually_result_list.sort()
-        my_debug("%s, %s", actually_result_list, expected_result_list)
-        if len(expected_result_list) == len(actually_result_list) == 0:
+    def _row_wise_compare_str(self, actual_results, expected_results, record: Record):
+        NULL = None
+        if len(expected_results) == len(actual_results) == 0:
             cmp_flag = True
-        elif len(expected_result_list) != len(actually_result_list):
+        elif len(expected_results) != len(actual_results):
             cmp_flag = False
         else:
-            for i, row in enumerate(expected_result_list):
+            for i, row in enumerate(expected_results):
                 # cockroach db does not produce tabs, but only multiple spaces. check for atleast 2 spaces because
                 # strings like these need to be split by more than
                 # one space: 'c           c_bar_key        UNIQUE       UNIQUE (bar ASC)      true       NULL'
@@ -388,7 +337,7 @@ class ResultHelper():
                 items = list(filter(None, items))
                 for j, item in enumerate(items):
                     # direct comparison
-                    rvalue = actually_result_list[i][j]
+                    rvalue = actual_results[i][j]
                     # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
                     cmp_flag = item is rvalue
                     cmp_flag = item == str(rvalue) or cmp_flag
@@ -411,11 +360,34 @@ class ResultHelper():
                 if not cmp_flag:
                     break
         result_string = '\n'.join(['\t'.join(
-            [str(item) if item != None else 'NULL' for item in row]) for row in results])
+            [str(item) if item != None else 'NULL' for item in row]) for row in actual_results])
 
         if not cmp_flag:
             # One last attempt to string compare everything
-            cmp_flag = self.complete_string_compare(results, record)
+            cmp_flag = self.complete_string_compare(actual_results, record)
+        return cmp_flag, result_string
+
+    def row_wise_compare(self, results, record: Record):
+        # the result is just what we want.
+        if type(results) == str:
+            if results == record.result:
+                return True, results
+            else:
+                return False, results
+        expected_result_list = record.result.strip().split('\n') if record.result else []
+        cmp_flag = False
+        actual_result_list = copy(results)
+        # actually_result_list.sort()
+        # sort the actual result list based on the string
+        my_debug("%s, %s", actual_result_list, expected_result_list)
+        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list)
+        # if the result is same, just end here
+        if cmp_flag:
+            return cmp_flag, result_string
+        # if not, try to sort the result and do again
+        expected_result_list.sort()
+        actual_result_list = sorted(actual_result_list, key=str)
+        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list)
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):
