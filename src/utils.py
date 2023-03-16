@@ -230,17 +230,6 @@ class ResultHelper():
             """
         return hashlib.md5(results.encode(encoding='utf-8')).hexdigest()
 
-    # def int_format(self, item):
-    #     try:
-    #         item = int(item)
-    #     except ValueError:
-    #         if pd.isna(item):
-    #             return "NULL"
-    #         item = 0
-    #     except TypeError:  # when the element is None
-    #         return "NULL"
-    #     return "%d" % item
-
     def int_format(self, item):
         if isinstance(item, int):
             return str(item)
@@ -254,16 +243,6 @@ class ResultHelper():
         else:
             return "0"
 
-    # def float_format(self, item):
-    #     if pd.isna(item):
-    #         return "NULL"
-    #     try:
-    #         item = float(item)
-    #     except ValueError:  # When the element is long string
-    #         item = 0.0
-    #     except TypeError:  # when the element is None
-    #         return "NULL"
-    #     return "%.3f" % item
     
     def float_format(self, item):
         if isinstance(item, float):
@@ -278,28 +257,10 @@ class ResultHelper():
         else:
             return "0.000"
 
-    # def text_format(self, item):
-    #     if pd.isna(item):
-    #         return 'NULL'
-    #     return str(item)
 
     def text_format(self, item):
         return str(item) if item != None else "NULL"
 
-    # def format_results(self, results, datatype: str):
-    #     cols = list(datatype)
-    #     tmp_results = pd.DataFrame(results)
-    #     # tmp_results = tmp_results.fillna('NULL')
-    #     for i, col in enumerate(cols):
-    #         if col == "I":
-    #             tmp_results[i] = tmp_results[i].apply(self.int_format)
-    #         elif col == "R":
-    #             tmp_results[i] = tmp_results[i].apply(self.float_format)
-    #         elif col == "T":
-    #             tmp_results[i] = tmp_results[i].apply(self.text_format)
-    #         else:
-    #             logging.warning("Datatype not support")
-    #     return tmp_results.values.tolist()
     
     def format_results(self, results, datatype: str):
         cols = list(datatype)
