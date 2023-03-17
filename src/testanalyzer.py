@@ -20,12 +20,12 @@ def compute_similarity(a: str, b: str):
     return fuzz.ratio(a, b)
 
 
-ERROR_FILES = ['xxx']
+ERROR_FILES = ['xxx',
+               ]
 
 TEST_FILTER = {
-    'CLUSTER': lambda x: x['TESTFILE_NAME'] not in ERROR_FILES,
-    'REGRESS': lambda x: re.search(x['SQL'], r'regress_lib') is None,
-    'TIMESTAMP': lambda x: re.search(x['SQL'], r'timestamp') is None,
+    'CLUSTER': lambda x: x['TESTFILE_PATH'] not in ERROR_FILES,
+    'REGRESS': lambda x: re.search('regress_lib', str(x['SQL'])) is not None,
 }
 
 
@@ -179,7 +179,7 @@ class TestResultAnalyzer():
                       columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
 
     def dump_results(self, suffix: str = 'clustered'):
-        self.results.to_csv(f"{self.results_path}{suffix}.csv", index=False)
+        self.results.to_csv(f"{self.results_path.removesuffix('.csv')}{suffix}.csv", index=False)
 
     def find_dependency_failure(self, row: pd.DataFrame):
         all_results = self.results[self.results['TESTFILE_PATH']
@@ -239,7 +239,8 @@ class TestResultAnalyzer():
                         self.results.loc[index, 'ERROR_REASON'] = 'DEP-EXT'
                     else:
                         print('ERROR: ', row.SQL)
-                    self.results.loc[index, 'DEPENDENCY'] = str(dep)
+                    if len(dep) > 0:
+                        self.results.loc[index, 'DEPENDENCY'] = str(dep)
                 if sql_type.upper() in self.DDL:
                     ddl_dep.update(identifiers)
                 elif sql_type.upper() in self.DML:

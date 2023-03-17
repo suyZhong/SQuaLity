@@ -1,2 +1,3 @@
-TEST_SUITE, TAG, REASON, INFORMATION
-
+TEST_SUITE,TAG,REASON,INFORMATION
+postgresql,REGRESS,External regress.so usage,
+postgresql,COLLATION,Collation settings is not the same,
