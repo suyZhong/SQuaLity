@@ -215,9 +215,9 @@ class TestResultAnalyzer():
                 parsed = sqlparse.parse(sql)[0]
             sql_type = str(parsed.token_first())
             identifiers = set(
-                [str(token) for token in parsed.tokens if isinstance(token, Identifier)])
+                [str(token) for token in parsed.flatten() if token.ttype is sqlparse.tokens.Name])
             if row.IS_ERROR:
-                if row.CASE_TYPE == 'Query' or row.CASE_TYPE == 'Statement':
+                if row.CASE_TYPE == 'Query':
                     # print(row.SQL)
                     # if relation with ddl dependency
                     if len(set.intersection(identifiers, ddl_dep)) > 0:
@@ -234,18 +234,15 @@ class TestResultAnalyzer():
                     self.results.loc[index, 'DEPENDENCY'] = str(
                         {'ddl': ddl_dep, 'dml': dml_dep, 'tcl': tcl_dep, 'true': true_dep})
                 if sql_type.upper() in self.DDL:
-                    ddl_dep.update(
-                        [item for token in identifiers for item in token.split()])
+                    ddl_dep.update(identifiers)
                 elif sql_type.upper() in self.DML:
-                    dml_dep.update(
-                        [item for token in identifiers for item in token.split()])
+                    dml_dep.update(identifiers)
                 elif sql_type.upper() in self.TCL:
                     tcl_dep.update(self.find_dependencies(';\n'.join(
                         all_results[all_results['TESTCASE_INDEX'] < row.TESTCASE_INDEX]), self.DDL + self.DML))
             else:
                 if sql_type.upper() in self.DDL:
-                    true_dep.update(
-                        [item for token in identifiers for item in token.split()])
+                    true_dep.update(identifiers)
         print(all_results.info())
         return all_results
 
@@ -255,10 +252,9 @@ class TestResultAnalyzer():
         for sql in parsed:
             if str(sql.token_first()) in dep_type:
                 tokens = sql.tokens
-                identifiers = [
-                    str(token) for token in tokens if isinstance(token, Identifier)]
+                identifiers = [str(token) for token in parsed.flatten(
+                ) if token.ttype is sqlparse.tokens.Name]
                 # splits the string into a list of substrings at each space.
                 # The result is a flattened list of substrings without spaces.
-                dependencies.update(
-                    [item for token in identifiers for item in token.split()])
+                dependencies.update(identifiers)
         return dependencies
