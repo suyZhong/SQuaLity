@@ -25,7 +25,7 @@ ERROR_FILES = ['xxx',
 
 TEST_FILTER = {
     'CLUSTER': lambda x: x['TESTFILE_PATH'] not in ERROR_FILES,
-    'REGRESS': lambda x: re.search('regress_lib', str(x['SQL'])) is not None,
+    'REGRESS': lambda x: re.search('regresslib', str(x['SQL'])) is not None,
 }
 
 
