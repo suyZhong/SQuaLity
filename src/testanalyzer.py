@@ -220,19 +220,26 @@ class TestResultAnalyzer():
                 if row.CASE_TYPE == 'Query':
                     # print(row.SQL)
                     # if relation with ddl dependency
-                    if len(set.intersection(identifiers, ddl_dep)) > 0:
+                    inter_ddl = identifiers.intersection(ddl_dep)
+                    inter_dml = identifiers.intersection(dml_dep)
+                    inter_tcl = identifiers.intersection(tcl_dep)
+                    inter_true = identifiers.intersection(true_dep)
+                    dep = set()
+                    if len(inter_ddl) > 0:
                         # update the row of the all_results
                         self.results.loc[index, 'ERROR_REASON'] = 'DEP-DDL'
-                    elif len(identifiers.intersection(dml_dep)) > 0:
+                        dep = inter_ddl
+                    elif len(inter_dml) > 0:
                         self.results.loc[index, 'ERROR_REASON'] = 'DEP-DML'
-                    elif len(identifiers.intersection(tcl_dep)) > 0:
+                        dep = inter_dml
+                    elif len(inter_tcl) > 0:
                         self.results.loc[index, 'ERROR_REASON'] = 'DEP-TCL'
-                    elif len(identifiers.intersection(true_dep)) == 0 and len(identifiers.intersection(ddl_dep)) == 0:
+                        dep = inter_tcl
+                    elif len(inter_true) == 0 and len(inter_ddl) == 0:
                         self.results.loc[index, 'ERROR_REASON'] = 'DEP-EXT'
                     else:
                         print('ERROR: ', row.SQL)
-                    self.results.loc[index, 'DEPENDENCY'] = str(
-                        {'ddl': ddl_dep, 'dml': dml_dep, 'tcl': tcl_dep, 'true': true_dep})
+                    self.results.loc[index, 'DEPENDENCY'] = str(dep)
                 if sql_type.upper() in self.DDL:
                     ddl_dep.update(identifiers)
                 elif sql_type.upper() in self.DML:
