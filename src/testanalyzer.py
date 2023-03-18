@@ -20,12 +20,15 @@ def compute_similarity(a: str, b: str):
     return fuzz.ratio(a, b)
 
 
-ERROR_FILES = ['xxx',
+ERROR_FILES = [
+    'postgresql_tests/regress/sql/largeobject.sql',
                ]
 
 TEST_FILTER = {
-    'CLUSTER': lambda x: x['TESTFILE_PATH'] not in ERROR_FILES,
+    'CLUSTER': lambda x: x['TESTFILE_PATH'] in ERROR_FILES,
     'REGRESS': lambda x: re.search('regresslib', str(x['SQL'])) is not None,
+    'SHOWTABLE': lambda x: re.match(r'\\d\+', str(x['SQL'])) is not None,
+    'LARGEOBJ': lambda x: x['TESTFILE_PATH'] in ERROR_FILES,
 }
 
 

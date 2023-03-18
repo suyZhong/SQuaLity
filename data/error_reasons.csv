@@ -1,3 +1,5 @@
 TEST_SUITE,TAG,REASON,INFORMATION
 postgresql,REGRESS,External regress.so usage,
 postgresql,COLLATION,Collation settings is not the same,
+postgresql,SHOWTABLE,PSQL commands will display more information than expected,
+postgresql,LARGEOBJ,PSQL commands try to read large data in data but failed,postgresql_tests/regress/sql/largeobject.sql
