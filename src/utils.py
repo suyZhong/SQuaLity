@@ -203,7 +203,8 @@ def convert_postgres_result(result: str):
         else:
             return "", is_query
     else:
-        # logging.warning("Parsing result warning: while parsing {}".format(result))
+        logging.warning("Parsing result warning: while parsing {}".format(result))
+        result = result.replace('\n\n', '\n')
         return result, is_query
 
 
