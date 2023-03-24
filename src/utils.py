@@ -180,12 +180,13 @@ def convert_postgres_result(result: str):
         return result, is_query
     if result_lines[0].strip().startswith('ERROR'):
         return "\n".join(result_lines), is_query
-    elif re.match(rows_regex, result_lines[-1]):
+    # elif re.match(rows_regex, result_lines[-1]):
+    elif (index := next((i for i, row in enumerate(result_lines) if re.match(rows_regex, row)), None)) is not None:
         # print(result_lines)
         is_query = True
         result_rows = int(
-            re.search(r"[0-9]+", result_lines[-1]).group())
-        value_table = result_lines[-result_rows - 1:-1]
+            re.search(r"[0-9]+", result_lines[index]).group())
+        value_table = result_lines[index - result_rows:index]
         # handle multiple rows
         if len(value_table) != result_rows:
             # empty_ind = [i for i, row in enumerate(value_table) if row.strip().endswith('+')]

@@ -1,6 +1,9 @@
 import os
 import logging
 import random
+import sqlparse
+import re
+from sqlparse.sql import Identifier
 import pandas as pd
 from tqdm import tqdm
 from copy import copy
@@ -15,6 +18,15 @@ from fuzzywuzzy import fuzz
 def compute_similarity(a: str, b: str):
     # use fuzzywuzzy to compute similarity
     return fuzz.ratio(a, b)
+
+
+ERROR_FILES = ['xxx',
+               ]
+
+TEST_FILTER = {
+    'CLUSTER': lambda x: x['TESTFILE_PATH'] not in ERROR_FILES,
+    'REGRESS': lambda x: re.search('regresslib', str(x['SQL'])) is not None,
+}
 
 
 class TestCaseAnalyzer():
@@ -85,6 +97,10 @@ class TestCaseAnalyzer():
 
 
 class TestResultAnalyzer():
+    DDL = ['CREATE', 'ALTER', 'DROP', 'TRUNCATE', 'COMMENT', 'RENAME']
+    DML = ['INSERT', 'UPDATE', 'DELETE', 'MERGE', 'UPSERT', 'REPLACE']
+    TCL = ['COMMIT', 'ROLLBACK', 'SAVEPOINT', 'RELEASE', 'SET', 'BEGIN']
+
     def __init__(self) -> None:
         self.results = pd.DataFrame(columns=ResultColumns)
         self.logs = pd.DataFrame([])
@@ -162,5 +178,91 @@ class TestResultAnalyzer():
         errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv",
                       columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False, mode = 'a')
 
-    def dump_results(self):
-        self.results.to_csv(f"{self.results_path}_clustered.csv", index=False, mode = 'a')
+    def dump_results(self, suffix: str = 'clustered'):
+        self.results.to_csv(f"{self.results_path.removesuffix('.csv')}{suffix}.csv", index=False, mode = 'a')
+
+    def find_dependency_failure(self, row: pd.DataFrame):
+        all_results = self.results[self.results['TESTFILE_PATH']
+                                   == row.TESTFILE_PATH.values[0]]
+        # get the logs of the test case
+        logs = self.logs.loc[row.LOGS_INDEX.values[0]].values[0]
+
+        # get the successful dependencies
+        succ_ddl_dep = self.find_dependencies(logs, self.DDL)
+        succ_dml_dep = self.find_dependencies(logs, self.DML)
+
+        # find the rows in results that has smaller index than the current row
+        previous_results = all_results[all_results['TESTCASE_INDEX']
+                                       < row.TESTCASE_INDEX.values[0]]
+        failed_rows = previous_results[previous_results['IS_ERROR'] == True]
+
+        fail_ddl_dep = self.find_dependencies(
+            '\n'.join(failed_rows['SQL'].values), self.DDL)
+
+    def extract_dependency_failure(self, filename: str):
+        all_results = self.results[self.results['TESTFILE_PATH'] == filename]
+        # all_statements = all_results[all_results['CASE_TYPE'] == 'STATEMENT']
+        # iterate the results:
+        true_dep = set()
+        ddl_dep = set()
+        dml_dep = set()
+        tcl_dep = set()
+        if all_results[all_results['IS_ERROR'] == True].empty:
+            return all_results
+        for index, row in all_results.iterrows():
+            sql = row.SQL
+            if len(sql) > 0:
+                parsed = sqlparse.parse(sql)[0]
+            sql_type = str(parsed.token_first())
+            identifiers = set(
+                [str(token) for token in parsed.flatten() if token.ttype is sqlparse.tokens.Name])
+            if row.IS_ERROR:
+                if row.CASE_TYPE == 'Query':
+                    # print(row.SQL)
+                    # if relation with ddl dependency
+                    inter_ddl = identifiers.intersection(ddl_dep)
+                    inter_dml = identifiers.intersection(dml_dep)
+                    inter_tcl = identifiers.intersection(tcl_dep)
+                    inter_true = identifiers.intersection(true_dep)
+                    dep = set()
+                    if len(inter_ddl) > 0:
+                        # update the row of the all_results
+                        self.results.loc[index, 'ERROR_REASON'] = 'DEP-DDL'
+                        dep = inter_ddl
+                    elif len(inter_dml) > 0:
+                        self.results.loc[index, 'ERROR_REASON'] = 'DEP-DML'
+                        dep = inter_dml
+                    elif len(inter_tcl) > 0:
+                        self.results.loc[index, 'ERROR_REASON'] = 'DEP-TCL'
+                        dep = inter_tcl
+                    elif len(inter_true) == 0 and len(inter_ddl) == 0:
+                        self.results.loc[index, 'ERROR_REASON'] = 'DEP-EXT'
+                    else:
+                        print('ERROR: ', row.SQL)
+                    if len(dep) > 0:
+                        self.results.loc[index, 'DEPENDENCY'] = str(dep)
+                if sql_type.upper() in self.DDL:
+                    ddl_dep.update(identifiers)
+                elif sql_type.upper() in self.DML:
+                    dml_dep.update(identifiers)
+                elif sql_type.upper() in self.TCL:
+                    tcl_dep.update(self.find_dependencies(';\n'.join(
+                        all_results[all_results['TESTCASE_INDEX'] < row.TESTCASE_INDEX]), self.DDL + self.DML))
+            else:
+                if sql_type.upper() in self.DDL:
+                    true_dep.update(identifiers)
+        print(all_results.info())
+        return all_results
+
+    def find_dependencies(self, logs: str, dep_type='CREATE'):
+        dependencies = set()
+        parsed = sqlparse.parse(logs)
+        for sql in parsed:
+            if str(sql.token_first()) in dep_type:
+                tokens = sql.tokens
+                identifiers = [str(token) for token in parsed.flatten(
+                ) if token.ttype is sqlparse.tokens.Name]
+                # splits the string into a list of substrings at each space.
+                # The result is a flattened list of substrings without spaces.
+                dependencies.update(identifiers)
+        return dependencies

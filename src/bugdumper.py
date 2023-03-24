@@ -1,4 +1,5 @@
 import sqlite3
+import logging
 from datetime import datetime
 from typing import List
 import pandas as pd
@@ -120,7 +121,10 @@ class BugDumper():
 
     def dump_to_csv(self, dbname='demo', mode='a'):
         my_debug("Dump the bugs as a Dataframe to a csv {}".format(dbname))
+        path_suffix = ""
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            path_suffix = "_debug"
         self.bugs_dataframe.to_csv(
-            OUTPUT_PATH['execution_result'].format(dbname), mode=mode, header=False)
+            f"{OUTPUT_PATH['execution_result'].format(dbname)}{path_suffix}", mode=mode, header=False)
         self.logs_dataframe.to_csv(
-            OUTPUT_PATH['execution_log'].format(dbname), mode=mode, header=False, index=False)
+            f"{OUTPUT_PATH['execution_log'].format(dbname)}{path_suffix}", mode=mode, header=False, index=False)
