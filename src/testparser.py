@@ -708,7 +708,7 @@ class CDBTParser(SLTParser):
 
         if record_type == 'statement':
             status = (tokens[1] == 'ok' or tokens[1] == 'count') if len(tokens) > 1 else True
-            statements = ("".join([strip_comment_suffix(line)
+            statements = (" ".join([strip_comment_suffix(line)
                                    for line in lines[1:]])).strip().split(';')
             statements = list(filter(None, statements))
             for stmt in statements:

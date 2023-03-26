@@ -26,6 +26,13 @@ ERROR_FILES = ['xxx',
 TEST_FILTER = {
     'CLUSTER': lambda x: x['TESTFILE_PATH'] not in ERROR_FILES,
     'REGRESS': lambda x: re.search('regresslib', str(x['SQL'])) is not None,
+    'DATATYPE': lambda x: (re.search('INT8', str(x['EXPECTED_RESULT'])) and
+                           re.search('INT4', str(x['ACTUAL_RESULT']))) is not None,
+    'LOCK_TIMEOUT': lambda x: (re.search('lock timeout', str(x['EXPECTED_RESULT']))) is not None,
+    'PG_CATALOG': lambda x: re.search('pg_catalog', str(x['SQL'])) is not None,
+    'EXISTING_USER': lambda x: re.search('a role\/user named \w+ already exists', str(x['ERROR_MSG'])) is not None,
+    'AUTH_FAIL': lambda x: re.search('password authentication failed', str(x['ERROR_MSG'])) is not None ,
+    'NO_USER': lambda x: re.search('role\/user "\w+" does not exist', str(x['ERROR_MSG'])) is not None
 }
 
 
