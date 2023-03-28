@@ -109,6 +109,12 @@ OUTPUT_PATH = {
 }
 
 
+POSTGRESQL_FILTER = {
+    'REGRESS': lambda x: re.search('regresslib', str(x['SQL'])) is not None,
+    'SHOWTABLE': lambda x: re.match(r'\\d\+', str(x['SQL'])) is not None,
+    'LARGEOBJ': lambda x: x['TESTFILE_PATH'] in ['postgresql_tests/regress/sql/largeobject.sql', ],
+}
+
 class Record:
 
     def __init__(self, sql="", result="", suite="", input_data="", **kwargs) -> None:
