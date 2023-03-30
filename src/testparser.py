@@ -354,6 +354,8 @@ class PGTParser(Parser):
         self.meta_data['total_files'] += 1
         self.test_content = self._read_file(self.testfile)
         self.result_content = self._read_file(self.resultfile)
+        self.test_content = re.sub(r"; --.*?$", ";", self.test_content, flags=re.MULTILINE)
+        self.result_content = re.sub(r"; --.*?$", ";", self.result_content, flags=re.MULTILINE)
 
     def testfile_dialect_handler(self, *args, **kwargs):
 
@@ -382,12 +384,14 @@ class PGTParser(Parser):
         if self.testfile.endswith('gin.sql'):
             a = commands[:-1]
             b = [command for command in commands[-1].split(';\n')]
-            commands = commands[:-1] + [command.strip(';\n') + ';\n' for command in commands[-1].split(';\n')]
-        
+            commands = commands[:-1] + [command.strip(
+                ';\n') + ';\n' for command in commands[-1].split(';\n')]
+
         # we need to do a special handling for the case that we have \if \endif psql commands
         for i in range(0, len(commands)):
             if commands[i] == "\\endif;":
-                commands[i - 2] = "".join(commands[i - 2: i + 1]).replace(';', '\n')
+                commands[i - 2] = "".join(commands[i - 2: i + 1]
+                                          ).replace(';', '\n')
                 commands.pop(i - 1)
                 commands.pop(i - 1)
                 break
@@ -413,15 +417,14 @@ class PGTParser(Parser):
         psql_flag = False
         for i, command in enumerate(commands):
             result = ""
-            command_lines = command.strip(';').splitlines()
-
+            command_lines = [line.strip(';') for line in command.splitlines()]
             # if next command is actually a input, skip this one
             for k in range(i, num_command):
                 next_command = commands[k + 1] if k < num_command - 1 else "\n"
                 if not next_command.endswith('\\.;'):
                     break
-            next_line = next_command.strip(';').splitlines()[
-                0] if next_command != ';' else ''
+            next_line = next_command.splitlines()[0].strip(
+                ';') if next_command != ';' else ''
 
             if command_lines[0] == result_lines[ind].strip(';'):
                 ind += len(command.split('\n'))
