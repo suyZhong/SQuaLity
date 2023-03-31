@@ -354,8 +354,8 @@ class PGTParser(Parser):
         self.meta_data['total_files'] += 1
         self.test_content = self._read_file(self.testfile)
         self.result_content = self._read_file(self.resultfile)
-        self.test_content = re.sub(r"; --.*?$", ";", self.test_content, flags=re.MULTILINE)
-        self.result_content = re.sub(r"; --.*?$", ";", self.result_content, flags=re.MULTILINE)
+        self.test_content = re.sub(r"; {1,2}--.*?$", ";", self.test_content, flags=re.MULTILINE)
+        self.result_content = re.sub(r"; {1,2}--.*?$", ";", self.result_content, flags=re.MULTILINE)
 
     def testfile_dialect_handler(self, *args, **kwargs):
 

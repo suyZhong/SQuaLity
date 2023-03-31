@@ -1,7 +1,10 @@
-TEST_SUITE,TAG,REASON,INFORMATION
-postgresql,REGRESS,External regress.so usage,
+TEST_SUITE,TAG,REASON,INFORMATION,
+postgresql,REGRESS,External regress.so usage,ALL
 postgresql,COLLATION,Collation settings is not the same,
 postgresql,SHOWTABLE,PSQL commands will display more information than expected,
-postgresql,LARGEOBJ,PSQL commands try to read large data in data but failed,postgresql_tests/regress/sql/largeobject.sql
-postgresql,NOEXIST,Failed due to the previous failed DDL statements
-postgresql,ALREADYEXIST,Failed due to the previous failed DDL statements
+postgresql,LARGEOBJ,PSQL commands try to read large data in data but failed,postgresql_tests/regress/sql/largeobject.sql,ALL
+postgresql,NOEXIST,Failed due to the previous failed DDL statements,
+postgresql,ALREADYEXIST,Failed due to the previous failed DDL statements,
+postgresql,TIMESTAMP,The value of timestamp is different from different settings. CREATE_AT @ from TIME ZONE clause,
+postgresql,FUNCFORMAT,The function return value formatting varies due to locale settings,
+postgresql,PREPARETXN,Prepare Transaction Failed,ALL
