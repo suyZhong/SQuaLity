@@ -669,13 +669,17 @@ class CDBTParser(SLTParser):
             if line == '----':
                 ind = i
                 break
-        sql = '\n'.join(lines[1:ind])
+        sql = "\n ".join(lines[1:ind])
         result = ""
 
         if ind != len(lines):
             if alternate_sort_mode == SortType.COLUMN_NAMES:
                 ind += 1
+            regex = '\\s{2,}|\\t'
+            for i in range(ind + 1, len(lines)):
+                lines[i] = re.sub(regex, "\t", lines[i])
             result = '\n'.join(lines[ind + 1:])
+
         record = Query(sql=sql, result=result, data_type=data_type,
                        sort=sort_mode, label=label, id=self.record_id, user= self.user)
         if any(x in record.sql for x in self.only_cockroach):

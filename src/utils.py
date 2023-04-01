@@ -329,14 +329,10 @@ class ResultHelper():
             cmp_flag = False
         else:
             for i, row in enumerate(expected_results):
-                # cockroach db does not produce tabs, but only multiple spaces. check for atleast 2 spaces because
-                # strings like these need to be split by more than
-                # one space: 'c           c_bar_key        UNIQUE       UNIQUE (bar ASC)      true       NULL'
-                #todo: do this in parser
-                regex = '\\s{2,}|\\t'
-                items = re.split(regex, row.strip())
+                items = row.strip().split('\t')
                 # To remove empty strings from items
                 items = list(filter(None, items))
+
                 for j, item in enumerate(items):
                     # direct comparison
                     rvalue = actual_results[i][j]
@@ -368,6 +364,7 @@ class ResultHelper():
             # One last attempt to string compare everything
             cmp_flag = self.complete_string_compare(actual_results, record)
         return cmp_flag, result_string
+
 
     def row_wise_compare(self, results, record: Record):
         # the result is just what we want.

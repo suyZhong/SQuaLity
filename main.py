@@ -24,7 +24,10 @@ ignore_list = list(["cockroachdb_tests/logic_test/internal_executor",
                     # duckdb SIGSEVS
                     "cockroachdb_tests/logic_test/array",
                     "cockroachdb_tests/logic_test/virtual_columns",
-                    "cockroachdb_tests/logic_test/window"
+                    "cockroachdb_tests/logic_test/window" ,
+                    #mysql
+                    #"cockroachdb_tests/logic_test/role" ,
+                    #"cockroachdb_tests/logic_test/drop_user"
                     ])
 
 if __name__ == "__main__":
@@ -133,7 +136,8 @@ if __name__ == "__main__":
         p.get_file_content()
         p.parse_file()
         x = str.split(test_file, '/')
-        #r.set_db("output/" + x[2] + ".db")
+        #uncomment for duckdb, sqlite
+        #r.set_db("sqlite_dbs/" + x[2] + ".db")
         r.set_db(db_name)
 
         r.get_records(p.get_records(), testfile_index=i,

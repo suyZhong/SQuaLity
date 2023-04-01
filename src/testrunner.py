@@ -604,7 +604,7 @@ class CockroachDBRunner(PyDBCRunner):
         except_msg = None
         self.user = record.user
         try:
-            if record.sql == "BEGIN":
+            if record.sql.startswith("BEGIN"):
                 self.transaction = True
                 self.disconnect()
                 self.connect_again(autocommit=False, force=True)
