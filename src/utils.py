@@ -360,9 +360,6 @@ class ResultHelper():
         result_string = '\n'.join(['\t'.join(
             [str(item) if item != None else 'NULL' for item in row]) for row in actual_results])
 
-        if not cmp_flag:
-            # One last attempt to string compare everything
-            cmp_flag = self.complete_string_compare(actual_results, record)
         return cmp_flag, result_string
 
 
@@ -387,6 +384,12 @@ class ResultHelper():
         expected_result_list.sort()
         actual_result_list = sorted(actual_result_list, key=str)
         cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list, record)
+
+        #if still not same, try string wise compare
+        if not cmp_flag:
+            # One last attempt to string compare everything
+            cmp_flag = self.complete_string_compare(actual_result_list, record)
+
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):
