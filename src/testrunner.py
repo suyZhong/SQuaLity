@@ -13,7 +13,7 @@ from tqdm import tqdm
 import duckdb
 from .utils import *
 from .bugdumper import BugDumper
-
+import signal
 
 class Runner():
     def __init__(self, records: List[Record] = []) -> None:
@@ -224,7 +224,7 @@ class Runner():
 
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
-    MAX_RUNTIME_PERSQL = 10
+    MAX_RUNTIME_PERSQL = 20
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
@@ -238,6 +238,9 @@ class PyDBCRunner(Runner):
         self.testfile_path = ""
         self.labels = {}
 
+    def timeout_handler(self, signum, frame):
+        raise TimeoutError
+    
     def set_db(self, db_name: str):
         if not db_name.startswith(":memory:"):
             os.system('rm -f %s' % db_name)
@@ -270,8 +273,10 @@ class PyDBCRunner(Runner):
                     self.handle_control(action, record)
                 except StopRunnerException:
                     break
-
+            signal.signal(signal.SIGALRM, self.timeout_handler)
+            signal.alarm(self.MAX_RUNTIME_PERSQL)
             self._single_run(record)
+            signal.alarm(0)
             self.end_time = datetime.now()
             exec_time = (self.end_time-self.cur_time).seconds
 
