@@ -14,7 +14,9 @@ DUCKDB_MSG = {
 }
 
 MYSQL_MSG = {
-    
+    'SYNTAX': re.compile(r'1064 \(42000\)'),
+    'NOEXIST': re.compile(r'1146 \(42S02\)'),
+    'ALREADYEXIST': re.compile(r'1050 \(42S01\)'),
 }
 
 COCKROACHDB_MSG = {
