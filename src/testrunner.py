@@ -328,7 +328,7 @@ class PyDBCRunner(Runner):
                               record.sql, except_msg)
                 self.commit()
                 self.bug_dumper.save_state(self.records_log, record, str(False), (
-                    datetime.now()-self.cur_time).microseconds, is_error=True, msg="Execution Failed: {}".format(except_msg))
+                    datetime.now()-self.cur_time).microseconds, is_error=True, msg="{}".format(except_msg))
                 self.allright = False
                 return
             else:
