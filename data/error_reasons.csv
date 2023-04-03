@@ -8,3 +8,4 @@ postgresql,ALREADYEXIST,Failed due to the previous failed DDL statements,
 postgresql,TIMESTAMP,The value of timestamp is different from different settings. CREATE_AT @ from TIME ZONE clause,
 postgresql,FUNCFORMAT,The function return value formatting varies due to locale settings,
 postgresql,PREPARETXN,Prepare Transaction Failed,ALL
+postgresql,SYNTAX,Syntax Errors,ALL
