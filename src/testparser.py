@@ -267,6 +267,7 @@ class MYTParser(Parser):
             '/t/', '/r/').replace('.test', '.result')
 
     def get_file_content(self):
+        self.meta_data['total_files'] += 1
         self.test_content = self._read_file(self.testfile)
         self.result_content = self._read_file(self.resultfile)
 
@@ -279,25 +280,25 @@ class MYTParser(Parser):
         else:
             return self.find_next_command(id + 1)
 
-    def get_test_commands(self):
-        record_id = 0
-        command = []
-        for i, script in enumerate(self.scripts):
-            if script.startswith('#'):
-                continue
-            if script.startswith('--'):
-                tokens = script.split()
-                action = RunnerAction[tokens[0][2:].upper()]
-                self.records.append(Control(sql=' '.join(
-                    tokens[1:]), action=action, id=record_id))
-                record_id += 1
-            else:
-                command.append(script)
-                if script.endswith(self.delimiter):
-                    self.records.append(
-                        Record(sql="\n".join(command), id=record_id))
-                    command = []
-                    record_id += 1
+    # def get_test_commands(self):
+    #     record_id = 0
+    #     command = []
+    #     for i, script in enumerate(self.scripts):
+    #         if script.startswith('#'):
+    #             continue
+    #         if script.startswith('--'):
+    #             tokens = script.split()
+    #             action = RunnerAction[tokens[0][2:].upper()]
+    #             self.records.append(Control(sql=' '.join(
+    #                 tokens[1:]), action=action, id=record_id))
+    #             record_id += 1
+    #         else:
+    #             command.append(script)
+    #             if script.endswith(self.delimiter):
+    #                 self.records.append(
+    #                     Record(sql="\n".join(command), id=record_id))
+    #                 command = []
+    #                 record_id += 1
 
     def get_test_results(self):
         for i, record in enumerate(self.records):
@@ -321,7 +322,7 @@ class MYTParser(Parser):
             '\n') if script != '']
 
         # parse the test file and get commands
-        self.get_test_commands()
+        # self.get_test_commands()
 
         # parse the result file and get results
         self.get_test_results()
