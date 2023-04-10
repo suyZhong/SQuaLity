@@ -267,7 +267,6 @@ class MYTParser(Parser):
             '/t/', '/r/').replace('.test', '.result')
 
     def get_file_content(self):
-        self.meta_data['total_files'] += 1
         self.test_content = self._read_file(self.testfile)
         self.result_content = self._read_file(self.resultfile)
 
@@ -280,25 +279,31 @@ class MYTParser(Parser):
         else:
             return self.find_next_command(id + 1)
 
-    # def get_test_commands(self):
-    #     record_id = 0
-    #     command = []
-    #     for i, script in enumerate(self.scripts):
-    #         if script.startswith('#'):
-    #             continue
-    #         if script.startswith('--'):
-    #             tokens = script.split()
-    #             action = RunnerAction[tokens[0][2:].upper()]
-    #             self.records.append(Control(sql=' '.join(
-    #                 tokens[1:]), action=action, id=record_id))
-    #             record_id += 1
-    #         else:
-    #             command.append(script)
-    #             if script.endswith(self.delimiter):
-    #                 self.records.append(
-    #                     Record(sql="\n".join(command), id=record_id))
-    #                 command = []
-    #                 record_id += 1
+    def filter_dummy_lines(self):
+        self.test_content = "\n".join([line for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
+    
+    def filter_comment(self):
+        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--')])
+    
+    def filter_echo(self):
+        # find the echo lines in the test file
+        echo_lines = [line.removeprefix("--echo ") for line in self.test_content.split('\n') if line.startswith('--echo ')]
+        # filter the echo lines in the test file
+        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--echo ')])
+        # filter the echo content in the result file
+        result_lines_echo_free = []
+        result_lines = [line for line in self.result_content.split('\n') if line != '']
+        for line in result_lines:
+            if len(echo_lines) > 0 and line == echo_lines[0]:
+                echo_lines.pop(0)
+            else:
+                result_lines_echo_free.append(line)
+        self.result_content = "\n".join(result_lines_echo_free)
+        
+    def split_file(self):
+        record_id = 0
+        commands = sqlparse.split(self.test_content)
+        return commands
 
     def get_test_results(self):
         for i, record in enumerate(self.records):
@@ -317,15 +322,27 @@ class MYTParser(Parser):
                     result = ""
                 record.result = result
 
+    def get_diff(self):
+        test_differ = difflib.Differ()
+        test_lines = [line for line in self.test_content.splitlines(
+            keepends=True) if line != '\n']
+        result_lines = [line for line in self.result_content.splitlines(
+            keepends=True) if line != '\n']
+        return list(test_differ.compare(test_lines, result_lines))
+    
     def parse_file(self):
-        self.scripts = [script.strip() for script in self.test_content.strip().split(
-            '\n') if script != '']
-
-        # parse the test file and get commands
-        # self.get_test_commands()
-
-        # parse the result file and get results
-        self.get_test_results()
+        self.records = []
+        # filter the dummy lines in test content
+        self.filter_dummy_lines()
+        
+        # remove messages generate by --echo
+        self.filter_echo()
+        
+        # filter the comment lines in test content
+        self.filter_comment()
+        
+        # split the file into records
+        
 
 
 class PGTParser(Parser):
