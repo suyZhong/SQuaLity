@@ -270,15 +270,6 @@ class MYTParser(Parser):
         self.test_content = self._read_file(self.testfile)
         self.result_content = self._read_file(self.resultfile)
 
-    def find_next_command(self, id):
-        if id + 1 >= len(self.records):
-            return ""
-        command = self.records[id + 1].sql
-        if command != "":
-            return command.split('\n')[0]
-        else:
-            return self.find_next_command(id + 1)
-
     def filter_dummy_lines(self):
         self.test_content = "\n".join([line for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
     
@@ -301,34 +292,46 @@ class MYTParser(Parser):
         self.result_content = "\n".join(result_lines_echo_free)
         
     def split_file(self):
-        record_id = 0
         commands = sqlparse.split(self.test_content)
         return commands
 
-    def get_test_results(self):
-        for i, record in enumerate(self.records):
-            if type(record) is Record:
-                command = record.sql.split('\n')[-1]
-                assert i == record.id
-                # print(record.id, len(self.records))
-                next_command = self.find_next_command(record.id)
-                loc = self.result_content.find(command) + len(command) + 1
-                self.result_content = self.result_content[loc:]
-                next_loc = self.result_content.find(
-                    next_command) if next_command != "" else 0
-                if next_loc > 0:
-                    result = self.result_content[:next_loc]
-                else:
-                    result = ""
-                record.result = result
+    def _get_diff(self):
+        """get difference between test file and result file using difflib
 
-    def get_diff(self):
+        Returns:
+            List: list of difference, each element is a string, string begin with + is result of the query
+        """        
         test_differ = difflib.Differ()
         test_lines = [line for line in self.test_content.splitlines(
             keepends=True) if line != '\n']
         result_lines = [line for line in self.result_content.splitlines(
             keepends=True) if line != '\n']
         return list(test_differ.compare(test_lines, result_lines))
+    
+    def parse_file_by_diff(self):
+        test_result_diff = self._get_diff()
+        commands = self.split_file()
+        for id, command in enumerate(commands):
+            command_lines = command.splitlines()
+            # check if the prefix of the test_result_diff is double space
+            assert all([line.startswith('  ') for line in test_result_diff[:len(command_lines)]])
+            # remove the first len(command_lines) of command from test_result_diff
+            test_result_diff = test_result_diff[len(command_lines):]
+            result_lines = []
+            # see if the command have result
+            while len(test_result_diff) > 0 and test_result_diff[0].startswith('+ '):
+                result_lines.append(test_result_diff[0].removeprefix('+ ').rstrip())
+                test_result_diff.pop(0)
+            
+            if len(result_lines) > 0:
+                if result_lines[0].startswith('ERROR'):
+                    self.records.append(Statement(command, "\n".join(result_lines), status=False, id=id))
+                elif result_lines[0].startswith('Warnings:'):
+                    self.records.append(Statement(command, "\n".join(result_lines), status=True, id=id))
+                else:
+                    self.records.append(Query(command, "\n".join(result_lines), id=id))
+            else:
+                self.records.append(Statement(command, status=True, id=id))
     
     def parse_file(self):
         self.records = []
@@ -342,7 +345,7 @@ class MYTParser(Parser):
         self.filter_comment()
         
         # split the file into records
-        
+        self.parse_file_by_diff()
 
 
 class PGTParser(Parser):
