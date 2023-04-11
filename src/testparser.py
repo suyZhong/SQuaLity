@@ -254,6 +254,8 @@ class SLTParser(Parser):
 
 
 class MYTParser(Parser):
+    RUNNER_COMMAND = ['call', 'let']
+    
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.testfile = filename
@@ -271,26 +273,28 @@ class MYTParser(Parser):
         self.result_content = self._read_file(self.resultfile)
 
     def filter_dummy_lines(self):
-        self.test_content = "\n".join([line for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
+        # filter the dummy lines in the test file
+        # lstrip the space in the line because mysql result would remove that
+        self.test_content = "\n".join([line.lstrip() for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
     
     def filter_comment(self):
-        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--')])
+        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--') and line != ''])
     
     def filter_echo(self):
         # find the echo lines in the test file
-        echo_lines = [line.removeprefix("--echo ") for line in self.test_content.split('\n') if line.startswith('--echo ')]
+        echo_lines = [line.removeprefix("--echo") for line in self.test_content.split('\n') if line.startswith('--echo')]
         # filter the echo lines in the test file
-        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--echo ')])
+        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--echo')])
         # filter the echo content in the result file
         result_lines_echo_free = []
         result_lines = [line for line in self.result_content.split('\n') if line != '']
         for line in result_lines:
-            if len(echo_lines) > 0 and line == echo_lines[0]:
+            if len(echo_lines) > 0 and line == echo_lines[0].strip():
                 echo_lines.pop(0)
             else:
                 result_lines_echo_free.append(line)
         self.result_content = "\n".join(result_lines_echo_free)
-        
+    
     def split_file(self):
         commands = sqlparse.split(self.test_content)
         return commands
@@ -303,15 +307,20 @@ class MYTParser(Parser):
         """        
         test_differ = difflib.Differ()
         test_lines = [line for line in self.test_content.splitlines(
-            keepends=True) if line != '\n']
+            keepends=False) if line != '\n']
         result_lines = [line for line in self.result_content.splitlines(
-            keepends=True) if line != '\n']
+            keepends=False) if line != '\n']
         return list(test_differ.compare(test_lines, result_lines))
     
     def parse_file_by_diff(self):
         test_result_diff = self._get_diff()
         commands = self.split_file()
         for id, command in enumerate(commands):
+            if command.startswith(tuple(self.RUNNER_COMMAND)):
+                self.records.append(Control(action=RunnerAction.ECHO, id=id, sql=command))
+                assert test_result_diff[0].startswith('- '), "the first line of test_result_diff should be - "
+                test_result_diff.pop(0)
+                continue
             command_lines = command.splitlines()
             # check if the prefix of the test_result_diff is double space
             assert all([line.startswith('  ') for line in test_result_diff[:len(command_lines)]])
