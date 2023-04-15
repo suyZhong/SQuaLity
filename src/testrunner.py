@@ -13,7 +13,7 @@ from tqdm import tqdm
 import duckdb
 from .utils import *
 from .bugdumper import BugDumper
-
+import signal
 
 class Runner():
     def __init__(self, records: List[Record] = []) -> None:
@@ -226,13 +226,14 @@ class Runner():
 
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
+    LARGE_TEST_THRESHOLD = 1000
     MAX_RUNTIME_PERSQL = 20
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
         self.transaction = False
         self.allright = True
-        self.db_error = Exception
+        # self.db_error = Exception
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.log_level = logging.root.level
         self.exec_time = 0
@@ -240,6 +241,9 @@ class PyDBCRunner(Runner):
         self.testfile_index = 0
         self.testfile_path = ""
         self.labels = {}
+
+    def timeout_handler(self, signum, frame):
+        raise TimeoutError
 
     def set_db(self, db_name: str):
         if not db_name.startswith(":memory:"):
@@ -279,18 +283,28 @@ class PyDBCRunner(Runner):
                     self.handle_control(action, record)
                 except StopRunnerException:
                     break
-
-            self._single_run(record)
+            signal.signal(signal.SIGALRM, self.timeout_handler)
+            signal.alarm(self.MAX_RUNTIME_PERSQL)
+            try:
+                self._single_run(record)
+            except TimeoutError:
+                self.end_time = datetime.now()
+                logging.warning("Time Exceed - %d" % self.MAX_RUNTIME_PERSQL)
+                self.bug_dumper.save_state(self.records_log, record, str(True),
+                                           execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(self.MAX_RUNTIME_PERSQL))
+                if len(self.records) > self.LARGE_TEST_THRESHOLD:
+                    break
+            else:
+                signal.alarm(0)
             self.end_time = datetime.now()
-            exec_time = (self.end_time - self.cur_time).seconds
+            # exec_time = (self.end_time-self.cur_time).seconds
 
             # If some SQL query too slow
-            if exec_time > self.MAX_RUNTIME_PERSQL:
-                logging.warning("Time Exceed - %d" % exec_time)
-                self.bug_dumper.save_state(self.records_log, record, str(True),
-                                           execution_time=(self.end_time - self.cur_time).microseconds, is_error=True,
-                                           msg="Time Exceed - {}".format(exec_time))
-                break
+            # if exec_time > self.MAX_RUNTIME_PERSQL:
+            #     logging.warning("Time Exceed - %d" % exec_time)
+            #     self.bug_dumper.save_state(self.records_log, record, str(True),
+            #                                execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(exec_time))
+            #     break
 
     def execute_stmt(self, sql):
         pass
@@ -347,14 +361,43 @@ class PyDBCRunner(Runner):
     def _single_run(self, record):
         self.single_run_stats['total_executed_sql'] += 1
         if type(record) is Statement:
-            self.handle_statement(record)
+            self.single_run_stats['statement_num'] += 1
+            status = True
+            except_msg = None
+            try:
+                self.execute_stmt(record.sql)
+            except self.db_error as e:
+                status = False
+                self.single_run_stats['failed_statement_num'] += 1
+                except_msg = str(e)
+                logging.debug(
+                    "Statement %s execution error: %s", record.sql, e)
+            self.handle_stmt_result(status, record, except_msg)
+            self.commit()
+            if status:
+                self.records_log.append(record)
         elif type(record) is Query:
-            self.handle_query(record)
+            self.single_run_stats['query_num'] += 1
+            results = []
+            try:
+                results = self.execute_query(record.sql)
+            except self.db_error as except_msg:
+                self.single_run_stats['failed_query_num'] += 1
+                logging.debug("Query %s execution error: %s",
+                              record.sql, except_msg)
+                self.commit()
+                self.bug_dumper.save_state(self.records_log, record, str(False), (
+                    datetime.now()-self.cur_time).microseconds, is_error=True, msg="{}".format(except_msg))
+                self.allright = False
+                return
+            else:
+                self.single_run_stats['success_query_num'] += 1
+            # print(results)
+            self.handle_query_result(results, record)
 
     def handle_control(self, action: RunnerAction, record: Record):
         if action == RunnerAction.HALT:
             logging.warning("halt the rest of the test cases")
-            logging.warning("sql: " + record.sql)
             self.allright = False
             raise StopRunnerException
         elif action == RunnerAction.ECHO:
@@ -445,7 +488,7 @@ class DuckDBRunner(PyDBCRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
         self.con = None
-        # self.db_error = (duckdb.ProgrammingError, duckdb.DataError, duckdb.IOException,duckdb.PermissionException)
+        self.db_error = duckdb.Error
 
     def connect(self, db_name):
         logging.info("connect to db %s", db_name)
@@ -474,7 +517,7 @@ class CockroachDBRunner(PyDBCRunner):
         self.user = "root"
         self.con = None
         self.cur = None
-        # self.db_error(psycopg2.ProgrammingError)
+        self.db_error = psycopg2.Error
 
     default_dbs = list(["postgres", "squalitytest", "system", "\""])
     default_users = list(["admin", "root", "\""])
@@ -669,6 +712,7 @@ class MySQLRunner(PyDBCRunner):
         super().__init__(records)
         self.cur = None
         self.con = None
+        self.db_error = mysql.connector.Error
 
     def set_db(self, db_name):
         self.db = db_name

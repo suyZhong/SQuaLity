@@ -39,6 +39,8 @@ class RunnerAction(Enum):
 class StopRunnerException(Exception):
     pass
 
+def timeout_handler(signum, frame):
+    raise TimeoutError("Timed out!")
 
 class DBEngineExcetion(Exception):
     def __init__(self, message):
