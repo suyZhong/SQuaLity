@@ -23,8 +23,9 @@ ignore_list = list(["cockroachdb_tests/logic_test/internal_executor",
                     "cockroachdb_tests/logic_test/grant_in_txn",
                     # duckdb SIGSEVS
                     "cockroachdb_tests/logic_test/array",
-                    "cockroachdb_tests/logic_test/virtual_columns",
-                    "cockroachdb_tests/logic_test/window" ,
+                    "cockroachdb_tests/logic_test/schema"
+                    #"cockroachdb_tests/logic_test/virtual_columns",
+                    #"cockroachdb_tests/logic_test/window" ,
                     #mysql
                     #"cockroachdb_tests/logic_test/role" ,
                     #"cockroachdb_tests/logic_test/drop_user"

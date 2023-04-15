@@ -145,6 +145,7 @@ class Runner():
         print("Success SQL query: ", stats['success_query_num'])
         print("Wrong SQL statement: ", stats['wrong_stmt_num'])
         print("Wrong SQL query: ", stats['wrong_query_num'])
+        print("Total negative test cases: ", stats['negative_test_cases'])
         print("-------------------------------------------", flush=True)
         # add the single run stats to the all run stats
         for key in self.single_run_stats:
@@ -361,6 +362,8 @@ class PyDBCRunner(Runner):
 
     def handle_stmt_result(self, status, record: Statement, err_msg: Exception = None):
         # myDebug("%r %r", status, record.status)
+        if not record.status:
+            self.single_run_stats['negative_test_cases']+= 1
         if status == record.status:
             logging.debug(record.sql + " Success")
             if self.dump_all:
@@ -846,6 +849,15 @@ class PSQLRunner(CLIRunner):
         self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
+
+    def remove_all_dbs(self):
+        pass
+
+    def drop_users(self):
+        pass
+
+    def disconnect(self):
+        pass
 
     def extract_sql(self):
         self.sql = []

@@ -62,6 +62,7 @@ Running_Stats = ['success_file_num',
                  'query_num',
                  'control_num',
                  'filter_sql',
+                 'negative_test_cases'
                  ]
 
 TestCaseColumns = ['INDEX',  # testcase index
