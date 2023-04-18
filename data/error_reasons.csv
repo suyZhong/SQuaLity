@@ -1,3 +1,14 @@
-TEST_SUITE,TAG,REASON,INFORMATION
-postgresql,REGRESS,External regress.so usage,
-postgresql,COLLATION,Collation settings is not the same,
+TEST_SUITE,TAG,REASON,INFORMATION,STAGE
+postgresql,REGRESS,External regress.so usage,External,RUNNING
+postgresql,COLLATION,Collation settings is not the same,Locale,RUNNING
+postgresql,SHOWTABLE,PSQL commands will display more information than expected,Runner/Client Command,RUNNING
+postgresql,LARGEOBJ,PSQL commands try to read large data in data but failed,Runner/Client Command,RUNNING
+postgresql,NOEXIST,Failed due to the previous failed DDL statements,Dependencies,RUNNING
+postgresql,ALREADYEXIST,Failed due to the previous failed DDL statements,Dependencies,RUNNING
+postgresql,TIMESTAMP,The value of timestamp is different from different settings. CREATE_AT @ from TIME ZONE clause,Locale,RUNNING
+postgresql,FUNCFORMAT,The function return value formatting varies due to locale settings,Locale,RUNNING
+postgresql,PREPARETXN,Prepare Transaction Failed,Transaction,RUNNING
+postgresql,SYNTAX,Syntax Errors,Dialect,RUNNING
+postgresql,DEP-DDL,Previous DDL statements failed,Dependencies,RUNNING
+postgresql,DEP-DML,Previous DML statements failed,Dependencies,RUNNING
+postgresql,DEP-EXT,Some unknown identifier exists: external dependencies,External,RUNNING

@@ -20,15 +20,6 @@ def compute_similarity(a: str, b: str):
     return fuzz.ratio(a, b)
 
 
-ERROR_FILES = ['xxx',
-               ]
-
-TEST_FILTER = {
-    'CLUSTER': lambda x: x['TESTFILE_PATH'] not in ERROR_FILES,
-    'REGRESS': lambda x: re.search('regresslib', str(x['SQL'])) is not None,
-}
-
-
 class TestCaseAnalyzer():
     def __init__(self) -> None:
         self.test_cases = pd.DataFrame(columns=TestCaseColumns)
@@ -245,9 +236,9 @@ class TestResultAnalyzer():
                     ddl_dep.update(identifiers)
                 elif sql_type.upper() in self.DML:
                     dml_dep.update(identifiers)
-                elif sql_type.upper() in self.TCL:
-                    tcl_dep.update(self.find_dependencies(';\n'.join(
-                        all_results[all_results['TESTCASE_INDEX'] < row.TESTCASE_INDEX]), self.DDL + self.DML))
+                # elif sql_type.upper() in self.TCL:
+                #     tcl_dep.update(self.find_dependencies(';\n'.join(
+                #         all_results[all_results['TESTCASE_INDEX'] < row.TESTCASE_INDEX]), self.DDL + self.DML))
             else:
                 if sql_type.upper() in self.DDL:
                     true_dep.update(identifiers)
