@@ -91,7 +91,7 @@ class BugDumper():
         self.bugs_single_row['DBMS_NAME'] = self.dbms_name
         self.bugs_single_row['TESTFILE_INDEX'] = self.testfile_index
         self.bugs_single_row['TESTFILE_PATH'] = self.testfile_path
-        self.bugs_single_row['ORIGINAL_SUITE'] = record.suite
+        # self.bugs_single_row['ORIGINAL_SUITE'] = record.suite
         self.bugs_single_row['TESTCASE_INDEX'] = record.id
         self.bugs_single_row['SQL'] = record.sql
         self.bugs_single_row['CASE_TYPE'] = type(record).__name__

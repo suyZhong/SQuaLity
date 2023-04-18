@@ -205,7 +205,9 @@ def convert_postgres_result(result: str):
         else:
             return "", is_query
     else:
-        # logging.warning("Parsing result warning: while parsing {}".format(result))
+        logging.warning(
+            "Parsing result warning: while parsing {}".format(result))
+        result = result.replace('\n\n', '\n')
         return result, is_query
 
 
@@ -215,8 +217,8 @@ class ResultHelper():
         self.record = record
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             self.debug("""@#$%""")
-        
-    def debug(self, ptrn:str):
+
+    def debug(self, ptrn: str):
         if self.record.sql.find(ptrn) != -1:
             my_debug(self.record.sql)
             my_debug(self.record.result)
@@ -246,7 +248,6 @@ class ResultHelper():
         else:
             return "0"
 
-    
     def float_format(self, item):
         if isinstance(item, float):
             return "%.3f" % item
@@ -260,15 +261,15 @@ class ResultHelper():
         else:
             return "0.000"
 
-
     def text_format(self, item):
         return str(item) if item != None else "NULL"
 
-    
     def format_results(self, results, datatype: str):
         cols = list(datatype)
-        format_func = {'I': self.int_format, 'R': self.float_format, 'T': self.text_format}
-        results = [[format_func[col](item) for col, item in zip(cols, row)] for row in results]
+        format_func = {'I': self.int_format,
+                       'R': self.float_format, 'T': self.text_format}
+        results = [[format_func[col](item) for col, item in zip(
+            cols, row)] for row in results]
         return results
 
     def sort_result(self, results, sort_type=SortType.ROW_SORT):
@@ -351,7 +352,6 @@ class ResultHelper():
             [str(item) if item != None else 'NULL' for item in row]) for row in actual_results])
         return cmp_flag, result_string
 
-
     def row_wise_compare(self, results, record: Record):
         # the result is just what we want.
         if type(results) == str:
@@ -365,14 +365,16 @@ class ResultHelper():
         # actually_result_list.sort()
         # sort the actual result list based on the string
         my_debug("%s, %s", actual_result_list, expected_result_list)
-        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list)
+        cmp_flag, result_string = self._row_wise_compare_str(
+            actual_result_list, expected_result_list)
         # if the result is same, just end here
         if cmp_flag:
             return cmp_flag, result_string
         # if not, try to sort the result and do again
         expected_result_list.sort()
         actual_result_list = sorted(actual_result_list, key=str)
-        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list)
+        cmp_flag, result_string = self._row_wise_compare_str(
+            actual_result_list, expected_result_list)
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):
