@@ -254,6 +254,8 @@ class SLTParser(Parser):
 
 
 class MYTParser(Parser):
+    RUNNER_COMMAND = ['call', 'let']
+    
     def __init__(self, filename='') -> None:
         super().__init__(filename)
         self.testfile = filename
@@ -270,61 +272,89 @@ class MYTParser(Parser):
         self.test_content = self._read_file(self.testfile)
         self.result_content = self._read_file(self.resultfile)
 
-    def find_next_command(self, id):
-        if id + 1 >= len(self.records):
-            return ""
-        command = self.records[id + 1].sql
-        if command != "":
-            return command.split('\n')[0]
-        else:
-            return self.find_next_command(id + 1)
-
-    def get_test_commands(self):
-        record_id = 0
-        command = []
-        for i, script in enumerate(self.scripts):
-            if script.startswith('#'):
-                continue
-            if script.startswith('--'):
-                tokens = script.split()
-                action = RunnerAction[tokens[0][2:].upper()]
-                self.records.append(Control(sql=' '.join(
-                    tokens[1:]), action=action, id=record_id))
-                record_id += 1
+    def filter_dummy_lines(self):
+        # filter the dummy lines in the test file
+        # lstrip the space in the line because mysql result would remove that
+        self.test_content = "\n".join([line.lstrip() for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
+    
+    def filter_comment(self):
+        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--') and line != ''])
+    
+    def filter_echo(self):
+        # find the echo lines in the test file
+        echo_lines = [line.removeprefix("--echo") for line in self.test_content.split('\n') if line.startswith('--echo')]
+        # filter the echo lines in the test file
+        self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--echo')])
+        # filter the echo content in the result file
+        result_lines_echo_free = []
+        result_lines = [line for line in self.result_content.split('\n') if line != '']
+        for line in result_lines:
+            if len(echo_lines) > 0 and line == echo_lines[0].strip():
+                echo_lines.pop(0)
             else:
-                command.append(script)
-                if script.endswith(self.delimiter):
-                    self.records.append(
-                        Record(sql="\n".join(command), id=record_id))
-                    command = []
-                    record_id += 1
+                result_lines_echo_free.append(line)
+        self.result_content = "\n".join(result_lines_echo_free)
+    
+    def split_file(self):
+        commands = sqlparse.split(self.test_content)
+        return commands
 
-    def get_test_results(self):
-        for i, record in enumerate(self.records):
-            if type(record) is Record:
-                command = record.sql.split('\n')[-1]
-                assert i == record.id
-                # print(record.id, len(self.records))
-                next_command = self.find_next_command(record.id)
-                loc = self.result_content.find(command) + len(command) + 1
-                self.result_content = self.result_content[loc:]
-                next_loc = self.result_content.find(
-                    next_command) if next_command != "" else 0
-                if next_loc > 0:
-                    result = self.result_content[:next_loc]
+    def _get_diff(self):
+        """get difference between test file and result file using difflib
+
+        Returns:
+            List: list of difference, each element is a string, string begin with + is result of the query
+        """        
+        test_differ = difflib.Differ()
+        test_lines = [line for line in self.test_content.splitlines(
+            keepends=False) if line != '\n']
+        result_lines = [line for line in self.result_content.splitlines(
+            keepends=False) if line != '\n']
+        return list(test_differ.compare(test_lines, result_lines))
+    
+    def parse_file_by_diff(self):
+        test_result_diff = self._get_diff()
+        commands = self.split_file()
+        for id, command in enumerate(commands):
+            if command.startswith(tuple(self.RUNNER_COMMAND)):
+                self.records.append(Control(action=RunnerAction.ECHO, id=id, sql=command))
+                assert test_result_diff[0].startswith('- '), "the first line of test_result_diff should be - "
+                test_result_diff.pop(0)
+                continue
+            command_lines = command.splitlines()
+            # check if the prefix of the test_result_diff is double space
+            assert all([line.startswith('  ') for line in test_result_diff[:len(command_lines)]])
+            # remove the first len(command_lines) of command from test_result_diff
+            test_result_diff = test_result_diff[len(command_lines):]
+            result_lines = []
+            # see if the command have result
+            while len(test_result_diff) > 0 and test_result_diff[0].startswith('+ '):
+                result_lines.append(test_result_diff[0].removeprefix('+ ').rstrip())
+                test_result_diff.pop(0)
+            
+            if len(result_lines) > 0:
+                if result_lines[0].startswith('ERROR'):
+                    self.records.append(Statement(command, "\n".join(result_lines), status=False, id=id))
+                elif result_lines[0].startswith('Warnings:'):
+                    self.records.append(Statement(command, "\n".join(result_lines), status=True, id=id))
                 else:
-                    result = ""
-                record.result = result
-
+                    self.records.append(Query(command, "\n".join(result_lines), id=id))
+            else:
+                self.records.append(Statement(command, status=True, id=id))
+    
     def parse_file(self):
-        self.scripts = [script.strip() for script in self.test_content.strip().split(
-            '\n') if script != '']
-
-        # parse the test file and get commands
-        self.get_test_commands()
-
-        # parse the result file and get results
-        self.get_test_results()
+        self.records = []
+        # filter the dummy lines in test content
+        self.filter_dummy_lines()
+        
+        # remove messages generate by --echo
+        self.filter_echo()
+        
+        # filter the comment lines in test content
+        self.filter_comment()
+        
+        # split the file into records
+        self.parse_file_by_diff()
 
 
 class PGTParser(Parser):
