@@ -47,3 +47,4 @@ sqlparse==0.4.3
 tqdm==4.64.1
 fuzzywuzzy==0.18.0
 scikit-learn==1.2.1
+chardet==5.1.0

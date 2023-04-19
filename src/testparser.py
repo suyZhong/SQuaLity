@@ -1,12 +1,13 @@
 import re
 import difflib
+import chardet
 import sqlparse
 from copy import copy
 import pandas as pd
 from .utils import *
 from typing import List
 from data import filters
-
+logging.getLogger('chardet').setLevel(logging.CRITICAL)
 
 def strip_hash_comment_lines(code: str):
     return re.sub(r'(?m)^ *#.*\n?', '', code)
@@ -37,13 +38,15 @@ class Parser:
         """
 
     def _read_file(self, filename):
+        file_encoding = 'utf-8'
         content = ""
-        try:
-            with open(filename, 'r', encoding='utf-8') as f:
-                content = f.read()
-        except UnicodeDecodeError:
-            with open(filename, 'r', encoding='windows-1252') as f:
-                content = f.read()
+        with open(filename, 'rb') as f:
+            raw_data = f.read()
+            file_encoding = chardet.detect(raw_data)['encoding']
+        # print(file_encoding)
+        with open(filename, 'r', encoding=file_encoding) as f:
+            content = f.read()
+
         return content
 
     def get_file_name(self, filename):
@@ -285,7 +288,7 @@ class MYTParser(Parser):
     def filter_dummy_lines(self):
         # filter the dummy lines in the test file
         # lstrip the space in the line because mysql result would remove that
-        self.test_content = "\n".join([line.strip() for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
+        self.test_content = "\n".join([line.strip() for line in self.test_content.split('\n') if line != '' and not line.lstrip().startswith('#')])
         
         # remove the spaces after the comment dashes
         self.test_content = "\n".join([re.sub(r'^--\s+', '--', line) for line in self.test_content.split('\n') if line != ''])
