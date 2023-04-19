@@ -286,6 +286,9 @@ class MYTParser(Parser):
         # filter the dummy lines in the test file
         # lstrip the space in the line because mysql result would remove that
         self.test_content = "\n".join([line.lstrip() for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
+        
+        # remove the spaces after the comment dashes
+        self.test_content = "\n".join([re.sub(r'^--\s+', '--', line) for line in self.test_content.split('\n') if line != ''])
     
     def filter_comment(self):
         self.test_content = "\n".join([line for line in self.test_content.split('\n') if not line.startswith('--') and line != ''])
