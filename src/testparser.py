@@ -323,15 +323,23 @@ class MYTParser(Parser):
         return list(test_differ.compare(test_lines, result_lines))
     
     def parse_file_by_diff(self):
-        test_result_diff = self._get_diff()
         commands = self.split_file()
+        test_result_diff = self._get_diff()
         # filter files that have runner commands
         for filter_tag in self.filter:
             if filter_tag not in filters.MYSQL_FILTER:
                 logging.warning("This filter %s is not implemented", filter_tag)
+                # logging.debug()
                 continue
             if any([filters.MYSQL_FILTER[filter_tag](command) for command in commands]):
                 logging.warning("This script %s has runner command", self.testfile)
+                # # open a csv file and write a row to its end
+                # df = pd.read_csv(SETUP_PATH['filter']+'/mysql_errors.csv')
+                # print(df)
+                # df.loc[df['TESTFILE_NAME'] == convert_testfile_name(self.testfile, self.suite_name), ['TESTCASE_INDEX']] = [-1]
+                # df.to_csv(SETUP_PATH['filter']+'/mysql_errors.csv', index=False)
+                # print(df)
+                # exit(0)
                 return
         
         for id, command in enumerate(commands):
@@ -360,10 +368,25 @@ class MYTParser(Parser):
                     self.records.append(Query(command, "\n".join(result_lines), id=id))
             else:
                 self.records.append(Statement(command, status=True, id=id))
+    def add_include_files(self):
+        include_files = []
+        test_content_list = self.test_content.splitlines()
+        for i in range(len(test_content_list)):
+            if test_content_list[i].startswith('--source'):
+                inc_file_name = 'mysql_tests/' + test_content_list[i].removeprefix('--source ')
+                test_content_list[i] = self._read_file(inc_file_name)
+        self.test_content = "\n".join(test_content_list)
+        # for line in test_content_list:
+        #     if line.startswith('--source'):
+        #         inc_file_name = 'mysql_tests/' + line.removeprefix('--source ')
+        #         include_files.append(self._read_file(inc_file_name))
+        
     
     def parse_file(self):
         self.records = []
         # filter the dummy lines in test content
+        self.add_include_files()
+        
         self.filter_dummy_lines()
         
         # remove messages generate by --echo
