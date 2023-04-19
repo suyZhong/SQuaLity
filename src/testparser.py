@@ -285,7 +285,7 @@ class MYTParser(Parser):
     def filter_dummy_lines(self):
         # filter the dummy lines in the test file
         # lstrip the space in the line because mysql result would remove that
-        self.test_content = "\n".join([line.lstrip() for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
+        self.test_content = "\n".join([line.strip() for line in self.test_content.split('\n') if line != '' and not line.startswith('#')])
         
         # remove the spaces after the comment dashes
         self.test_content = "\n".join([re.sub(r'^--\s+', '--', line) for line in self.test_content.split('\n') if line != ''])
@@ -371,19 +371,22 @@ class MYTParser(Parser):
                     self.records.append(Query(command, "\n".join(result_lines), id=id))
             else:
                 self.records.append(Statement(command, status=True, id=id))
-    def add_include_files(self):
-        include_files = []
-        test_content_list = self.test_content.splitlines()
+                
+
+    def _read_include_file(self, test_content:str):
+        source_flag = False
+        test_content_list = test_content.splitlines()
         for i in range(len(test_content_list)):
             if test_content_list[i].startswith('--source'):
-                inc_file_name = 'mysql_tests/' + test_content_list[i].removeprefix('--source ')
-                test_content_list[i] = self._read_file(inc_file_name)
-        self.test_content = "\n".join(test_content_list)
-        # for line in test_content_list:
-        #     if line.startswith('--source'):
-        #         inc_file_name = 'mysql_tests/' + line.removeprefix('--source ')
-        #         include_files.append(self._read_file(inc_file_name))
-        
+                source_flag = True
+                inc_file_name = 'mysql_tests/' + \
+                    test_content_list[i].removeprefix('--source ')
+                test_content_list[i] = self._read_include_file(self._read_file(inc_file_name))
+        return "\n".join(test_content_list)
+    
+    
+    def add_include_files(self):
+        self.test_content = self._read_include_file(self.test_content)
     
     def parse_file(self):
         self.records = []
