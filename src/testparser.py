@@ -5,6 +5,7 @@ from copy import copy
 import pandas as pd
 from .utils import *
 from typing import List
+from data import filters
 
 
 def strip_hash_comment_lines(code: str):
@@ -28,6 +29,8 @@ class Parser:
         self.records: List[Record] = list()
         self.setup_records: List[Record] = list()
         self.record_id = 0
+        self.filter = []
+        self.suite_name = ""
 
     def get_setup_tests(self):
         """get the environment set up records
@@ -64,6 +67,10 @@ class Parser:
 
     def get_records(self):
         return self.records
+    
+    def get_filter(self):
+        filter_df = pd.read_csv(SETUP_PATH['errors'], na_filter=False).fillna('')
+        self.filter = filter_df[filter_df['TEST_SUITE'] == self.suite_name]['TAG'].tolist()
 
     def debug(self):
         # my_debug(self.test_content)
@@ -116,6 +123,7 @@ class SLTParser(Parser):
         super().__init__(filename)
         self.scripts = []
         self.dbms_set = DBMS_Set
+        self.suite_name = DBMS_MAPPING['sqlite']
 
     def get_query(self, tokens, lines):
         # A query record begins with a line of the following form:
@@ -262,6 +270,8 @@ class MYTParser(Parser):
         self.resultfile = filename.replace(
             '/t/', '/r/').replace('.test', '.result')
         self.delimiter = ';'
+        self.suite_name = DBMS_MAPPING['mysql']
+        self.get_filter()
 
     def get_file_name(self, filename):
         self.testfile = filename
@@ -315,6 +325,15 @@ class MYTParser(Parser):
     def parse_file_by_diff(self):
         test_result_diff = self._get_diff()
         commands = self.split_file()
+        # filter files that have runner commands
+        for filter_tag in self.filter:
+            if filter_tag not in filters.MYSQL_FILTER:
+                logging.warning("This filter %s is not implemented", filter_tag)
+                continue
+            if any([filters.MYSQL_FILTER[filter_tag](command) for command in commands]):
+                logging.warning("This script %s has runner command", self.testfile)
+                return
+        
         for id, command in enumerate(commands):
             if command.startswith(tuple(self.RUNNER_COMMAND)):
                 self.records.append(Control(action=RunnerAction.ECHO, id=id, sql=command))
@@ -366,6 +385,7 @@ class PGTParser(Parser):
         self.delimiter = ';'
         self.meta_data = {'psql_testcase': 0, 'total_files': 0,
                           'total_testcase': 0, 'psql_files': 0}
+        self.suite_name = DBMS_MAPPING['postgres']
         self.get_setup_tests(filename)
 
     def get_setup_tests(self, filename):
@@ -541,6 +561,7 @@ class PGTParser(Parser):
 class DTParser(SLTParser):
     def __init__(self, filename='') -> None:
         super().__init__(filename)
+        self.suite_name = DBMS_MAPPING['duckdb']
 
     def testfile_dialect_handler(self, *args, **kwargs):
         record_type = kwargs['record_type']

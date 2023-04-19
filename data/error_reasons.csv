@@ -12,3 +12,7 @@ postgresql,SYNTAX,Syntax Errors,Dialect,RUNNING
 postgresql,DEP-DDL,Previous DDL statements failed,Dependencies,RUNNING
 postgresql,DEP-DML,Previous DML statements failed,Dependencies,RUNNING
 postgresql,DEP-EXT,Some unknown identifier exists: external dependencies,External,RUNNING
+mysql,RC,MySQL Test Runner commands,Runner/Client Command,PARSING
+mysql,DELIMETER,MySQL DELIMETER command make it hard to parse,Runner/Client Command,PARSING
+,,,,
+,,,,

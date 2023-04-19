@@ -101,6 +101,7 @@ DBMS_MAPPING = {
 SETUP_PATH = {
     'postgresql': 'postgresql_tests/regress/sql/test_setup.sql',
     'filter': 'data/flaky',
+    'errors': 'data/error_reasons.csv'
 }
 
 OUTPUT_PATH = {
