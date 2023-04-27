@@ -39,8 +39,16 @@ class SimpleFuzzer(Fuzzer):
     # MAX_INT_POOL = [-9223372036854775808, -1, 0, 1, 9223372036854775807]
     INT_POOL = [-1, 0, 1, 9223372036854775807, -9223372036854775808]
     SEG_POOL = [(-1, 1), (0, 1), (1, 14),  (-0.5, 0.5)]
+    OP_POOL = [
+        "==", "!=", "<>", "<", "<=", ">", ">=", "=",
+        "IS", "IS NOT","IN","LIKE","GLOB","MATCH","REGEXP","BETWEEN","AND","OR",
+    ]
     
     FUZZING_TAG = ["INT", "NUMERIC", "STR"]
+    
+    CONSTANT_REGEX = re.compile(r"(\b\d+(\.\d+)?\b)|('(?:[^']|'')*')")
+    OPERATOR_REGEX = re.compile(
+        r"\b(?:==|!=|<>|<=|>=|=|<|>|IS(?:\s+NOT)?|IN|LIKE|GLOB|MATCH|REGEXP|BETWEEN|AND|OR)\b")
     
     def __init__(self, seed) -> None:
         super().__init__(seed)
@@ -77,9 +85,14 @@ class SimpleFuzzer(Fuzzer):
     def _get_random_string(self, match) -> str:
         return "'" + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(random.randint(1, 20))) + "'"
     
-    def constant_mutator(self, sql: str, tag) -> str:
-        return re.sub(r"(\b\d+(\.\d+)?\b)|('(?:[^']|'')*')", self._random_generator(tag), sql)
+    def _get_random_op(self, match) -> str:
+        return random.choice(self.OP_POOL)
     
+    def constant_mutator(self, sql: str, tag) -> str:
+        return re.sub(self.CONSTANT_REGEX, self._random_generator(tag), sql)
+    
+    def operator_mutator(self, sql: str) -> str:
+        return re.sub(self.OPERATOR_REGEX, self._get_random_op, sql)
     
     def mutate(self, iter = False) -> None:
         # replace every number in the sql with a random new number
@@ -89,6 +102,8 @@ class SimpleFuzzer(Fuzzer):
             self.input = "\n".join(self.sql_list)
         else:
             self.input = "\n".join([self.constant_mutator(str(sql), random.choice(self.FUZZING_TAG)) for sql in self.sql_list])
+            
+        self.input = self.operator_mutator(self.input)
     
     def run(self) -> None:
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -110,8 +125,6 @@ class SimpleFuzzer(Fuzzer):
         # print time
         # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
         
-        if logging.getLogger().level == logging.DEBUG:
-            self.test_cases = self.test_cases.sample(1)
         
         for test_case in self.test_cases['TESTFILE_PATH'].unique():
             # logging.info(f"Running iteration ")
@@ -150,6 +163,7 @@ class SQLiteSimpleFuzzer(SimpleFuzzer):
         
         # filter generate_series
         self.sql_list = [sql for sql in self.sql_list if sql.find("generate_series") == -1]
+        logging.info(f"Length of sql list: {len(self.sql_list)}")
 
 class DuckDBSimpleFuzzer(SimpleFuzzer):
     INT_POOL = [-1, 0, 1, 9223372036854775807, -9223372036854775808, 666, 112233, 14]
