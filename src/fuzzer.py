@@ -75,7 +75,7 @@ class SimpleFuzzer(Fuzzer):
         return str(random.uniform(seg[0], seg[1]))
     
     def _get_random_string(self, match) -> str:
-        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(random.randint(1, 20)))
+        return "'" + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(random.randint(1, 20))) + "'"
     
     def constant_mutator(self, sql: str, tag) -> str:
         return re.sub(r"(\b\d+(\.\d+)?\b)|('(?:[^']|'')*')", self._random_generator(tag), sql)
