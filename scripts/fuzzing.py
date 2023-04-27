@@ -15,6 +15,7 @@ if __name__ == "__main__":
     arg_parser.add_argument('--seed', type=int, default=0, help='random seed')
     arg_parser.add_argument('--log', type=str, default='INFO', help='logging level')
     arg_parser.add_argument('--corpus', type=str, default='output/psql_results_dependency_without_error.csv', help='corpus path')
+    arg_parser.add_argument('-d', '--dbms', type=str, default='sqlite', help='DBMS to fuzz')
     arg_parser.parse_args()
     args = arg_parser.parse_args()
     
@@ -22,7 +23,10 @@ if __name__ == "__main__":
     time_string = time.strftime("%Y-%m-%d-%H-%M", time.localtime())
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename=f'logs/fuzzing-{time_string}.log')
     # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename='logs/debug.log')
-    sqlite_fuzzer = fuzzer.SQLiteSimpleFuzzer()
-    sqlite_fuzzer.fuzz(args.corpus)
-    # duckdb_fuzzer = fuzzer.DuckDBSimpleFuzzer()
-    # duckdb_fuzzer.fuzz('output/psql_results_dependency.csv')
+    if args.dbms == 'sqlite':
+        fuzzer = fuzzer.SQLiteSimpleFuzzer()
+    elif args.dbms == 'duckdb':
+        fuzzer = fuzzer.DuckDBSimpleFuzzer()
+    else:
+        assert False, 'DBMS not supported'
+    fuzzer.fuzz(args.corpus)
