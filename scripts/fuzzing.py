@@ -25,9 +25,9 @@ if __name__ == "__main__":
     )), format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename=f'logs/fuzzing-{time_string}.log')
     # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename='logs/debug.log')
     if args.dbms == 'sqlite':
-        fuzzer = fuzzer.SQLiteSimpleFuzzer()
+        fuzzer = fuzzer.SQLiteSimpleFuzzer(seed=args.seed)
     elif args.dbms == 'duckdb':
-        fuzzer = fuzzer.DuckDBSimpleFuzzer()
+        fuzzer = fuzzer.DuckDBSimpleFuzzer(seed=args.seed)
     else:
         assert False, 'DBMS not supported'
     fuzzer.fuzz(args.corpus)

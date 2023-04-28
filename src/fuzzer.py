@@ -7,6 +7,7 @@ import signal
 import time
 from tqdm import tqdm
 import string
+from .config import CONFIG
 
 # MAXINT in SQLite is 9223372036854775807
 # from data import filters
@@ -48,7 +49,7 @@ class SimpleFuzzer(Fuzzer):
     
     CONSTANT_REGEX = re.compile(r"(\b\d+(\.\d+)?\b)|('(?:[^']|'')*')")
     OPERATOR_REGEX = re.compile(
-        r"\b(?:==|!=|<>|<=|>=|=|<|>|IS(?:\s+NOT)?|IN|LIKE|GLOB|MATCH|REGEXP|BETWEEN|AND|OR)\b")
+        r"(\b==|!=|<>|<=|>=|=|<|>|\+|-|\*|IS(?:\s+NOT)?|IN|LIKE|GLOB|MATCH|REGEXP|BETWEEN|AND|OR\b)")
     
     def __init__(self, seed) -> None:
         super().__init__(seed)
@@ -59,6 +60,8 @@ class SimpleFuzzer(Fuzzer):
     def setup_summary(self):
         logging.info("Setup Summary")
         logging.info(f"Fuzzer: {self.__class__.__name__}")
+        logging.info(f"Seed: {self.seed}")
+        logging.info(f"Using DBMS {self.cmd}")
         logging.info(f"Fuzzing Tag: {self.FUZZING_TAG}")
         logging.info(f"Int Pool: {self.INT_POOL}")
         logging.info(f"Seg Pool: {self.SEG_POOL}")
@@ -153,7 +156,7 @@ class SQLiteSimpleFuzzer(SimpleFuzzer):
     
     def __init__(self, seed = 233) -> None:
         super().__init__(seed)
-        self.cmd = ["sqlite3"]
+        self.cmd = [CONFIG['sqlite_path']]
     
     def extract(self, test_case) -> None:
         logging.info(f"Extracting test case {test_case}")
@@ -172,7 +175,7 @@ class DuckDBSimpleFuzzer(SimpleFuzzer):
     
     def __init__(self, seed = 233) -> None:
         super().__init__(seed)
-        self.cmd = ["scripts/duckdb"]
+        self.cmd = [CONFIG['duckdb_path']]
     
     def extract(self, test_case) -> None:
         logging.info(f"Extracting test case {test_case}")
