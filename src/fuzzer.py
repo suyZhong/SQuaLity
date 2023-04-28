@@ -115,7 +115,7 @@ class SimpleFuzzer(Fuzzer):
         else:
             self.input = "\n".join([self.constant_mutator(str(sql), random.choice(self.FUZZING_TAG)) for sql in self.sql_list])
             
-        self.input = self.operator_mutator(self.input)
+        # self.input = self.operator_mutator(self.input)
     
     def run(self) -> None:
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -124,10 +124,10 @@ class SimpleFuzzer(Fuzzer):
         logging.debug("input: ")
         logging.debug(self.input)
         logging.debug("output: ")
-        logging.debug(out)
-        if self.cli.returncode != 0:
-            logging.warning(self.input)
+        logging.debug(out)   
+        if self.cli.returncode < 0:
             logging.warning(f"err: {err}")
+            logging.warning(self.input)
         self.cli.terminate()
         
     def fuzz(self, path: str) -> None:
