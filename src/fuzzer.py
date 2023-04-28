@@ -48,7 +48,7 @@ class SimpleFuzzer(Fuzzer):
     
     CONSTANT_REGEX = re.compile(r"(\b\d+(\.\d+)?\b)|('(?:[^']|'')*')")
     OPERATOR_REGEX = re.compile(
-        r"(\b==|!=|<>|<=|>=|=|<|>|\+|-|\*|IS(?:\s+NOT)?|IN|LIKE|GLOB|MATCH|REGEXP|BETWEEN|AND|OR\b)")
+        r"(==|!=|<>|<=|>=|=|<|>)")
     
     def __init__(self, seed) -> None:
         super().__init__(seed)
@@ -115,7 +115,7 @@ class SimpleFuzzer(Fuzzer):
         else:
             self.input = "\n".join([self.constant_mutator(str(sql), random.choice(self.FUZZING_TAG)) for sql in self.sql_list])
             
-        # self.input = self.operator_mutator(self.input)
+        self.input = self.operator_mutator(self.input)
     
     def run(self) -> None:
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -137,8 +137,10 @@ class SimpleFuzzer(Fuzzer):
         # print time
         # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
         
-        
-        for test_case in self.test_cases['TESTFILE_PATH'].unique():
+        test_cases = list(self.test_cases['TESTFILE_PATH'].unique())
+        if logging.getLogger().level == logging.DEBUG:
+            random.shuffle(test_cases)
+        for test_case in test_cases:
             # logging.info(f"Running iteration ")
             self.extract(test_case)
             
