@@ -42,7 +42,6 @@ class SimpleFuzzer(Fuzzer):
     SEG_POOL = [(-1, 1), (0, 1), (1, 14),  (-0.5, 0.5)]
     OP_POOL = [
         "==", "!=", "<>", "<", "<=", ">", ">=", "=",
-        "IS", "IS NOT","IN","LIKE","GLOB","MATCH","REGEXP","BETWEEN","AND","OR",
     ]
     
     FUZZING_TAG = ["INT", "NUMERIC", "STR"]
@@ -91,7 +90,17 @@ class SimpleFuzzer(Fuzzer):
     def _get_random_op(self, match) -> str:
         return random.choice(self.OP_POOL)
     
+    
     def constant_mutator(self, sql: str, tag) -> str:
+        """substite all the constant in the sql with a random new constant
+
+        Args:
+            sql (str): sql to be mutated
+            tag (str): type of constant to be mutated
+
+        Returns:
+            str: sql after mutation
+        """        
         return re.sub(self.CONSTANT_REGEX, self._random_generator(tag), sql)
     
     def operator_mutator(self, sql: str) -> str:
@@ -110,15 +119,15 @@ class SimpleFuzzer(Fuzzer):
     
     def run(self) -> None:
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
+                                    stderr=subprocess.PIPE, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
         out, err = self.cli.communicate(input=self.input)
         logging.debug("input: ")
         logging.debug(self.input)
         logging.debug("output: ")
         logging.debug(out)
-        if err:
+        if self.cli.returncode != 0:
             logging.warning(self.input)
-            logging.warning(err)
+            logging.warning(f"err: {err}")
         self.cli.terminate()
         
     def fuzz(self, path: str) -> None:
