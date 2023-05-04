@@ -67,6 +67,7 @@ Running_Stats = ['success_file_num',
                  'negative_test_cases'
                  ]
 
+
 TestCaseColumns = ['INDEX',  # testcase index
                    'TYPE',  # Enum Type: Statement, Query and Control
                    'SQL',  # SQL string
@@ -77,8 +78,8 @@ TestCaseColumns = ['INDEX',  # testcase index
                    'INPUT_DATA',  # The input data for this test case
                    'DATA_TYPE',  # Query only, store the require result type
                    'SORT_TYPE',  # Query only, store the required sort methods
-                   'LABEL',  # Query only, store the result label
-                   'RES_FORM',  # Query only, store the result format
+                   'LABEL',      # Query only, store the result label
+                   'RES_FORM',   # Query only, store the result format
                    'IS_HASH',    # Query only, store the result is hash or not
                    ]
 
@@ -211,7 +212,9 @@ def convert_postgres_result(result: str):
         else:
             return "", is_query
     else:
-        # logging.warning("Parsing result warning: while parsing {}".format(result))
+        logging.warning(
+            "Parsing result warning: while parsing {}".format(result))
+        result = result.replace('\n\n', '\n')
         return result, is_query
 
 
@@ -222,7 +225,7 @@ class ResultHelper():
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             self.debug("""@#$%""")
 
-    def debug(self, ptrn:str):
+    def debug(self, ptrn: str):
         if self.record.sql.find(ptrn) != -1:
             my_debug(self.record.sql)
             my_debug(self.record.result)
@@ -252,7 +255,6 @@ class ResultHelper():
         else:
             return "0"
 
-
     def float_format(self, item):
         if isinstance(item, float):
             return "%.3f" % item
@@ -266,15 +268,15 @@ class ResultHelper():
         else:
             return "0.000"
 
-
     def text_format(self, item):
         return str(item) if item != None else "NULL"
 
-
     def format_results(self, results, datatype: str):
         cols = list(datatype)
-        format_func = {'I': self.int_format, 'R': self.float_format, 'T': self.text_format}
-        results = [[format_func[col](item) for col, item in zip(cols, row)] for row in results]
+        format_func = {'I': self.int_format,
+                       'R': self.float_format, 'T': self.text_format}
+        results = [[format_func[col](item) for col, item in zip(
+            cols, row)] for row in results]
         return results
 
     def sort_result(self, results, sort_type=SortType.ROW_SORT):
@@ -320,7 +322,7 @@ class ResultHelper():
         if is_hash and result_len > hash_threshold:
             result_string = self.hash_results(result_string)
             result_string = str(result_len) + \
-                            " values hashing to " + result_string
+                " values hashing to " + result_string
         cmp_flag = result_string.strip() == record.result.strip()
         return cmp_flag, result_string
 
@@ -364,7 +366,6 @@ class ResultHelper():
             [str(item) if item != None else 'NULL' for item in row]) for row in actual_results])
 
         return cmp_flag, result_string
-
 
     def row_wise_compare(self, results, record: Record):
         # the result is just what we want.

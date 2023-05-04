@@ -464,6 +464,7 @@ class SQLiteRunner(PyDBCRunner):
         super().__init__(records)
         self.con = None
         self.cur = None
+        self.db_error = sqlite3.Error
 
     def connect(self, db_name):
         logging.info("connect to db %s", db_name)

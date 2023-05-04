@@ -1,0 +1,6 @@
+{
+    "sqlite_path": "sqlite3",
+    "duckdb_path": "duckdb",
+    "psql_path": "psql"
+    
+}
