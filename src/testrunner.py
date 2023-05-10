@@ -765,6 +765,9 @@ class PostgreSQLRunner(CockroachDBRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
 
+    def connect_again(self, autocommit: bool = True, force=False):
+        pass
+
     def set_db(self, db_name):
         self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
         self.connect("postgres")
