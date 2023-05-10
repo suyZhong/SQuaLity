@@ -768,6 +768,8 @@ class PostgreSQLRunner(CockroachDBRunner):
     def set_db(self, db_name):
         self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
         self.connect("postgres")
+        self.con = psycopg2.connect(dsn=self.db)
+        self.cur = self.con.cursor()
         self.con.autocommit = True
 
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
