@@ -537,10 +537,6 @@ class DTParser(SLTParser):
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def get_file_content(self):
-        if 'sqlite' in self.filename:
-            self.records = []
-            self.test_content = ""
-            return
         return super().get_file_content()
 
     def parse_script(self, script: str):
