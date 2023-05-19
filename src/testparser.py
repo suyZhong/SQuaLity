@@ -43,6 +43,22 @@ class Parser:
                 content = f.read()
         return content
 
+    def _read_file_lines(self, filename):
+        content = ""
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                content = f.readlines()
+        except UnicodeDecodeError:
+            with open(filename, 'r', encoding='windows-1252') as f:
+                content = f.readlines()
+        return content
+
+    def read_file(self, filename, byline=False):
+        if byline:
+            return self._read_file_lines(filename)
+        else:
+            return self._read_file(filename)
+
     def get_file_name(self, filename):
         self.filename = filename
 
@@ -521,10 +537,6 @@ class DTParser(SLTParser):
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def get_file_content(self):
-        if 'sqlite' in self.filename:
-            self.records = []
-            self.test_content = ""
-            return
         return super().get_file_content()
 
     def parse_script(self, script: str):
