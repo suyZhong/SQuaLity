@@ -238,15 +238,13 @@ class ResultHelper():
     def int_format(self, item):
         if isinstance(item, int):
             return str(item)
-        elif isinstance(item, str) or isinstance(item, float):
+        elif item == None:
+            return "NULL"
+        else:
             try:
                 return str(int(item))
             except ValueError:
                 return "0"
-        elif item == None:
-            return "NULL"
-        else:
-            return "0"
 
     def float_format(self, item):
         if isinstance(item, float):

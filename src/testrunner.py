@@ -372,6 +372,8 @@ class PyDBCRunner(Runner):
         result_string = ""
         cmp_flag = False
         helper = ResultHelper(results, record)
+        if record.sql.startswith("SELECT DISTINCT - - 17 AS col1 FROM tab1, tab0 AS cor0 GROUP BY cor0.col1"):
+            my_debug(results)
         if record.label != '' and record.result == '':
             # my_debug(results)
             result_string = helper.hash_results(str(results))
@@ -385,6 +387,7 @@ class PyDBCRunner(Runner):
             if record.res_format == ResultFormat.VALUE_WISE:
                 cmp_flag, result_string = helper.value_wise_compare(
                     results, record, self.hash_threshold, record.is_hash)
+                # my_debug(result_string)
             elif record.res_format == ResultFormat.ROW_WISE:
                 cmp_flag, result_string = helper.row_wise_compare(
                     results, record)
@@ -518,6 +521,7 @@ class MySQLRunner(PyDBCRunner):
         self.db = db_name
 
     def remove_db(self, db_name):
+        self.cur.fetchall()
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
         self.commit()
         self.con.close()
