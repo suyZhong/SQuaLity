@@ -1,6 +1,8 @@
 {
     "sqlite_path": "sqlite3",
     "duckdb_path": "duckdb",
-    "psql_path": "psql"
-    
+    "psql_path": "psql",
+    "postgres_user": "postgres",
+    "postgres_password": "postgres",
+    "postgres_port": 5432
 }
