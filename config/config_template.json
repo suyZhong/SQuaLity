@@ -4,5 +4,6 @@
     "psql_path": "psql",
     "postgres_user": "postgres",
     "postgres_password": "postgres",
-    "postgres_port": 5432
+    "postgres_port": 5432,
+    "mysql_port": 3306
 }

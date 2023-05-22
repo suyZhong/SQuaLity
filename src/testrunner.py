@@ -525,7 +525,7 @@ class MySQLRunner(PyDBCRunner):
     def connect(self, db_name=""):
         logging.info("connect to db %s", db_name)
         self.con = mysql.connector.connect(
-            host="localhost", user="root", password="root", port=3307)
+            host="localhost", user="root", password="root", port=CONFIG['mysql_port'])
         self.cur = self.con.cursor()
 
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
