@@ -219,6 +219,8 @@ class TestResultAnalyzer():
 
     def extract_dependency_failure(self, filename: str):
         all_results = self.results[self.results['TESTFILE_PATH'] == filename]
+        # add a column to store the dependency
+        self.results['DEPENDENCY'] = None
         # all_statements = all_results[all_results['CASE_TYPE'] == 'STATEMENT']
         # iterate the results:
         true_dep = set()

@@ -10,3 +10,7 @@ regress-sql-select_views.csv, -1, -1
 regress-sql-copy2.csv, -1, -1
 regress-sql-largeobject.csv, -1, -1
 regress-sql-xml.csv, -1, -1
+regress-sql-strings.csv, -1, -1
+regress-sql-merge.csv, -1, -1
+regress-sql-amutils.csv, -1, -1
+regress-sql-guc.csv, -1, -1
