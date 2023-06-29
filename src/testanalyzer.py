@@ -53,6 +53,7 @@ class TestCaseAnalyzer():
 
             for test_file in tqdm(test_files):
                 df = self.read_testcase(test_file)
+                df['TESTFILE_PATH'] = test_file
                 all_test = pd.concat([all_test, df], ignore_index=True)
             self.test_cases = all_test
         else:
@@ -85,6 +86,32 @@ class TestCaseAnalyzer():
         df = self.get_data(self.attributes)
         queries = df[df['TYPE'] == 'QUERY']
         return queries
+    
+    def get_sql_statement_type(self, sql:str):
+        if sql.lstrip().startswith('\\'):
+            return 'CLI_COMMAND'
+        if not sql.strip():
+            print("Error: Empty SQL")
+            return None
+        try:
+            parsed = sqlparse.parse(sql)
+        except Exception as e:
+            print(f"Error: {e} in SQL {sql}")
+            return None
+        try:
+            statement = parsed[0]
+        except IndexError:
+            print(f"Error: No statement found in SQL {sql}")
+            return None
+        first_token = statement.tokens[0]
+        if first_token.ttype is sqlparse.tokens.Keyword.DDL:
+            second_token = statement.tokens[2]  # In "CREATE TABLE", TABLE is the second token (index 2) after whitespace
+            return first_token.value.upper() + " "+ second_token.value.upper()
+        if first_token.ttype in sqlparse.tokens.Keyword:
+            return first_token.value.upper()
+        else:
+            print(f"Error: Unknown statement type in SQL {sql}")
+            return first_token.value.split()[0].upper()
 
 
 class TestResultAnalyzer():

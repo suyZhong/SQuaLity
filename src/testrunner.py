@@ -13,6 +13,7 @@ from tqdm import tqdm
 import duckdb
 from .utils import *
 from .bugdumper import BugDumper
+from .config import CONFIG
 import signal
 
 class Runner():
@@ -371,6 +372,8 @@ class PyDBCRunner(Runner):
         result_string = ""
         cmp_flag = False
         helper = ResultHelper(results, record)
+        if record.sql.startswith("SELECT DISTINCT - - 17 AS col1 FROM tab1, tab0 AS cor0 GROUP BY cor0.col1"):
+            my_debug(results)
         if record.label != '' and record.result == '':
             # my_debug(results)
             result_string = helper.hash_results(str(results))
@@ -384,6 +387,7 @@ class PyDBCRunner(Runner):
             if record.res_format == ResultFormat.VALUE_WISE:
                 cmp_flag, result_string = helper.value_wise_compare(
                     results, record, self.hash_threshold, record.is_hash)
+                # my_debug(result_string)
             elif record.res_format == ResultFormat.ROW_WISE:
                 cmp_flag, result_string = helper.row_wise_compare(
                     results, record)
@@ -517,6 +521,7 @@ class MySQLRunner(PyDBCRunner):
         self.db = db_name
 
     def remove_db(self, db_name):
+        self.cur.fetchall()
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
         self.commit()
         self.con.close()
@@ -524,7 +529,7 @@ class MySQLRunner(PyDBCRunner):
     def connect(self, db_name=""):
         logging.info("connect to db %s", db_name)
         self.con = mysql.connector.connect(
-            host="localhost", user="root", password="root", port=3307)
+            host="localhost", user="root", password="root", port=CONFIG['mysql_port'])
         self.cur = self.con.cursor()
 
         self.execute_stmt("DROP DATABASE IF EXISTS %s" % db_name)
@@ -564,7 +569,7 @@ class PostgreSQLRunner(CockroachDBRunner):
         super().__init__(records)
 
     def set_db(self, db_name):
-        self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
+        self.db = f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable"
         self.connect("postgres")
         self.con.autocommit = True
 
@@ -572,11 +577,11 @@ class PostgreSQLRunner(CockroachDBRunner):
         self.execute_stmt("CREATE DATABASE %s" % db_name)
         self.commit()
         self.close()
-        dsn = "postgresql://postgres:root@localhost:5432/%s?sslmode=disable" % db_name
+        dsn = f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable" 
         self.db = dsn
 
     def remove_db(self, db_name):
-        self.db = "postgresql://postgres:root@localhost:5432/postgres?sslmode=disable"
+        self.db = f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable"
         self.connect("postgres")
         self.con.autocommit = True
 
@@ -688,7 +693,6 @@ class CLIRunner(Runner):
 class PSQLRunner(CLIRunner):
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
-        self.base_url = "postgresql://postgres:root@localhost:5432/{}?sslmode=disable"
         self.res_delimiter = "*-------------*"
         self.echo = "\\echo {}\n"
 
@@ -736,16 +740,14 @@ class PSQLRunner(CLIRunner):
                 os.environ[env_name] = self.env[env_name]
 
             # init a test database
-            self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-                'postgres'), '-X', '-a', '-q', '-c']
+            self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
             stmts = [
                 "DROP DATABASE IF EXISTS {};\n".format(db_name),
                 "CREATE DATABASE {};\n".format(db_name),
             ]
             for stmt in stmts:
                 self.execute_stmt(stmt)
-            self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-                db_name), '-X', '-q']
+            self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable", '-X', '-q']
 
             # run the test_setup.sql
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -766,25 +768,22 @@ class PSQLRunner(CLIRunner):
         if len(self.setup_records) > 0:
             return
         my_debug('set up db {}'.format(db_name))
-        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-            'postgres'), '-X', '-a', '-q', '-c']
+        self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
         stmts = [
             "DROP DATABASE IF EXISTS {};\n".format(db_name),
             "CREATE DATABASE {};\n".format(db_name),
         ]
         for stmt in stmts:
             self.execute_stmt(stmt)
-        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-            db_name), '-X', '-q']
+        self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable", '-X', '-q']
 
     def remove_db(self, db_name: str):
         # return
         if len(self.records) >= 0:
             return
-        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
-            'postgres'), '-X', '-a', '-q', '-c']
+        self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
         self.execute_stmt("DROP DATABASE IF EXISTS {}".format(db_name))
-        self.cmd = ['psql', 'postgresql://postgres:root@localhost:5432/{}?sslmode=disable'.format(
+        self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable".format(
             db_name), '-X', '-q']
 
     def execute_stmt(self, sql):
