@@ -189,6 +189,10 @@ class TestResultAnalyzer():
         self.results.loc[rm_error_index, 'CLUSTER'] = kmeans.labels_ + 100
         return kmeans.labels_
 
+    def get_log_string(self, row: pd.DataFrame):
+        test_cases = self.results[self.results['TESTFILE_INDEX'] == row.TESTFILE_INDEX.values[0]]
+        return "\n".join(test_cases[test_cases['TESTCASE_INDEX'] <= row.TESTCASE_INDEX.values[0]].values)
+    
     def dump_errors(self, path: str = 'data/flaky'):
         errors = copy(self.get_error_rows())
         errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(
