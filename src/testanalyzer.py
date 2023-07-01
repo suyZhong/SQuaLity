@@ -61,6 +61,12 @@ class TestCaseAnalyzer():
             self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = len(self.test_cases)
 
+    def extract_subset(self, test_case_index: list):
+        return self.test_cases.loc[test_case_index]
+
+    def dump_subset(self, test_case_index: list, file_name:str):
+        self.test_cases.loc[test_case_index].to_csv(file_name, index=False)
+
     def get_results(self, length: int = 10, rand: bool = False):
         return self.get_data('RESULT', length=length, rand=rand)
 
@@ -290,3 +296,8 @@ class TestResultAnalyzer():
                 # The result is a flattened list of substrings without spaces.
                 dependencies.update(identifiers)
         return dependencies
+    
+    def extract_success_subset(self, filename:str):
+        all_results = self.results[self.results['TESTFILE_PATH'] == filename]
+        # print(all_results.info())
+        return all_results[all_results['IS_ERROR'] == False]['TESTCASE_INDEX'].values
