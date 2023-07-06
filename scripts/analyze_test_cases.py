@@ -88,7 +88,8 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
     print(top_type_cnt.info())
     hatches = ['/', 'o', '\\','*'] #, '+', 'x', 'o', 'O', '.', '*']
     # top_type_cnt[:10].plot(kind='bar', width=0.9, figsize=(12, 5))
-    standard_cases = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT','DROP TABLE','CREATE VIEW', 'ALTER TABLE']
+    analyzer = testanalyzer.TestCaseAnalyzer()
+    standard_cases = analyzer.STANDARD_CASES
     # ax.set_aspect(1)
     
     cols = 15

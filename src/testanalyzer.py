@@ -21,6 +21,12 @@ def compute_similarity(a: str, b: str):
 
 
 class TestCaseAnalyzer():
+    # currently only listed these because these are the top 10 most common SQL statements
+    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT','DROP TABLE','CREATE VIEW', 'ALTER TABLE',
+    'CREATE TRIGGER', 'DROP TRIGGER', 'CREATE TEMPORARY', 'DROP VIEW',
+    'CREATE SCHEMA', 'CREATE SEQUENCE', 'WITH', 'COMMIT', 'PREPARE', 'ALTER SEQUENCE', 
+    'CREATE ROLE', 'ALTER ROLE', 'DROP ROLE',
+                      ]
     def __init__(self) -> None:
         self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = 0
@@ -86,6 +92,12 @@ class TestCaseAnalyzer():
         df = self.get_data(self.attributes)
         queries = df[df['TYPE'] == 'QUERY']
         return queries
+    
+    def is_standard(self, sql: str):
+        sql_type = self.get_sql_statement_type(sql)
+        if sql_type in self.STANDARD_CASES:
+            return True
+        return False
     
     def get_sql_statement_type(self, sql:str):
         if sql.lstrip().startswith('\\'):
