@@ -103,17 +103,17 @@ class TestCaseAnalyzer():
         if sql.lstrip().startswith('\\'):
             return 'CLI_COMMAND'
         if not sql.strip():
-            print("Error: Empty SQL")
+            logging.debug("Error: Empty SQL")
             return None
         try:
             parsed = sqlparse.parse(sql)
         except Exception as e:
-            print(f"Error: {e} in SQL {sql}")
+            logging.debug(f"Error: {e} in SQL {sql}")
             return None
         try:
             statement = parsed[0]
         except IndexError:
-            print(f"Error: No statement found in SQL {sql}")
+            logging.debug(f"Error: No statement found in SQL {sql}")
             return None
         first_token = statement.tokens[0]
         if first_token.ttype is sqlparse.tokens.Keyword.DDL:
@@ -122,7 +122,7 @@ class TestCaseAnalyzer():
         if first_token.ttype in sqlparse.tokens.Keyword:
             return first_token.value.upper()
         else:
-            print(f"Error: Unknown statement type in SQL {sql}")
+            logging.debug(f"Error: Unknown statement type in SQL {sql}")
             return first_token.value.split()[0].upper()
 
 

@@ -44,6 +44,8 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
 
 def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',output:str = Table_Dir):
     db_dict = {}
+    standard_percentage_perfile = []
+    standard_percentage_overall = []
     for db_name in db_names:
         db_dict[db_name] = {}
         analyzer = testanalyzer.TestCaseAnalyzer()
@@ -57,10 +59,20 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
         print(f"Total test cases: {analyzer.test_num}")
         analyzer.test_cases = analyzer.test_cases[analyzer.test_cases['TYPE'] != 'CONTROL']
         analyzer.test_cases['SQL_TYPE']  = analyzer.test_cases.apply(lambda row: analyzer.get_sql_statement_type(row['SQL'].lstrip()), axis=1)
+        analyzer.test_cases['IS_STANDARD'] = analyzer.test_cases.apply(lambda row: analyzer.is_standard(row['SQL'].lstrip(' (“$')), axis=1)
         sql_type_count = analyzer.test_cases['SQL_TYPE'].dropna().value_counts(normalize=True)
         sql_type_count.rename(None, inplace=True)
         db_dict[db_name]['sql_type_count'] = sql_type_count
         print(f"SQL_TYPE: {sql_type_count}")
+        # count the number of standard files
+        standard_test_files = analyzer.test_cases.groupby('TESTFILE_PATH').filter(lambda x: x['IS_STANDARD'].all())['TESTFILE_PATH'].nunique()
+        print(f"Number of standard files: {standard_test_files}")
+        standard_percentage_perfile.append(standard_test_files / analyzer.test_cases['TESTFILE_PATH'].nunique())
+        
+        overall_standard_cases = analyzer.test_cases['IS_STANDARD'].sum()
+        standard_percentage = overall_standard_cases / analyzer.test_num
+        print(f"Percentage of standard cases: {standard_percentage}")
+        standard_percentage_overall.append(standard_percentage)
         
         # plot info of SQL_TYPE and savefig
         sql_type_count[:10].plot(kind='bar')
@@ -68,6 +80,8 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
         plt.xticks(rotation=45, ha='right')
         plt.savefig(os.path.join(output, f"{db_name}_sql_type.png"))
         sql_type_count.to_csv(os.path.join(output, f"{db_name}_sql_type.csv"))
+
+        
     all_type_cnt = pd.concat([db_dict[db_name]['sql_type_count'] for db_name in db_names], axis=1, keys=db_names)
     all_type_cnt.fillna(0, inplace=True)
     all_type_cnt['arithmetic_mean'] = all_type_cnt.mean(axis=1)
@@ -81,6 +95,22 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
     plt.ylabel("Percentage")
     plt.tight_layout()
     plt.savefig(os.path.join(output, f"all_sql_type.png"))
+    
+    plt.figure()
+    fig, ax = plt.subplots()
+    x = np.arange(len(db_names))
+    bar_width = 0.35
+    # Fill the bars with different patterns
+    bar1 = ax.bar(x - bar_width/2, standard_percentage_overall,width=bar_width,  label='Overall Standard Percentage', hatch='//', color='white', edgecolor='black')
+    bar2 = ax.bar(x + bar_width/2, standard_percentage_perfile,width=bar_width, label='Fully Standard Files', hatch='+', color='white', edgecolor='black')
+
+    # Fix the x-axes.
+    ax.set_xticks(x)
+    ax.set_xticklabels(db_names)
+
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(output, f"standard_percentage.png"))
 
 def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',output:str = Table_Dir):
     top_type_cnt = pd.read_csv(input, index_col=0)
@@ -117,5 +147,5 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
     plt.savefig(os.path.join(output, f"all_sql_type.png"))
 
 # plot_test_case_length()
-# generate_test_case_data(db_names=['sqlite', 'postgresql', 'cockroachdb', 'duckdb'], output="data")
-generate_test_case_data_from_cache(input="data/all_sql_type.csv", output="data")
+generate_test_case_data(db_names=['sqlite', 'postgresql', 'cockroachdb', 'duckdb'], output="data")
+# generate_test_case_data_from_cache(input="data/all_sql_type.csv", output="data")
