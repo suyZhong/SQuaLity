@@ -112,7 +112,7 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
     plt.tight_layout()
     plt.savefig(os.path.join(output, f"standard_percentage.png"))
 
-def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',output:str = Table_Dir):
+def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',output:str = Table_Dir, break_down:bool = True):
     top_type_cnt = pd.read_csv(input, index_col=0)
     top_type_cnt.drop(columns=['arithmetic_mean'], inplace=True)
     print(top_type_cnt.info())
@@ -127,25 +127,65 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
     bar_value = top_type_cnt[:cols].values.T
     bar_num = bar_value.shape[1]
     bar_width = 0.21
-    plt.figure(figsize=(12, 5))
-    for i, type_cnt in enumerate(bar_value):
-        plt.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, color='white', edgecolor='black')
-    plt.legend()
-    plt.xticks(np.arange(bar_num) + bar_width + (len(labels) - 1) % 2 / 2 * bar_width , top_type_cnt[:cols].index.tolist(), rotation=45, ha='right')
-    rc('text', usetex=True)
-    ax = plt.gca()
-    ax.set_yscale('log')
-    for label in ax.get_xticklabels():
-        if label.get_text() in standard_cases:
-            # label.set_bbox(dict(facecolor='none', edgecolor='black', boxstyle='bottom'))
-            label.set_weight('bold')
+    
+    '''
+    Plot all bars in one figure
+    '''
+    if not break_down:
+        plt.figure(figsize=(12, 5))
+        for i, type_cnt in enumerate(bar_value):
+            plt.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, color='white', edgecolor='black')
+        plt.legend()
+        plt.xticks(np.arange(bar_num) + bar_width + (len(labels) - 1) % 2 / 2 * bar_width , top_type_cnt[:cols].index.tolist(), rotation=45, ha='right')
+        rc('text', usetex=True)
+        ax = plt.gca()
+        ax.set_yscale('log')
+        for label in ax.get_xticklabels():
+            if label.get_text() in standard_cases:
+                # label.set_bbox(dict(facecolor='none', edgecolor='black', boxstyle='bottom'))
+                label.set_weight('bold')
+        plt.xlabel("SQL Type")
+        plt.ylabel("Percentage")
+        plt.tight_layout()
+        plt.savefig(os.path.join(output, f"all_sql_type.png"))
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1,sharex=True, figsize=(12, 5))
+        lower_limit = 0
+        break_limit = 0.06
+        upper_limit = 1
+        
+        for i, type_cnt in enumerate(bar_value):
+            ax1.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, color='white', edgecolor='black')
+            ax2.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, color='white', edgecolor='black')
+        plt.xticks(np.arange(bar_num) + bar_width + (len(labels) - 1) % 2 / 2 * bar_width , top_type_cnt[:cols].index.tolist(), rotation=45, ha='right')
+        
+        ax1.set_ylim(break_limit, upper_limit)
+        ax2.set_ylim(lower_limit, break_limit)
+        ax1.spines['bottom'].set_visible(False)
+        ax2.spines['top'].set_visible(False)
+        ax1.xaxis.tick_top()
+        ax1.tick_params(labeltop=False)
+        ax2.xaxis.tick_bottom()
+        
+        d = .005
+        kwargs = dict(transform=ax1.transAxes, color='k', clip_on=False)
+        ax1.plot((-d, +d), (-d, +d), **kwargs)
+        ax1.plot((1 - d, 1 + d), (-d, +d), **kwargs)
+        kwargs.update(transform=ax2.transAxes)
+        ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)
+        ax2.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
+        # ax2.set_yscale('log')
+        ax1.legend()
+        for label in ax2.get_xticklabels():
+            if label.get_text() in standard_cases:
+                # label.set_bbox(dict(facecolor='none', edgecolor='black', boxstyle='bottom'))
+                label.set_weight('bold')
+        plt.xlabel("SQL Type")
+        plt.tight_layout()
+        plt.savefig(os.path.join(output, f"all_sql_type_breakdown.png"))
 
     # xtext = plt.xticks(rotation=45, ha='right')
-    plt.xlabel("SQL Type")
-    plt.ylabel("Percentage")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output, f"all_sql_type.png"))
 
 # plot_test_case_length()
-generate_test_case_data(db_names=['sqlite', 'postgresql', 'cockroachdb', 'duckdb'], output="data")
-# generate_test_case_data_from_cache(input="data/all_sql_type.csv", output="data")
+# generate_test_case_data(db_names=['sqlite', 'postgresql', 'cockroachdb', 'duckdb'], output="data")
+generate_test_case_data_from_cache(input="data/all_sql_type.csv", output="data", break_down=True)
