@@ -21,6 +21,12 @@ def compute_similarity(a: str, b: str):
 
 
 class TestCaseAnalyzer():
+    # currently only listed these because these are the top 10 most common SQL statements
+    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT','DROP TABLE','CREATE VIEW', 'ALTER TABLE',
+    'CREATE TRIGGER', 'DROP TRIGGER', 'CREATE TEMPORARY', 'DROP VIEW',
+    'CREATE SCHEMA', 'CREATE SEQUENCE', 'WITH', 'COMMIT', 'PREPARE', 'ALTER SEQUENCE', 
+    'CREATE ROLE', 'ALTER ROLE', 'DROP ROLE',
+                      ]
     def __init__(self) -> None:
         self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = 0
@@ -93,21 +99,27 @@ class TestCaseAnalyzer():
         queries = df[df['TYPE'] == 'QUERY']
         return queries
     
+    def is_standard(self, sql: str):
+        sql_type = self.get_sql_statement_type(sql)
+        if sql_type in self.STANDARD_CASES:
+            return True
+        return False
+    
     def get_sql_statement_type(self, sql:str):
         if sql.lstrip().startswith('\\'):
             return 'CLI_COMMAND'
         if not sql.strip():
-            print("Error: Empty SQL")
+            logging.debug("Error: Empty SQL")
             return None
         try:
             parsed = sqlparse.parse(sql)
         except Exception as e:
-            print(f"Error: {e} in SQL {sql}")
+            logging.debug(f"Error: {e} in SQL {sql}")
             return None
         try:
             statement = parsed[0]
         except IndexError:
-            print(f"Error: No statement found in SQL {sql}")
+            logging.debug(f"Error: No statement found in SQL {sql}")
             return None
         first_token = statement.tokens[0]
         if first_token.ttype is sqlparse.tokens.Keyword.DDL:
@@ -116,7 +128,7 @@ class TestCaseAnalyzer():
         if first_token.ttype in sqlparse.tokens.Keyword:
             return first_token.value.upper()
         else:
-            print(f"Error: Unknown statement type in SQL {sql}")
+            logging.debug(f"Error: Unknown statement type in SQL {sql}")
             return first_token.value.split()[0].upper()
 
 
