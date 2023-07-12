@@ -554,7 +554,7 @@ class DTParser(SLTParser):
 
         if record_type == 'statement':
             status = (tokens[1] == 'ok')
-            statements = ("".join([strip_comment_suffix(line)
+            statements = (" ".join([strip_comment_suffix(line)
                           for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
