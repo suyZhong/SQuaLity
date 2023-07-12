@@ -494,7 +494,7 @@ class CockroachDBRunner(PyDBCRunner):
     def connect(self, db_name):
         logging.info("connect to db %s", db_name)
 
-        self.con = psycopg2.connect(dsn=self.db)
+        self.con = psycopg2.connect(dsn=self.db, options="-c statement_timeout=20s")
         self.cur = self.con.cursor()
 
     def close(self):
