@@ -158,7 +158,8 @@ class Runner():
             dump_all (bool, optional): Decide whether should dump all the information but not only the bugs. Defaults to False.
         """
         self.dump_all = dump_all
-        self.bug_dumper = BugDumper(self.dbms_name, dump_all)
+        suffix = "" if self.filter_dict == {} else "_filter"
+        self.bug_dumper = BugDumper(self.dbms_name, dump_all, suffix)
 
     def init_filter(self, filter_flag=False):
         """init the filter in the test runner
