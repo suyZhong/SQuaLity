@@ -146,16 +146,16 @@ class TestResultAnalyzer():
         self.result_path = ""
         self.result_num = 0
 
-    def load_results(self, dbms: str, dir_name: str = ""):
+    def load_results(self, dbms: str, dir_name: str = "", suffix: str = ""):
         self.dbms_suite = DBMS_MAPPING[dbms]
         if dir_name:
             self.results_path = os.path.join(
-                dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
+                dir_name, OUTPUT_PATH['execution_result'].format(dbms + suffix).split('/')[1])
             logs_path = os.path.join(
-                dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
+                dir_name, OUTPUT_PATH['execution_log'].format(dbms + suffix).split('/')[1])
         else:
-            self.results_path = OUTPUT_PATH['execution_result'].format(dbms)
-            logs_path = OUTPUT_PATH['execution_log'].format(dbms)
+            self.results_path = OUTPUT_PATH['execution_result'].format(dbms + suffix)
+            logs_path = OUTPUT_PATH['execution_log'].format(dbms + suffix)
         self.results = pd.read_csv(self.results_path, na_filter=False)
         self.logs = pd.read_csv(logs_path, na_filter=False)
         self.result_num = len(self.results)

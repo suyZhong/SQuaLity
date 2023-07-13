@@ -20,12 +20,14 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--cluster', action='store_true')
     parser.add_argument('-dep', '--dependency', action='store_true')
     parser.add_argument('-sub', '--subset', action='store_true')
+    parser.add_argument('-sf', '--suffix', default=None, type=str)
     
     args = parser.parse_args()
     dbms_name = args.dbms
     dir = args.folder
+    suffix = args.suffix
     res_analyzer = testanalyzer.TestResultAnalyzer()
-    res_analyzer.load_results(dbms_name, dir)
+    res_analyzer.load_results(dbms_name, dir, suffix)
     
     print(res_analyzer.results.info())
     print(res_analyzer.logs.info())
@@ -67,6 +69,9 @@ if __name__ == "__main__":
         # get the subset of the testcases
         case_analyzer = testanalyzer.TestCaseAnalyzer()
         reuse_propotions = []
+        output_path = utils.OUTPUT_PATH['testcase_dir'] + dbms_name + '_success'
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         for testfile in res_analyzer.results['TESTFILE_PATH'].unique():
             print(f"Extracting subset for {testfile}")
             dbms_suite = testfile.split('_')[0]
@@ -79,7 +84,7 @@ if __name__ == "__main__":
             print(reuse_propotion)
             reuse_propotions.append(reuse_propotion)
             if reuse_propotion > 0:
-                case_analyzer.dump_subset(success_test_case_index, utils.OUTPUT_PATH['testcase_dir'] + utils.DBMS_MAPPING[dbms_suite] + '_success' + '/'+ utils.convert_testfile_name(testfile, dbms_suite))
+                case_analyzer.dump_subset(success_test_case_index, utils.OUTPUT_PATH['testcase_dir'] + utils.DBMS_MAPPING[dbms_name] + '_success' + '/'+ utils.convert_testfile_name(testfile, dbms_suite))
                 # exit(0)
         # plt.boxplot(reuse_propotions)
         # plt.savefig('data/reuse_propotion.png')
