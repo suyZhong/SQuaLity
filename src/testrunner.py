@@ -31,6 +31,7 @@ class Runner():
         self.db = ":memory:"
         self.env = {}
         self.hash_threshold = 8
+        self.filter_dict = {}
         self.test_setup()
 
     def test_setup(self):
