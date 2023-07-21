@@ -65,9 +65,12 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
         db_dict[db_name]['sql_type_count'] = sql_type_count
         print(f"SQL_TYPE: {sql_type_count}")
         # count the number of standard files
-        standard_test_files = analyzer.test_cases.groupby('TESTFILE_PATH').filter(lambda x: x['IS_STANDARD'].all())['TESTFILE_PATH'].nunique()
-        print(f"Number of standard files: {standard_test_files}")
-        standard_percentage_perfile.append(standard_test_files / analyzer.test_cases['TESTFILE_PATH'].nunique())
+        standard_test_files = analyzer.test_cases.groupby('TESTFILE_PATH').filter(lambda x: x['IS_STANDARD'].all())['TESTFILE_PATH']
+        standard_test_files_num = standard_test_files.nunique()
+        for file in standard_test_files.unique():
+            print(file)
+        print(f"Number of standard files: {standard_test_files_num}")
+        standard_percentage_perfile.append(standard_test_files_num / analyzer.test_cases['TESTFILE_PATH'].nunique())
         
         overall_standard_cases = analyzer.test_cases['IS_STANDARD'].sum()
         standard_percentage = overall_standard_cases / analyzer.test_num
@@ -186,6 +189,16 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
 
     # xtext = plt.xticks(rotation=45, ha='right')
 
-# plot_test_case_length()
-# generate_test_case_data(db_names=['sqlite', 'postgresql', 'cockroachdb', 'duckdb'], output="data")
-generate_test_case_data_from_cache(input="data/all_sql_type.csv", output="data", break_down=True)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', "--mode", choices=['length', 'dist', 'dist_cache', 'standard'], default='dist')
+    parser.add_argument('-o', "--output", type=str, default=Image_Dir, help="output directory")
+    arguments = parser.parse_args()
+    output = arguments.output
+
+    if arguments.mode == 'length':
+        plot_test_case_length()
+    elif arguments.mode == 'dist':
+        generate_test_case_data(db_names=['sqlite'], output=output)
+    elif arguments.mode == 'dist_cache':
+        generate_test_case_data_from_cache(input="data/all_sql_type.csv", output=output, break_down=True)
