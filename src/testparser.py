@@ -569,8 +569,8 @@ class DTParser(SLTParser):
             record.suite = 'duckdb'
             record.is_hash = False
 
-            if record.sql.split()[0].upper() == 'EXPLAIN':
-                record.set_execute_db(set())
+            # if record.sql.split()[0].upper() == 'EXPLAIN':
+            #     record.set_execute_db(set())
 
             # In DuckDB implementation they do like this. A dirty way.
             # https://github.com/duckdb/duckdb/blob/master/test/sqlite/result_helper.cpp#L391
@@ -593,6 +593,18 @@ class DTParser(SLTParser):
                             # Then join them together by "\t" and then by "\n"
                             record.result = '\n'.join(['\t'.join(row) for row in [
                                                       result_lines[i:i+cols] for i in range(0, len(result_lines), cols)]])
+                        # remove the redundant \t
+                        if result_lines[0].count('\t') >= cols:
+                            record.result = '\n'.join(
+                                [re.sub('\t+', '\t', line) for line in result_lines])
+                    record.set_resformat(ResultFormat.ROW_WISE)
+                # Not quite exact. DuckDB use a guess to determine the row-wise...
+                if cols > 1:
+                    result_lines = record.result.split('\n')
+                    if all([len(line.split('\t')) == cols for line in result_lines]):
+                        record.set_resformat(ResultFormat.ROW_WISE)
+                # Some are not value-wise and the result is not normal object. So we need to convert it to row-wise
+                if record.data_type == 'I':
                     record.set_resformat(ResultFormat.ROW_WISE)
 
                 record.result = re.sub(

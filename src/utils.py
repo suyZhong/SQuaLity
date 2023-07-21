@@ -328,6 +328,8 @@ class ResultHelper():
                 for j, item in enumerate(items):
                     # direct comparison
                     rvalue = actual_results[i][j]
+                    if type(rvalue) is str:
+                        rvalue = rvalue.replace('\0', '\\0')
                     # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
                     cmp_flag = item is rvalue
                     cmp_flag = item == str(rvalue) or cmp_flag
@@ -346,7 +348,7 @@ class ResultHelper():
                 if not cmp_flag:
                     break
         result_string = '\n'.join(['\t'.join(
-            [str(item) if item != None else 'NULL' for item in row]) for row in actual_results])
+            [str(item).replace('\0', '\\0') if item != None else 'NULL' for item in row]) for row in actual_results])
         return cmp_flag, result_string
 
     def row_wise_compare(self, results, record: Record):
