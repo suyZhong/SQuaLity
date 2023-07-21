@@ -31,6 +31,7 @@ class Runner():
         self.db = ":memory:"
         self.env = {}
         self.hash_threshold = 8
+        self.filter_dict = {}
         self.test_setup()
 
     def test_setup(self):
@@ -158,7 +159,8 @@ class Runner():
             dump_all (bool, optional): Decide whether should dump all the information but not only the bugs. Defaults to False.
         """
         self.dump_all = dump_all
-        self.bug_dumper = BugDumper(self.dbms_name, dump_all)
+        suffix = "" if self.filter_dict == {} else "_filter"
+        self.bug_dumper = BugDumper(self.dbms_name, dump_all, suffix)
 
     def init_filter(self, filter_flag=False):
         """init the filter in the test runner
@@ -192,7 +194,8 @@ class Runner():
         Args:
             mode (str, optional): a means add, 'w' means cover write. Defaults to 'a'.
         """
-        self.bug_dumper.dump_to_csv(self.dbms_name, mode=mode)
+        dump_name = self.dbms_name if self.filter_dict == {} else f"{self.dbms_name}_filter"
+        self.bug_dumper.dump_to_csv(dump_name, mode=mode)
 
     def handle_wrong_query(self, query: Query, result: str, **kwargs):
         self.single_run_stats['wrong_query_num'] += 1
@@ -493,7 +496,7 @@ class CockroachDBRunner(PyDBCRunner):
     def connect(self, db_name):
         logging.info("connect to db %s", db_name)
 
-        self.con = psycopg2.connect(dsn=self.db)
+        self.con = psycopg2.connect(dsn=self.db, options="-c statement_timeout=20s")
         self.cur = self.con.cursor()
 
     def close(self):

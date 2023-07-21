@@ -159,8 +159,7 @@ def my_debug(mystr: str, *args):
 
 
 def convert_testfile_name(path: str, dbms: str):
-    return "-".join(path.removeprefix(
-        "{}_tests/".format(dbms)).replace(".test", ".csv").replace(".sql", ".csv").split('/'))
+    return "-".join(path.replace(".test", ".csv").replace(".sql", ".csv").split('/')[1:])
 
 
 def convert_postgres_result(result: str):

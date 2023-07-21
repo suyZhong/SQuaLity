@@ -11,6 +11,8 @@ SQLITE_MSG = {
 
 DUCKDB_MSG = {
     'SYNTAX': re.compile(r'(?i)near ".*": syntax error'),
+    'NOEXIST': re.compile(r'Error: Catalog Error: .* with name .* does not exist!'),
+    'ALREADYEXIST': re.compile(r'Error: Catalog Error: .* with name .* already exists!'),
 }
 
 MYSQL_MSG = {

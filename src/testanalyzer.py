@@ -67,6 +67,12 @@ class TestCaseAnalyzer():
             self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = len(self.test_cases)
 
+    def extract_subset(self, test_case_index: list):
+        return self.test_cases.loc[test_case_index]
+
+    def dump_subset(self, test_case_index: list, file_name:str):
+        self.test_cases.loc[test_case_index].to_csv(file_name, index=False)
+
     def get_results(self, length: int = 10, rand: bool = False):
         return self.get_data('RESULT', length=length, rand=rand)
 
@@ -140,16 +146,16 @@ class TestResultAnalyzer():
         self.result_path = ""
         self.result_num = 0
 
-    def load_results(self, dbms: str, dir_name: str = ""):
+    def load_results(self, dbms: str, dir_name: str = "", suffix: str = ""):
         self.dbms_suite = DBMS_MAPPING[dbms]
         if dir_name:
             self.results_path = os.path.join(
-                dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
+                dir_name, OUTPUT_PATH['execution_result'].format(dbms + suffix).split('/')[1])
             logs_path = os.path.join(
-                dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
+                dir_name, OUTPUT_PATH['execution_log'].format(dbms + suffix).split('/')[1])
         else:
-            self.results_path = OUTPUT_PATH['execution_result'].format(dbms)
-            logs_path = OUTPUT_PATH['execution_log'].format(dbms)
+            self.results_path = OUTPUT_PATH['execution_result'].format(dbms + suffix)
+            logs_path = OUTPUT_PATH['execution_log'].format(dbms + suffix)
         self.results = pd.read_csv(self.results_path, na_filter=False)
         self.logs = pd.read_csv(logs_path, na_filter=False)
         self.result_num = len(self.results)
@@ -201,6 +207,10 @@ class TestResultAnalyzer():
         self.results.loc[rm_error_index, 'CLUSTER'] = kmeans.labels_ + 100
         return kmeans.labels_
 
+    def get_log_string(self, row: pd.DataFrame):
+        test_cases = self.results[self.results['TESTFILE_INDEX'] == row.TESTFILE_INDEX.values[0]]
+        return "\n".join(test_cases[test_cases['TESTCASE_INDEX'] <= row.TESTCASE_INDEX.values[0]].values)
+    
     def dump_errors(self, path: str = 'data/flaky'):
         errors = copy(self.get_error_rows())
         errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(
@@ -231,6 +241,8 @@ class TestResultAnalyzer():
 
     def extract_dependency_failure(self, filename: str):
         all_results = self.results[self.results['TESTFILE_PATH'] == filename]
+        # add a column to store the dependency
+        self.results['DEPENDENCY'] = None
         # all_statements = all_results[all_results['CASE_TYPE'] == 'STATEMENT']
         # iterate the results:
         true_dep = set()
@@ -296,3 +308,8 @@ class TestResultAnalyzer():
                 # The result is a flattened list of substrings without spaces.
                 dependencies.update(identifiers)
         return dependencies
+    
+    def extract_success_subset(self, filename:str):
+        all_results = self.results[self.results['TESTFILE_PATH'] == filename]
+        # print(all_results.info())
+        return all_results[all_results['IS_ERROR'] == False]['TESTCASE_INDEX'].values
