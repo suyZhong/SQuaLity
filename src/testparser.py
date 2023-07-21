@@ -594,6 +594,11 @@ class DTParser(SLTParser):
                             record.result = '\n'.join(['\t'.join(row) for row in [
                                                       result_lines[i:i+cols] for i in range(0, len(result_lines), cols)]])
                     record.set_resformat(ResultFormat.ROW_WISE)
+                # Not quite exact. DuckDB use a guess to determine the row-wise...
+                if cols > 1:
+                    result_lines = record.result.split('\n')
+                    if all([len(line.split('\t')) == cols for line in result_lines]):
+                        record.set_resformat(ResultFormat.ROW_WISE)
 
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
