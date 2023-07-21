@@ -569,8 +569,8 @@ class DTParser(SLTParser):
             record.suite = 'duckdb'
             record.is_hash = False
 
-            if record.sql.split()[0].upper() == 'EXPLAIN':
-                record.set_execute_db(set())
+            # if record.sql.split()[0].upper() == 'EXPLAIN':
+            #     record.set_execute_db(set())
 
             # In DuckDB implementation they do like this. A dirty way.
             # https://github.com/duckdb/duckdb/blob/master/test/sqlite/result_helper.cpp#L391
