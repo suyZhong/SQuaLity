@@ -603,6 +603,9 @@ class DTParser(SLTParser):
                     result_lines = record.result.split('\n')
                     if all([len(line.split('\t')) == cols for line in result_lines]):
                         record.set_resformat(ResultFormat.ROW_WISE)
+                # Some are not value-wise and the result is not normal object. So we need to convert it to row-wise
+                if record.data_type == 'I':
+                    record.set_resformat(ResultFormat.ROW_WISE)
 
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
