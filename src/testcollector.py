@@ -90,6 +90,9 @@ def find_local_duckdb_test():
     for path, _, file_list in g:
         if path.find('csv') > 0:
             continue
+        if path.find('sqlite') > 0:
+            # print("file_list: ", file_list)
+            continue
         tests_files += [os.path.join(path, file_name)
                         for file_name in file_list if re.match(duckdb_test_regex, file_name)]
     return tests_files

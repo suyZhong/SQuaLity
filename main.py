@@ -110,8 +110,8 @@ if __name__ == "__main__":
         r = testrunner.PSQLRunner(p.setup_records)
     else:
         sys.exit("Not implement yet")
-    r.init_dumper(dump_all=args.dump_all)
     r.init_filter(filter_flaky)
+    r.init_dumper(dump_all=args.dump_all)
     skip_index = []
     for i, test_file in enumerate(test_files):
         # if test_file == "postgresql_tests/regress/sql/select.sql":

@@ -21,6 +21,12 @@ def compute_similarity(a: str, b: str):
 
 
 class TestCaseAnalyzer():
+    # currently only listed these because these are the top 10 most common SQL statements
+    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT','DROP TABLE','CREATE VIEW', 'ALTER TABLE',
+    'CREATE TRIGGER', 'DROP TRIGGER', 'CREATE TEMPORARY', 'DROP VIEW',
+    'CREATE SCHEMA', 'CREATE SEQUENCE', 'WITH', 'COMMIT', 'PREPARE', 'ALTER SEQUENCE', 
+    'CREATE ROLE', 'ALTER ROLE', 'DROP ROLE',
+                      ]
     def __init__(self) -> None:
         self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = 0
@@ -53,12 +59,19 @@ class TestCaseAnalyzer():
 
             for test_file in tqdm(test_files):
                 df = self.read_testcase(test_file)
+                df['TESTFILE_PATH'] = test_file
                 all_test = pd.concat([all_test, df], ignore_index=True)
             self.test_cases = all_test
         else:
             logging.warning("dir_name and file_name could not be both empty!")
             self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = len(self.test_cases)
+
+    def extract_subset(self, test_case_index: list):
+        return self.test_cases.loc[test_case_index]
+
+    def dump_subset(self, test_case_index: list, file_name:str):
+        self.test_cases.loc[test_case_index].to_csv(file_name, index=False)
 
     def get_results(self, length: int = 10, rand: bool = False):
         return self.get_data('RESULT', length=length, rand=rand)
@@ -85,6 +98,38 @@ class TestCaseAnalyzer():
         df = self.get_data(self.attributes)
         queries = df[df['TYPE'] == 'QUERY']
         return queries
+    
+    def is_standard(self, sql: str):
+        sql_type = self.get_sql_statement_type(sql)
+        if sql_type in self.STANDARD_CASES:
+            return True
+        return False
+    
+    def get_sql_statement_type(self, sql:str):
+        if sql.lstrip().startswith('\\'):
+            return 'CLI_COMMAND'
+        if not sql.strip():
+            logging.debug("Error: Empty SQL")
+            return None
+        try:
+            parsed = sqlparse.parse(sql)
+        except Exception as e:
+            logging.debug(f"Error: {e} in SQL {sql}")
+            return None
+        try:
+            statement = parsed[0]
+        except IndexError:
+            logging.debug(f"Error: No statement found in SQL {sql}")
+            return None
+        first_token = statement.tokens[0]
+        if first_token.ttype is sqlparse.tokens.Keyword.DDL:
+            second_token = statement.tokens[2]  # In "CREATE TABLE", TABLE is the second token (index 2) after whitespace
+            return first_token.value.upper() + " "+ second_token.value.upper()
+        if first_token.ttype in sqlparse.tokens.Keyword:
+            return first_token.value.upper()
+        else:
+            logging.debug(f"Error: Unknown statement type in SQL {sql}")
+            return first_token.value.split()[0].upper()
 
 
 class TestResultAnalyzer():
@@ -101,16 +146,16 @@ class TestResultAnalyzer():
         self.result_path = ""
         self.result_num = 0
 
-    def load_results(self, dbms: str, dir_name: str = ""):
+    def load_results(self, dbms: str, dir_name: str = "", suffix: str = ""):
         self.dbms_suite = DBMS_MAPPING[dbms]
         if dir_name:
             self.results_path = os.path.join(
-                dir_name, OUTPUT_PATH['execution_result'].format(dbms).split('/')[1])
+                dir_name, OUTPUT_PATH['execution_result'].format(dbms + suffix).split('/')[1])
             logs_path = os.path.join(
-                dir_name, OUTPUT_PATH['execution_log'].format(dbms).split('/')[1])
+                dir_name, OUTPUT_PATH['execution_log'].format(dbms + suffix).split('/')[1])
         else:
-            self.results_path = OUTPUT_PATH['execution_result'].format(dbms)
-            logs_path = OUTPUT_PATH['execution_log'].format(dbms)
+            self.results_path = OUTPUT_PATH['execution_result'].format(dbms + suffix)
+            logs_path = OUTPUT_PATH['execution_log'].format(dbms + suffix)
         self.results = pd.read_csv(self.results_path, na_filter=False)
         self.logs = pd.read_csv(logs_path, na_filter=False)
         self.result_num = len(self.results)
@@ -162,6 +207,10 @@ class TestResultAnalyzer():
         self.results.loc[rm_error_index, 'CLUSTER'] = kmeans.labels_ + 100
         return kmeans.labels_
 
+    def get_log_string(self, row: pd.DataFrame):
+        test_cases = self.results[self.results['TESTFILE_INDEX'] == row.TESTFILE_INDEX.values[0]]
+        return "\n".join(test_cases[test_cases['TESTCASE_INDEX'] <= row.TESTCASE_INDEX.values[0]].values)
+    
     def dump_errors(self, path: str = 'data/flaky'):
         errors = copy(self.get_error_rows())
         errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(
@@ -192,6 +241,8 @@ class TestResultAnalyzer():
 
     def extract_dependency_failure(self, filename: str):
         all_results = self.results[self.results['TESTFILE_PATH'] == filename]
+        # add a column to store the dependency
+        self.results['DEPENDENCY'] = None
         # all_statements = all_results[all_results['CASE_TYPE'] == 'STATEMENT']
         # iterate the results:
         true_dep = set()
@@ -257,3 +308,8 @@ class TestResultAnalyzer():
                 # The result is a flattened list of substrings without spaces.
                 dependencies.update(identifiers)
         return dependencies
+    
+    def extract_success_subset(self, filename:str):
+        all_results = self.results[self.results['TESTFILE_PATH'] == filename]
+        # print(all_results.info())
+        return all_results[all_results['IS_ERROR'] == False]['TESTCASE_INDEX'].values

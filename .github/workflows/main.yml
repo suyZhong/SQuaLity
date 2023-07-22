@@ -80,7 +80,7 @@ jobs:
         image: 
           postgres:latest
         env:
-          POSTGRES_PASSWORD: root
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
     steps:
@@ -133,7 +133,7 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: root
         ports:
-          - 3307:3306
+          - 3306:3306
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10

@@ -9,7 +9,7 @@ from .utils import Statement, Record, my_debug, OUTPUT_PATH, ResultColumns
 class BugDumper():
     """Dump things to csv"""
 
-    def __init__(self, dbms_name, dump_all) -> None:
+    def __init__(self, dbms_name, dump_all, suffix: str = "") -> None:
         # self.conn = sqlite3.connect("database.db")
         # self.cur = self.conn.cursor()
         self.tables = ['DBMS_BUGS', 'BUG_LOGS', 'BUG_TEST_CASES']
@@ -17,6 +17,7 @@ class BugDumper():
                       'DBMS_BUGS_TRUE_POSITIVES', 'BUG_TEST_CASES_NO_FP',
                       'DBMS_BUGS_FALSE_POSITIVES', 'TAGS_AGGREGATED_WITH_FP']
         self.dbms_name = dbms_name
+        self.suffix = suffix
         self.dump_all = dump_all
         self.bugs_dataframe = pd.DataFrame()
         self.logs_dataframe = pd.DataFrame()
@@ -41,9 +42,9 @@ class BugDumper():
         self.logs_dataframe = pd.DataFrame(columns=self.logs_columns)
 
         self.bugs_dataframe.to_csv(
-            OUTPUT_PATH['execution_result'].format(self.dbms_name), mode="w", header=True)
+            OUTPUT_PATH['execution_result'].format(self.dbms_name + self.suffix), mode="w", header=True)
         self.logs_dataframe.to_csv(
-            OUTPUT_PATH['execution_log'].format(self.dbms_name), mode="w", header=True, index=False)
+            OUTPUT_PATH['execution_log'].format(self.dbms_name + self.suffix), mode="w", header=True, index=False)
 
     def get_testfile_data(self, **kwargs):
         self.testfile_path = kwargs['testfile_path']

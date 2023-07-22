@@ -166,8 +166,7 @@ def my_debug(mystr: str, *args):
 
 
 def convert_testfile_name(path: str, dbms: str):
-    return "-".join(path.removeprefix(
-        "{}_tests/".format(dbms)).replace(".test", ".csv").replace(".sql", ".csv").split('/'))
+    return "-".join(path.replace(".test", ".csv").replace(".sql", ".csv").split('/')[1:])
 
 
 def convert_postgres_result(result: str):
@@ -245,15 +244,13 @@ class ResultHelper():
     def int_format(self, item):
         if isinstance(item, int):
             return str(item)
-        elif isinstance(item, str) or isinstance(item, float):
+        elif item == None:
+            return "NULL"
+        else:
             try:
                 return str(int(item))
             except ValueError:
                 return "0"
-        elif item == None:
-            return "NULL"
-        else:
-            return "0"
 
     def float_format(self, item):
         if isinstance(item, float):
@@ -341,6 +338,8 @@ class ResultHelper():
                 for j, item in enumerate(items):
                     # direct comparison
                     rvalue = actual_results[i][j]
+                    if type(rvalue) is str:
+                        rvalue = rvalue.replace('\0', '\\0')
                     # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
                     cmp_flag = item is rvalue
                     cmp_flag = item == str(rvalue) or cmp_flag
@@ -363,8 +362,7 @@ class ResultHelper():
                 if not cmp_flag:
                     break
         result_string = '\n'.join(['\t'.join(
-            [str(item) if item != None else 'NULL' for item in row]) for row in actual_results])
-
+            [str(item).replace('\0', '\\0') if item != None else 'NULL' for item in row]) for row in actual_results])
         return cmp_flag, result_string
 
     def row_wise_compare(self, results, record: Record):

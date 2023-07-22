@@ -43,6 +43,22 @@ class Parser:
                 content = f.read()
         return content
 
+    def _read_file_lines(self, filename):
+        content = ""
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                content = f.readlines()
+        except UnicodeDecodeError:
+            with open(filename, 'r', encoding='windows-1252') as f:
+                content = f.readlines()
+        return content
+
+    def read_file(self, filename, byline=False):
+        if byline:
+            return self._read_file_lines(filename)
+        else:
+            return self._read_file(filename)
+
     def get_file_name(self, filename):
         self.filename = filename
 
@@ -531,10 +547,6 @@ class DTParser(SLTParser):
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def get_file_content(self):
-        if 'sqlite' in self.filename:
-            self.records = []
-            self.test_content = ""
-            return
         return super().get_file_content()
 
     def parse_script(self, script: str):
@@ -552,8 +564,8 @@ class DTParser(SLTParser):
 
         if record_type == 'statement':
             status = (tokens[1] == 'ok')
-            statements = ("".join([strip_comment_suffix(line)
-                                   for line in lines[1:]])).strip().split(';\n')
+            statements = (" ".join([strip_comment_suffix(line)
+                          for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
                 record = Statement(sql=stmt.rstrip(';'), result=str(
@@ -567,8 +579,8 @@ class DTParser(SLTParser):
             record.suite = 'duckdb'
             record.is_hash = False
 
-            if record.sql.split()[0].upper() == 'EXPLAIN':
-                record.set_execute_db(set())
+            # if record.sql.split()[0].upper() == 'EXPLAIN':
+            #     record.set_execute_db(set())
 
             # In DuckDB implementation they do like this. A dirty way.
             # https://github.com/duckdb/duckdb/blob/master/test/sqlite/result_helper.cpp#L391
@@ -590,6 +602,18 @@ class DTParser(SLTParser):
                         # Then join them together by "\t" and then by "\n"
                         record.result = '\n'.join(['\t'.join(row) for row in [
                             result_lines[i:i + cols] for i in range(0, len(result_lines), cols)]])
+                        # remove the redundant \t
+                        if result_lines[0].count('\t') >= cols:
+                            record.result = '\n'.join(
+                                [re.sub('\t+', '\t', line) for line in result_lines])
+                    record.set_resformat(ResultFormat.ROW_WISE)
+                # Not quite exact. DuckDB use a guess to determine the row-wise...
+                if cols > 1:
+                    result_lines = record.result.split('\n')
+                    if all([len(line.split('\t')) == cols for line in result_lines]):
+                        record.set_resformat(ResultFormat.ROW_WISE)
+                # Some are not value-wise and the result is not normal object. So we need to convert it to row-wise
+                if record.data_type == 'I':
                         record.set_resformat(ResultFormat.ROW_WISE)
 
                 record.result = re.sub(
