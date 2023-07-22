@@ -216,10 +216,10 @@ class TestResultAnalyzer():
         errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(
             lambda x: convert_testfile_name(x, self.dbms_suite))
         errors.to_csv(f"{path}/{self.dbms_suite}_errors.csv",
-                      columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
+                      columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False, mode = 'a')
 
     def dump_results(self, suffix: str = 'clustered'):
-        self.results.to_csv(f"{self.results_path.removesuffix('.csv')}{suffix}.csv", index=False)
+        self.results.to_csv(f"{self.results_path.removesuffix('.csv')}{suffix}.csv", index=False, mode = 'a')
 
     def find_dependency_failure(self, row: pd.DataFrame):
         all_results = self.results[self.results['TESTFILE_PATH']

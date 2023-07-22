@@ -5,7 +5,7 @@ certifi==2022.9.14
 cx-Oracle==8.3.0
 debugpy==1.5.1
 decorator==5.1.1
-duckdb==0.5.1
+duckdb==0.7.1
 entrypoints==0.4
 executing==0.8.3
 ipykernel==6.15.2
@@ -14,7 +14,7 @@ jedi==0.18.1
 jupyter_client==7.3.5
 jupyter-core==4.10.0
 matplotlib-inline==0.1.6
-mysql-connector-python==8.0.30
+mysql-connector-python==8.0.32
 nest-asyncio==1.5.5
 numpy==1.23.3
 packaging==21.3
@@ -26,7 +26,7 @@ pip==22.1.2
 prompt-toolkit==3.0.20
 protobuf==3.20.1
 psutil==5.9.0
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.6
 ptyprocess==0.7.0
 pure-eval==0.2.2
 pycodestyle==2.9.1

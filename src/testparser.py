@@ -132,12 +132,15 @@ class SLTParser(Parser):
         super().__init__(filename)
         self.scripts = []
         self.dbms_set = DBMS_Set
+        self.user = "root"
 
     def get_query(self, tokens, lines):
         # A query record begins with a line of the following form:
         #       query <type-string> <sort-mode> <label>
         data_type = ''
+        colnames = False
         sort_mode = SortType.NO_SORT
+        alternate_sort_mode = SortType.NO_SORT
         label = ''
         # pop out 'query'
         tokens.pop(0)
@@ -147,9 +150,9 @@ class SLTParser(Parser):
         # pop out <sort-mode>
         if tokens:
             sort_token = tokens.pop(0)
-            try:
+            if sort_token in self.sort_mode_dict.keys():
                 sort_mode = self.sort_mode_dict[sort_token]
-            except KeyError:
+            else:
                 print("sort mode %s not implemented, change to nosort" %
                       sort_token)
         if tokens:
@@ -166,10 +169,13 @@ class SLTParser(Parser):
                 break
         sql = '\n'.join(lines[1:ind])
         result = ""
+
         if ind != len(lines):
+            if alternate_sort_mode == SortType.COLUMN_NAMES:
+                ind+=1
             result = '\n'.join(lines[ind + 1:])
         record = Query(sql=sql, result=result, data_type=data_type,
-                       sort=sort_mode, label=label, id=self.record_id)
+                       sort=sort_mode, label=label, id=self.record_id, user = self.user)
         return record
 
     def _parse_script_lines(self, lines: list):
@@ -187,7 +193,7 @@ class SLTParser(Parser):
             # Only a single SQL command is allowed per statement
             # r = Statement(sql=lines[1], status=status)
             record = Statement(sql="".join(lines[1:]), result=str(
-                status), status=status, id=self.record_id)
+                status), status=status, id=self.record_id, user = self.user)
             self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
@@ -244,6 +250,8 @@ class SLTParser(Parser):
     def parse_file(self):
         """ parse the file by double \\n into a list\n. Then call parse_script() 
         """
+        #reset user for every new file
+        self.user = "root"
         self.scripts = [script.strip()
                         for script in self.test_content.strip().split('\n\n') if script != '']
         # print(self.scripts)
@@ -465,7 +473,7 @@ class PGTParser(Parser):
                         ind += 2
             else:
                 for j in range(ind, len(result_lines)):
-                    if result_lines[j] .strip(';') == next_line:
+                    if result_lines[j].strip(';') == next_line:
                         result = '\n'.join(result_lines[ind:j])
                         ind = j
                         break
@@ -504,11 +512,13 @@ class PGTParser(Parser):
             return Statement(sql=record.sql, id=record.id, input_data=record.input_data)
         # Statement error
         elif converted_result.startswith("ERROR"):
-            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id, input_data=record.input_data)
+            return Statement(sql=record.sql, result=converted_result, status=False, id=record.id,
+                             input_data=record.input_data)
         # Query
         elif converted_result or is_query:
             data_type = 'I' * len(converted_result.split('\n')[0].split('\t'))
-            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE, data_type=data_type, input_data=record.input_data)
+            return Query(sql=record.sql, result=converted_result, id=record.id, res_format=ResultFormat.ROW_WISE,
+                         data_type=data_type, input_data=record.input_data)
         logging.warning("Unknown result: %s", converted_result)
         return converted_record
 
@@ -586,13 +596,12 @@ class DTParser(SLTParser):
                 if record.sort == SortType.NO_SORT:
                     if cols > 1:
                         result_lines = record.result.split('\n')
-                        # If DuckDB make the result value wise, convert it to row wise
-                        if result_lines[0].find('\t') < 0:
-                            # change the value wise into row wise
-                            # First split the result_lines into cols chunks
-                            # Then join them together by "\t" and then by "\n"
-                            record.result = '\n'.join(['\t'.join(row) for row in [
-                                                      result_lines[i:i+cols] for i in range(0, len(result_lines), cols)]])
+                        # If DuckDB make the result value wise, convert it to row wiseif result_lines[0].find('\t') < 0:
+                        # change the value wise into row wise
+                        # First split the result_lines into cols chunks
+                        # Then join them together by "\t" and then by "\n"
+                        record.result = '\n'.join(['\t'.join(row) for row in [
+                            result_lines[i:i + cols] for i in range(0, len(result_lines), cols)]])
                         # remove the redundant \t
                         if result_lines[0].count('\t') >= cols:
                             record.result = '\n'.join(
@@ -605,7 +614,7 @@ class DTParser(SLTParser):
                         record.set_resformat(ResultFormat.ROW_WISE)
                 # Some are not value-wise and the result is not normal object. So we need to convert it to row-wise
                 if record.data_type == 'I':
-                    record.set_resformat(ResultFormat.ROW_WISE)
+                        record.set_resformat(ResultFormat.ROW_WISE)
 
                 record.result = re.sub(
                     r'true(\t|\n|$)', r'True\1', record.result)
@@ -626,20 +635,84 @@ class DTParser(SLTParser):
 
 
 class CDBTParser(SLTParser):
+    only_cockroach = {"crdb_internal"}
+    db_name = "cockroachdb"
+    alternate_sort_mode_dict = {
+        'colnames': SortType.COLUMN_NAMES
+    }
+
     def __init__(self, filename='') -> None:
         super().__init__(filename)
 
     def testfile_dialect_handler(self, *args, **kwargs):
         record_type = kwargs['record_type']
         lines = kwargs['lines']
-        if record_type in ('loop', 'require', 'user', ):
+        if record_type in ('loop', 'require', 'user',):
             logging.warning("This script has not implement: %s", lines)
             return Control(action=RunnerAction.HALT, id=self.record_id)
         return super().testfile_dialect_handler(*args, **kwargs)
 
     def get_query(self, tokens, lines):
+        # A query record begins with a line of the following form:
+        #       query <type-string> <sort-mode> <label>
+        data_type = ''
+        colnames = False
+        sort_mode = SortType.NO_SORT
+        alternate_sort_mode = SortType.NO_SORT
+        label = ''
+        # pop out 'query'
+        tokens.pop(0)
+        # pop out <type-string>
+        if tokens:
+            data_type = tokens.pop(0)
 
-        return super().get_query(tokens, lines)
+        # pop out <sort-mode>
+        if tokens:
+            sort_token = tokens.pop(0)
+            if ',' in sort_token:
+                sort_tokens = sort_token.split(',')
+                sort_token = sort_tokens[1]
+                if sort_tokens[0] in self.alternate_sort_mode_dict:
+                    alternate_sort_mode = self.alternate_sort_mode_dict[sort_tokens[0]]
+
+            if sort_token in self.sort_mode_dict.keys():
+                sort_mode = self.sort_mode_dict[sort_token]
+            elif sort_token in self.alternate_sort_mode_dict.keys():
+                alternate_sort_mode = self.alternate_sort_mode_dict[sort_token]
+                print("sort mode %s not implemented, change to nosort, but alternate sort mode found" %
+                      sort_token)
+            else:
+                print("sort mode %s not implemented, change to nosort" %
+                      sort_token)
+        if tokens:
+            label = tokens.pop(0)
+        # The SQL for the query is found on second an subsequent lines
+        # of the record up to first line of the form "----" or until the
+        # end of the record. Lines following the "----" are expected results of the query,
+        # one value per line. If the "----" and/or the results are omitted, then the query
+        # is expected to return an empty set.
+        ind = len(lines)
+        for i, line in enumerate(lines):
+            if line == '----':
+                ind = i
+                break
+        sql = "\n ".join(lines[1:ind])
+        result = ""
+
+        if ind != len(lines):
+            if alternate_sort_mode == SortType.COLUMN_NAMES:
+                ind += 1
+            regex = '\\s{2,}|\\t'
+            for i in range(ind + 1, len(lines)):
+                lines[i] = re.sub(regex, "\t", lines[i])
+            result = '\n'.join(lines[ind + 1:])
+
+        record = Query(sql=sql, result=result, data_type=data_type,
+                       sort=sort_mode, label=label, id=self.record_id, user= self.user)
+        if any(x in record.sql for x in self.only_cockroach):
+            record.set_execute_db(set(self.db_name))
+
+        return record
 
     def parse_script(self, script: str):
         script = strip_hash_comment_lines(script)
@@ -650,22 +723,45 @@ class CDBTParser(SLTParser):
         self.dbms_set = set(['cockroach'])
 
         tokens = lines[0].split()
-        record_type = tokens[0]
+        if len(tokens) > 2 and tokens[1] == 'error':
+            record_type = 'statement'
+        else:
+            record_type = tokens[0]
         record = Statement(id=self.record_id)
 
+        #Skip crdb_internal.force_retry queries because they take up a lot of time
+        if "crdb_internal.force_retry" in script:
+            record_type = 'halt'
+
+        if record_type == 'user':
+            self.user = tokens[1]
+            return
+
         if record_type == 'statement':
-            status = (tokens[1] == 'ok') if len(tokens) > 1 else True
-            statements = ("".join([strip_comment_suffix(line)
-                          for line in lines[1:]])).strip().split(';\n')
+            status = (tokens[1] == 'ok' or tokens[1] == 'count') if len(tokens) > 1 else True
+            statements = (" ".join([strip_comment_suffix(line)
+                                   for line in lines[1:]])).strip().split(';')
             statements = list(filter(None, statements))
             for stmt in statements:
                 record = Statement(sql=stmt, result=" ".join(
                     tokens[2:]), status=status, id=self.record_id)
+                if any(x in record.sql for x in self.only_cockroach):
+                    record.set_execute_db(set(self.db_name))
                 self.records.append(record)
                 self.record_id += 1
         elif record_type == 'query':
             record = self.get_query(tokens=tokens, lines=lines)
 
+
+            if 'error' != record.data_type:
+                record.result = re.sub(r'true(\t|\n|$|\s)', r'True\1', record.result)
+                record.result = re.sub(r'false(\t|\n|$|\s)', r'False\1', record.result)
+                #record.result = re.sub(r'NaN', r'NULL', record.result)
+                #record.result = re.sub(r'Infinity', r'inf', record.result)
+                #record.result = re.sub(r'\s+', r'\t', record.result)
+
+                # record.result = '\n'.join(value.strip('\t').strip('\n') for value in record.result.split('\t') if
+                #                           value not in ['', '\n', '\t', ' '])
             record.set_resformat(ResultFormat.ROW_WISE)
             self.records.append(record)
             self.record_id += 1

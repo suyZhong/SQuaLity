@@ -13,6 +13,24 @@ from src import testrunner
 from src import testcollector
 from src.utils import DBMS_Set, Suite_Set, SETUP_PATH
 
+ignore_list = list(["cockroachdb_tests/logic_test/internal_executor",
+                    "cockroachdb_tests/logic_test/schema_change_feature_flags",
+                    "cockroachdb_tests/logic_test/set_time_zone",
+                    "cockroachdb_tests/logic_test/show_source",
+                    "cockroachdb_tests/logic_test/datetime",
+                    "cockroachdb_tests/logic_test/serializable_eager_restart",
+                    "cockroachdb_tests/logic_test/cursor",
+                    "cockroachdb_tests/logic_test/grant_in_txn",
+                    # duckdb SIGSEVS
+                    "cockroachdb_tests/logic_test/array",
+                    "cockroachdb_tests/logic_test/schema"
+                    #"cockroachdb_tests/logic_test/virtual_columns",
+                    #"cockroachdb_tests/logic_test/window" ,
+                    #mysql
+                    #"cockroachdb_tests/logic_test/role" ,
+                    #"cockroachdb_tests/logic_test/drop_user"
+                    ])
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', "--dbms", choices=DBMS_Set, default='duckdb',
@@ -24,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', "--db_name", type=str, default="output/tempdb",
                         help="Enter the database name. For embedded database it's the file path.")
     parser.add_argument('-u', "--db_url", type=str,
-                        default="postgresql://root@localhost:26257/defaultdb?sslmode=disable",
+                        default="postgresql://root@localhost:26257/test?sslmode=disable",
                         help="Enter the Dabase url")
     parser.add_argument('--log', type=str, default="DEBUG",
                         help="logging level")
@@ -72,6 +90,8 @@ if __name__ == "__main__":
         p = testparser.CSVParser()
     elif suite_name == 'postgresql':
         p = testparser.PGTParser(SETUP_PATH['postgresql'])
+    elif suite_name == 'cockroachdb':
+        p = testparser.CDBTParser()
     else:
         sys.exit("Not implement yet")
 
@@ -102,7 +122,7 @@ if __name__ == "__main__":
         single_begin_time = datetime.now()
         
         # skip some files
-        if i in skip_index:
+        if i in skip_index or test_file in ignore_list:
             continue
         if max_files <= 0 and i < abs(max_files):
             continue
@@ -116,11 +136,15 @@ if __name__ == "__main__":
         p.get_file_name(test_file)
         p.get_file_content()
         p.parse_file()
-
+        x = str.split(test_file, '/')
+        #uncomment for duckdb, sqlite
+        #r.set_db("sqlite_dbs/" + x[2] + ".db")
         r.set_db(db_name)
+
         r.get_records(p.get_records(), testfile_index=i,
                       testfile_path=test_file)
         r.connect(db_name)
+        #
         # print("-----------------------------------")
         logging.info("running %s", test_file)
         try:
@@ -130,14 +154,19 @@ if __name__ == "__main__":
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
             logging.info(traceback.format_exc())
             r.not_allright()
-            r.close()
         else:
-            r.close()
             if log_level != "DEBUG":
                 r.remove_db(db_name)
+        finally:
+            r.remove_all_dbs()
+            r.drop_users()
+
+            r.disconnect()
         single_end_time = datetime.now()
         single_running_time = (single_end_time - single_begin_time).seconds
         r.running_summary(str(i) + " " + test_file, single_running_time)
+        print(test_file, single_running_time)
+        print("\n")
         # print ("#############################\n\n")
         r.dump()
     r.running_summary("ALL", (datetime.now()-begin_time).seconds)

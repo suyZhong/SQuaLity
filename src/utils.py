@@ -1,3 +1,5 @@
+import string
+from collections.abc import Iterable
 from enum import Enum
 import logging
 import re
@@ -11,6 +13,7 @@ class SortType(Enum):
     NO_SORT = 1
     ROW_SORT = 2
     VALUE_SORT = 3
+    COLUMN_NAMES = 4
 
 
 class ResultFormat(Enum):
@@ -45,9 +48,9 @@ class DBEngineExcetion(Exception):
 
 
 DBMS_Set = set(['mysql', 'sqlite', 'postgresql',
-               'duckdb', 'cockroachdb', 'psql'])
+                'duckdb', 'cockroachdb', 'psql'])
 Suite_Set = set(['mysql', 'sqlite', 'postgresql',
-                'duckdb', 'cockroachdb', 'squality'])
+                 'duckdb', 'cockroachdb', 'squality'])
 
 Running_Stats = ['success_file_num',
                  'total_sql',
@@ -61,6 +64,7 @@ Running_Stats = ['success_file_num',
                  'query_num',
                  'control_num',
                  'filter_sql',
+                 'negative_test_cases'
                  ]
 
 
@@ -81,7 +85,7 @@ TestCaseColumns = ['INDEX',  # testcase index
 
 ResultColumns = ['DBMS_NAME', 'TESTFILE_INDEX', 'TESTFILE_PATH', 'ORIGINAL_SUITE',
                  'TESTCASE_INDEX', 'SQL', 'CASE_TYPE', 'EXPECTED_RESULT',
-                 'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'ERROR_MSG', 'LOGS_INDEX']
+                 'ACTUAL_RESULT', 'EXEC_TIME', 'DATE', 'IS_ERROR', 'ERROR_MSG','USER', 'LOGS_INDEX']
 
 TESTCASE_PATH = {
     'postgresql': 'postgresql_tests/regress/'
@@ -113,13 +117,14 @@ OUTPUT_PATH = {
 
 class Record:
 
-    def __init__(self, sql="", result="", suite="", input_data="", **kwargs) -> None:
+    def __init__(self, sql="", result="", suite="", input_data="", user="root", **kwargs) -> None:
         self.sql = sql
         self.result = result
         self.db = DBMS_Set
         self.id = kwargs['id']
         self.suite = suite
         self.input_data = input_data
+        self.user = user
 
     def set_execute_db(self, db: set):
         self.db = db
@@ -127,16 +132,18 @@ class Record:
 
 class Statement(Record):
     def __init__(self, sql="", result="", status=True,
-                 affected_rows=0, input_data="",  **kwargs) -> None:
-        super().__init__(sql, result, input_data=input_data, ** kwargs)
+                 affected_rows=0, input_data="", user="root", **kwargs) -> None:
+        super().__init__(sql, result, input_data=input_data, user = user, **kwargs)
         self.status = status
         self.affected_rows = affected_rows
 
 
 class Query(Record):
     def __init__(self, sql="", result="", data_type="I",
-                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="", is_hash=True, **kwargs) -> None:
-        super().__init__(sql=sql, result=result, input_data=input_data, **kwargs)
+                 sort=SortType.NO_SORT, label="", res_format=ResultFormat.VALUE_WISE, input_data="", is_hash=True,
+                 user="root",
+                 **kwargs) -> None:
+        super().__init__(sql=sql, result=result, input_data=input_data, user=user, **kwargs)
         self.data_type = data_type
         self.sort = sort
         self.label = label
@@ -198,7 +205,7 @@ def convert_postgres_result(result: str):
             ['False' if elem == 'f' else elem for elem in row] for row in row_wise_result_list]
 
         row_wise_result = '\n'.join(['\t'.join(row)
-                                    for row in row_wise_result_list])
+                                     for row in row_wise_result_list])
         if result_rows > 0:
             return row_wise_result, is_query
         else:
@@ -283,16 +290,16 @@ class ResultHelper():
             results.sort()
             for row in results:
                 for item in row:
-                    result_flat.append(item+'\n')
+                    result_flat.append(item + '\n')
         elif sort_type == SortType.VALUE_SORT:
             for row in results:
                 for item in row:
-                    result_flat.append(str(item)+'\n')
+                    result_flat.append(str(item) + '\n')
             result_flat.sort()
         else:
             for row in results:
                 for item in row:
-                    result_flat.append(str(item)+'\n')
+                    result_flat.append(str(item) + '\n')
         # myDebug(result_flat)
         return ''.join(result_flat)
 
@@ -316,7 +323,7 @@ class ResultHelper():
         cmp_flag = result_string.strip() == record.result.strip()
         return cmp_flag, result_string
 
-    def _row_wise_compare_str(self, actual_results, expected_results):
+    def _row_wise_compare_str(self, actual_results, expected_results, record: Record):
         NULL = None
         if len(expected_results) == len(actual_results) == 0:
             cmp_flag = True
@@ -325,6 +332,9 @@ class ResultHelper():
         else:
             for i, row in enumerate(expected_results):
                 items = row.strip().split('\t')
+                # To remove empty strings from items
+                items = list(filter(None, items))
+
                 for j, item in enumerate(items):
                     # direct comparison
                     rvalue = actual_results[i][j]
@@ -333,6 +343,8 @@ class ResultHelper():
                     # my_debug("lvalue = [%s], rvalue = [%s]",item, rvalue)
                     cmp_flag = item is rvalue
                     cmp_flag = item == str(rvalue) or cmp_flag
+                    # cockroach db
+                    cmp_flag = (item == 'NULL' and rvalue is None) or cmp_flag
                     # if DuckDB
                     cmp_flag = item == '(empty)' and rvalue == '' or cmp_flag
                     if not cmp_flag:
@@ -342,9 +354,11 @@ class ResultHelper():
                             continue
                         cmp_flag = lvalue == rvalue or cmp_flag
                         # if numeric (No, even data type is I, still would have float type
-                        if type(lvalue) is float and type(rvalue) is float:
+                        if isinstance(lvalue, float) and isinstance(rvalue, float):
                             cmp_flag = math.isclose(
                                 lvalue, rvalue) or cmp_flag
+                        if isinstance(lvalue, set) and isinstance(rvalue, list):
+                            cmp_flag = list(lvalue) == rvalue or cmp_flag
                 if not cmp_flag:
                     break
         result_string = '\n'.join(['\t'.join(
@@ -364,17 +378,57 @@ class ResultHelper():
         # actually_result_list.sort()
         # sort the actual result list based on the string
         my_debug("%s, %s", actual_result_list, expected_result_list)
-        cmp_flag, result_string = self._row_wise_compare_str(
-            actual_result_list, expected_result_list)
+        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list, record)
         # if the result is same, just end here
         if cmp_flag:
             return cmp_flag, result_string
         # if not, try to sort the result and do again
         expected_result_list.sort()
         actual_result_list = sorted(actual_result_list, key=str)
-        cmp_flag, result_string = self._row_wise_compare_str(
-            actual_result_list, expected_result_list)
+        cmp_flag, result_string = self._row_wise_compare_str(actual_result_list, expected_result_list, record)
+
+        #if still not same, try string wise compare
+        if not cmp_flag:
+            # One last attempt to string compare everything
+            cmp_flag = self.complete_string_compare(actual_result_list, record)
+
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):
         return [row.replace(old, new) for row in results]
+
+    def complete_string_compare(self, results, record: Record):
+        """
+        :param results: result obtained from execution
+        :type results: object
+        :param record: record testcase that we are trying to run
+        :type record: Record
+        :return: true if there is no string diff between the actual and expected result, false otherwise
+        :rtype: bool
+        """
+        expected_result_string = record.result.strip().translate({ord(c): None for c in string.whitespace})
+        expected_result_string = expected_result_string.translate({ord(c): None for c in string.punctuation})
+        actual_result_string = ''
+        if isinstance(results, str):
+            actual_result_string = str(actual_result_string).strip().translate(
+                {ord(c): None for c in string.whitespace})
+            actual_result_string = actual_result_string.translate({ord(c): None for c in string.punctuation})
+        else:
+            try:
+                for item in results:
+                    if isinstance(item, Iterable):
+                        for i in item:
+                            item_string = str(i).strip().translate({ord(c): None for c in string.whitespace})
+                            item_string = item_string.translate({ord(c): None for c in string.punctuation})
+                            actual_result_string += item_string
+                    else:
+                        item_string = str(item).strip().translate({ord(c): None for c in string.whitespace})
+                        item_string = item_string.translate({ord(c): None for c in string.punctuation})
+                        actual_result_string += item_string
+            except TypeError:
+                pass
+        cmp_flag = expected_result_string == actual_result_string
+        if not cmp_flag:
+            actual_result_string = actual_result_string.replace("None", "NULL")
+            cmp_flag = expected_result_string == actual_result_string
+        return cmp_flag

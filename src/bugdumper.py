@@ -104,6 +104,7 @@ class BugDumper():
         self.bugs_single_row['EXEC_TIME'] = execution_time
         self.bugs_single_row['IS_ERROR'] = str(is_error)
         self.bugs_single_row['ERROR_MSG'] = msg
+        self.bugs_single_row['USER'] = record.user
 
         self.bugs_single_row['LOGS_INDEX'] = self.log_index - 1
         self.bugs_dataframe = pd.concat(
