@@ -402,6 +402,8 @@ class PyDBCRunner(Runner):
                     [str(item) if item != None else 'NULL' for item in row]) for row in results]) + '\n'
                 result_string = helper.hash_results(result_string)
                 # my_debug(result_string)
+                if record.result.find(result_string) != -1:
+                    cmp_flag = True
             else:
                 logging.warning("Error record result format!")
 
