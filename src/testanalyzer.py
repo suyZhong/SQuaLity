@@ -22,11 +22,12 @@ def compute_similarity(a: str, b: str):
 
 class TestCaseAnalyzer():
     # currently only listed these because these are the top 10 most common SQL statements
-    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT','DROP TABLE','CREATE VIEW', 'ALTER TABLE',
-    'CREATE TRIGGER', 'DROP TRIGGER', 'CREATE TEMPORARY', 'DROP VIEW',
-    'CREATE SCHEMA', 'CREATE SEQUENCE', 'WITH', 'COMMIT', 'PREPARE', 'ALTER SEQUENCE', 
-    'CREATE ROLE', 'ALTER ROLE', 'DROP ROLE',
+    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT', 'DROP TABLE', 'CREATE VIEW', 'ALTER TABLE',
+                      'CREATE TRIGGER', 'DROP TRIGGER', 'CREATE TEMPORARY', 'DROP VIEW',
+                      'CREATE SCHEMA', 'CREATE SEQUENCE', 'WITH', 'COMMIT', 'PREPARE', 'ALTER SEQUENCE',
+                      'CREATE ROLE', 'ALTER ROLE', 'DROP ROLE',
                       ]
+
     def __init__(self) -> None:
         self.test_cases = pd.DataFrame(columns=TestCaseColumns)
         self.test_num = 0
@@ -70,7 +71,7 @@ class TestCaseAnalyzer():
     def extract_subset(self, test_case_index: list):
         return self.test_cases.loc[test_case_index]
 
-    def dump_subset(self, test_case_index: list, file_name:str):
+    def dump_subset(self, test_case_index: list, file_name: str):
         self.test_cases.loc[test_case_index].to_csv(file_name, index=False)
 
     def get_results(self, length: int = 10, rand: bool = False):
@@ -98,14 +99,14 @@ class TestCaseAnalyzer():
         df = self.get_data(self.attributes)
         queries = df[df['TYPE'] == 'QUERY']
         return queries
-    
+
     def is_standard(self, sql: str):
         sql_type = self.get_sql_statement_type(sql)
         if sql_type in self.STANDARD_CASES:
             return True
         return False
-    
-    def get_sql_statement_type(self, sql:str):
+
+    def get_sql_statement_type(self, sql: str):
         if sql.lstrip().startswith('\\'):
             return 'CLI_COMMAND'
         if not sql.strip():
@@ -123,8 +124,9 @@ class TestCaseAnalyzer():
             return None
         first_token = statement.tokens[0]
         if first_token.ttype is sqlparse.tokens.Keyword.DDL:
-            second_token = statement.tokens[2]  # In "CREATE TABLE", TABLE is the second token (index 2) after whitespace
-            return first_token.value.upper() + " "+ second_token.value.upper()
+            # In "CREATE TABLE", TABLE is the second token (index 2) after whitespace
+            second_token = statement.tokens[2]
+            return first_token.value.upper() + " " + second_token.value.upper()
         if first_token.ttype in sqlparse.tokens.Keyword:
             return first_token.value.upper()
         else:
@@ -154,7 +156,8 @@ class TestResultAnalyzer():
             logs_path = os.path.join(
                 dir_name, OUTPUT_PATH['execution_log'].format(dbms + suffix).split('/')[1])
         else:
-            self.results_path = OUTPUT_PATH['execution_result'].format(dbms + suffix)
+            self.results_path = OUTPUT_PATH['execution_result'].format(
+                dbms + suffix)
             logs_path = OUTPUT_PATH['execution_log'].format(dbms + suffix)
         self.results = pd.read_csv(self.results_path, na_filter=False)
         self.logs = pd.read_csv(logs_path, na_filter=False)
@@ -208,9 +211,10 @@ class TestResultAnalyzer():
         return kmeans.labels_
 
     def get_log_string(self, row: pd.DataFrame):
-        test_cases = self.results[self.results['TESTFILE_INDEX'] == row.TESTFILE_INDEX.values[0]]
+        test_cases = self.results[self.results['TESTFILE_INDEX']
+                                  == row.TESTFILE_INDEX.values[0]]
         return "\n".join(test_cases[test_cases['TESTCASE_INDEX'] <= row.TESTCASE_INDEX.values[0]].values)
-    
+
     def dump_errors(self, path: str = 'data/flaky'):
         errors = copy(self.get_error_rows())
         errors['TESTFILE_NAME'] = errors['TESTFILE_PATH'].apply(
@@ -219,25 +223,25 @@ class TestResultAnalyzer():
                       columns=['TESTFILE_NAME', 'TESTCASE_INDEX', 'CLUSTER'], index=False)
 
     def dump_results(self, suffix: str = 'clustered'):
-        self.results.to_csv(f"{self.results_path.removesuffix('.csv')}{suffix}.csv", index=False)
+        self.results.to_csv(
+            f"{self.results_path.removesuffix('.csv')}{suffix}.csv", index=False)
 
     def find_dependency_failure(self, row: pd.DataFrame):
         all_results = self.results[self.results['TESTFILE_PATH']
                                    == row.TESTFILE_PATH.values[0]]
         # get the logs of the test case
-        logs = self.logs.loc[row.LOGS_INDEX.values[0]].values[0]
 
         # get the successful dependencies
-        succ_ddl_dep = self.find_dependencies(logs, self.DDL)
-        succ_dml_dep = self.find_dependencies(logs, self.DML)
+        # succ_ddl_dep = self.find_dependencies(logs, self.DDL)
+        # succ_dml_dep = self.find_dependencies(logs, self.DML)
 
         # find the rows in results that has smaller index than the current row
         previous_results = all_results[all_results['TESTCASE_INDEX']
                                        < row.TESTCASE_INDEX.values[0]]
-        failed_rows = previous_results[previous_results['IS_ERROR'] == True]
+        # failed_rows = previous_results[previous_results['IS_ERROR'] == True]
 
-        fail_ddl_dep = self.find_dependencies(
-            '\n'.join(failed_rows['SQL'].values), self.DDL)
+        # fail_ddl_dep = self.find_dependencies(
+        #     '\n'.join(failed_rows['SQL'].values), self.DDL)
 
     def extract_dependency_failure(self, filename: str):
         all_results = self.results[self.results['TESTFILE_PATH'] == filename]
@@ -296,20 +300,19 @@ class TestResultAnalyzer():
         print(all_results.info())
         return all_results
 
-    def find_dependencies(self, logs: str, dep_type='CREATE'):
-        dependencies = set()
-        parsed = sqlparse.parse(logs)
-        for sql in parsed:
-            if str(sql.token_first()) in dep_type:
-                tokens = sql.tokens
-                identifiers = [str(token) for token in parsed.flatten(
-                ) if token.ttype is sqlparse.tokens.Name]
-                # splits the string into a list of substrings at each space.
-                # The result is a flattened list of substrings without spaces.
-                dependencies.update(identifiers)
-        return dependencies
-    
-    def extract_success_subset(self, filename:str):
+    # def find_dependencies(self, logs: str, dep_type='CREATE'):
+    #     dependencies = set()
+    #     parsed = sqlparse.parse(logs)
+    #     for sql in parsed:
+    #         if str(sql.token_first()) in dep_type:
+    #             tokens = sql.tokens
+    #             identifiers = [str(token) for token in parsed.flatten(
+    #             ) if token.ttype is sqlparse.tokens.Name]
+    #             # splits the string into a list of substrings at each space.
+    #             # The result is a flattened list of substrings without spaces.
+    #             dependencies.update(identifiers)
+    #     return dependencies
+
+    def extract_success_subset(self, filename: str):
         all_results = self.results[self.results['TESTFILE_PATH'] == filename]
-        # print(all_results.info())
         return all_results[all_results['IS_ERROR'] == False]['TESTCASE_INDEX'].values

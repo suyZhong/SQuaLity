@@ -370,8 +370,10 @@ class PGTParser(Parser):
         self.meta_data['total_files'] += 1
         self.test_content = self._read_file(self.testfile)
         self.result_content = self._read_file(self.resultfile)
-        self.test_content = re.sub(r"; {1,2}--.*?$", ";", self.test_content, flags=re.MULTILINE)
-        self.result_content = re.sub(r"; {1,2}--.*?$", ";", self.result_content, flags=re.MULTILINE)
+        self.test_content = re.sub(
+            r"; {1,2}--.*?$", ";", self.test_content, flags=re.MULTILINE)
+        self.result_content = re.sub(
+            r"; {1,2}--.*?$", ";", self.result_content, flags=re.MULTILINE)
 
     def testfile_dialect_handler(self, *args, **kwargs):
 
@@ -398,8 +400,6 @@ class PGTParser(Parser):
         commands = sqlparse.split(test_content)
         # currently do a hack here
         if self.testfile.endswith('gin.sql'):
-            a = commands[:-1]
-            b = [command for command in commands[-1].split(';\n')]
             commands = commands[:-1] + [command.strip(
                 ';\n') + ';\n' for command in commands[-1].split(';\n')]
 

@@ -8,13 +8,13 @@ import mysql.connector
 from typing import List
 from datetime import datetime
 from copy import copy
-from tqdm import tqdm
 
 import duckdb
 from .utils import *
 from .bugdumper import BugDumper
 from .config import CONFIG
 import signal
+
 
 class Runner():
     def __init__(self, records: List[Record] = []) -> None:
@@ -81,7 +81,6 @@ class Runner():
                 self.records = [
                     record for record in self.records if record.id not in test_cases]
                 self.single_run_stats['filter_sql'] += len(test_cases)
-
 
     def connect(self, db_name: str):
         """connect to the database instance by the file path or the database name
@@ -243,10 +242,11 @@ class PyDBCRunner(Runner):
         self.testfile_index = 0
         self.testfile_path = ""
         self.labels = {}
+        self.db_error = Exception
 
     def timeout_handler(self, signum, frame):
         raise TimeoutError
-    
+
     def set_db(self, db_name: str):
         if not db_name.startswith(":memory:"):
             os.system('rm -f %s' % db_name)
@@ -268,9 +268,6 @@ class PyDBCRunner(Runner):
         self.labels = {}
         for record in self.records:
             self.cur_time = datetime.now()
-            # if (self.cur_time - self.exec_time).seconds > self.MAX_RUNTIME:
-            #     logging.warning("Time exceed for this testfile", )
-            #     break
             if dbms_name not in record.db:
                 continue
             if type(record) == Control:
@@ -293,14 +290,6 @@ class PyDBCRunner(Runner):
             else:
                 signal.alarm(0)
             self.end_time = datetime.now()
-            # exec_time = (self.end_time-self.cur_time).seconds
-
-            # If some SQL query too slow
-            # if exec_time > self.MAX_RUNTIME_PERSQL:
-            #     logging.warning("Time Exceed - %d" % exec_time)
-            #     self.bug_dumper.save_state(self.records_log, record, str(True),
-            #                                execution_time=(self.end_time-self.cur_time).microseconds, is_error=True, msg="Time Exceed - {}".format(exec_time))
-            #     break
 
     def execute_stmt(self, sql):
         pass
@@ -501,7 +490,8 @@ class CockroachDBRunner(PyDBCRunner):
     def connect(self, db_name):
         logging.info("connect to db %s", db_name)
 
-        self.con = psycopg2.connect(dsn=self.db, options="-c statement_timeout=20s")
+        self.con = psycopg2.connect(
+            dsn=self.db, options="-c statement_timeout=20s")
         self.cur = self.con.cursor()
 
     def close(self):
@@ -585,7 +575,7 @@ class PostgreSQLRunner(CockroachDBRunner):
         self.execute_stmt("CREATE DATABASE %s" % db_name)
         self.commit()
         self.close()
-        dsn = f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable" 
+        dsn = f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable"
         self.db = dsn
 
     def remove_db(self, db_name):
@@ -607,7 +597,8 @@ class CLIRunner(Runner):
         self.dbms_name = type(self).__name__.lower().removesuffix("runner")
         self.cli = None
         self.sql = []
-        self.cli_limit = 1000 # shouldn't be too low, otherwise the cli will be very slow and the result for psql would not match
+        # shouldn't be too low, otherwise the cli will be very slow and the result for psql would not match
+        self.cli_limit = 1000
 
     def get_env(self):
         """get the environment variable
@@ -618,19 +609,22 @@ class CLIRunner(Runner):
         for record in self.records:
             sql = record.sql
             self.sql.append(sql + ';\n')
-            
+
     def handle_query_result(self, results: str, record: Query):
         """handle the query result
         """
         cmp_flag = False
         helper = ResultHelper(results, record)
         if record.res_format == ResultFormat.VALUE_WISE:
-            result_list = [row.split('\t') for row in results.split('\n')] if results else ""
-            cmp_flag, results = helper.value_wise_compare(result_list, record, self.hash_threshold)
+            result_list = [row.split('\t')
+                           for row in results.split('\n')] if results else ""
+            cmp_flag, results = helper.value_wise_compare(
+                result_list, record, self.hash_threshold)
         elif record.res_format == ResultFormat.ROW_WISE:
             cmp_flag, results = helper.row_wise_compare(results, record)
         else:
-            logging.error("Result format unsupported for this Runner: %s", record.res_format)
+            logging.error(
+                "Result format unsupported for this Runner: %s", record.res_format)
         if cmp_flag:
             # print("True!")
             my_debug("Query %s Success", record.sql)
@@ -672,11 +666,12 @@ class CLIRunner(Runner):
         # split sqls into groups of limit
         if len(self.sql) == 0:
             return
-        sql_lists = [self.sql[i:i + self.cli_limit] for i in range(0, len(self.sql), self.cli_limit)]
+        sql_lists = [self.sql[i:i + self.cli_limit]
+                     for i in range(0, len(self.sql), self.cli_limit)]
         whole_output_list = []
         for sql_list in sql_lists:
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
+                                        stderr=subprocess.STDOUT, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
             my_debug("Running %d sqls" % len(sql_list))
             input_string = ""
             for i, sql in enumerate(sql_list):
@@ -689,7 +684,7 @@ class CLIRunner(Runner):
                 input_string += sql
             output, _ = self.cli.communicate(input=input_string)
             output_list = output.split(self.res_delimiter)[1:]
-            if  self.cli_limit > len(self.sql):
+            if self.cli_limit > len(self.sql):
                 my_debug(output)
             assert len(
                 output_list) == i + 1, "The length of result list should be equal to the commands have executed"
@@ -748,14 +743,16 @@ class PSQLRunner(CLIRunner):
                 os.environ[env_name] = self.env[env_name]
 
             # init a test database
-            self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
+            self.cmd = [
+                'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
             stmts = [
                 "DROP DATABASE IF EXISTS {};\n".format(db_name),
                 "CREATE DATABASE {};\n".format(db_name),
             ]
             for stmt in stmts:
                 self.execute_stmt(stmt)
-            self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable", '-X', '-q']
+            self.cmd = [
+                'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable", '-X', '-q']
 
             # run the test_setup.sql
             self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -776,20 +773,23 @@ class PSQLRunner(CLIRunner):
         if len(self.setup_records) > 0:
             return
         my_debug('set up db {}'.format(db_name))
-        self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
+        self.cmd = [
+            'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
         stmts = [
             "DROP DATABASE IF EXISTS {};\n".format(db_name),
             "CREATE DATABASE {};\n".format(db_name),
         ]
         for stmt in stmts:
             self.execute_stmt(stmt)
-        self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable", '-X', '-q']
+        self.cmd = [
+            'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable", '-X', '-q']
 
     def remove_db(self, db_name: str):
         # return
         if len(self.records) >= 0:
             return
-        self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
+        self.cmd = [
+            'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/postgres?sslmode=disable", '-X', '-a', '-q', '-c']
         self.execute_stmt("DROP DATABASE IF EXISTS {}".format(db_name))
         self.cmd = ['psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/{db_name}?sslmode=disable".format(
             db_name), '-X', '-q']

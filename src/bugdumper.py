@@ -51,7 +51,6 @@ class BugDumper():
         self.testfile_index = kwargs['testfile_index']
         # self.testfile_content = kwargs['testfile_content']
 
-
     def recover_db(self):
         pass
 
