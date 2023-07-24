@@ -51,25 +51,6 @@ class BugDumper():
         self.testfile_index = kwargs['testfile_index']
         # self.testfile_content = kwargs['testfile_content']
 
-    # def init_bugDB(self):
-    #     for table in self.tables:
-    #         self.cur.execute('DROP TABLE IF EXISTS ' + table)
-    #     for view in self.views:
-    #         self.cur.execute('DROP VIEW IF EXISTS ' + view)
-    #     self.cur.execute("""
-    #     CREATE TABLE DBMS_BUGS (
-    #     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    #     DATABASE STRING,
-    #     DATE STRING,
-    #     TEST STRING,
-    #     TRIGGER_BUG_LINE STRING,
-    #     UNIQUE_BUG STRING,
-    #     SEVERITY STRING,
-    #     URL_EMAIL STRING,
-    #     URL_BUGTRACKER STRING,
-    #     URL_FIX STRING
-    #     );
-    #     """)
 
     def recover_db(self):
         pass
@@ -121,10 +102,9 @@ class BugDumper():
 
     def dump_to_csv(self, dbname='demo', mode='a'):
         my_debug("Dump the bugs as a Dataframe to a csv {}".format(dbname))
-        path_suffix = ""
-        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-            path_suffix = "_debug"
+        # if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+        #     path_suffix = "_debug"
         self.bugs_dataframe.to_csv(
-            f"{OUTPUT_PATH['execution_result'].format(dbname)}{path_suffix}", mode=mode, header=False)
+            f"{OUTPUT_PATH['execution_result'].format(dbname + self.suffix)}", mode=mode, header=False)
         self.logs_dataframe.to_csv(
-            f"{OUTPUT_PATH['execution_log'].format(dbname)}{path_suffix}", mode=mode, header=False, index=False)
+            f"{OUTPUT_PATH['execution_log'].format(dbname + self.suffix)}", mode=mode, header=False, index=False)

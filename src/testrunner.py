@@ -160,6 +160,7 @@ class Runner():
         """
         self.dump_all = dump_all
         suffix = "" if self.filter_dict == {} else "_filter"
+        suffix = suffix if logging.root.level != logging.DEBUG else suffix + "_debug"
         self.bug_dumper = BugDumper(self.dbms_name, dump_all, suffix)
 
     def init_filter(self, filter_flag=False):
