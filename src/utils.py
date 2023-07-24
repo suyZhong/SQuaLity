@@ -3,6 +3,7 @@ import logging
 import re
 import hashlib
 import math
+from decimal import Decimal
 import pandas as pd
 from copy import copy
 
@@ -253,6 +254,8 @@ class ResultHelper():
                 return "%.3f" % float(item)
             except:
                 return "0.000"
+        elif isinstance(item, Decimal):
+            return "%.3f" % float(item)
         elif item == None:
             return "NULL"
         else:
