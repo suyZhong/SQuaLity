@@ -380,6 +380,8 @@ class PyDBCRunner(Runner):
             my_debug(results)
         if record.label != '' and record.result == '':
             # my_debug(results)
+            if record.sort == SortType.ROW_SORT:
+                results.sort()
             result_string = helper.hash_results(str(results))
             cmp_flag = True
             if record.label in self.labels:
