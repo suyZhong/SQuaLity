@@ -258,6 +258,8 @@ class ResultHelper():
                 return "0.000"
         elif isinstance(item, Decimal):
             return "%.3f" % float(item)
+        elif isinstance(item, int):
+            return "%.3f" % float(item)
         elif item == None:
             return "NULL"
         else:
