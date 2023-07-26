@@ -151,7 +151,7 @@ class Runner():
         for key in self.single_run_stats:
             self.all_run_stats[key] += self.single_run_stats[key]
 
-    def init_dumper(self, dump_all=False):
+    def init_dumper(self, dump_all=False, suite_name=""):
         """init the bug dumper in the test runner
 
         Args:
@@ -160,6 +160,7 @@ class Runner():
         self.dump_all = dump_all
         suffix = "" if self.filter_dict == {} else "_filter"
         suffix = suffix if logging.root.level != logging.DEBUG else suffix + "_debug"
+        suffix = suffix if suite_name == "" else f"_{suite_name}{suffix}"
         self.bug_dumper = BugDumper(self.dbms_name, dump_all, suffix)
 
     def init_filter(self, filter_flag=False):

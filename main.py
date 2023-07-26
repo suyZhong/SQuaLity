@@ -91,7 +91,7 @@ if __name__ == "__main__":
     else:
         sys.exit("Not implement yet")
     r.init_filter(filter_flaky)
-    r.init_dumper(dump_all=args.dump_all)
+    r.init_dumper(dump_all=args.dump_all, suite_name=suite_name, )
     skip_index = []
     for i, test_file in enumerate(test_files):
         # if test_file == "postgresql_tests/regress/sql/select.sql":
