@@ -553,6 +553,9 @@ class DTParser(SLTParser):
         record = Statement(id=self.record_id)
 
         if record_type == 'statement':
+            # if there is connection
+            if len(tokens) > 2:
+                return
             status = (tokens[1] == 'ok')
             statements = (" ".join([strip_comment_suffix(line)
                           for line in lines[1:]])).strip().split(';\n')
@@ -565,12 +568,14 @@ class DTParser(SLTParser):
                 self.records.append(record)
                 self.record_id += 1
         elif record_type == 'query':
+            # if there is connection DuckDB do a dirty hack
+            if len(tokens) >= 3:
+                if tokens[2] not in ['nosort', 'rowsort', 'valuesort']:
+                    return
+            
             record = self.get_query(tokens=tokens, lines=lines)
             record.suite = 'duckdb'
             record.is_hash = False
-
-            # if record.sql.split()[0].upper() == 'EXPLAIN':
-            #     record.set_execute_db(set())
 
             # In DuckDB implementation they do like this. A dirty way.
             # https://github.com/duckdb/duckdb/blob/master/test/sqlite/result_helper.cpp#L391
