@@ -394,6 +394,9 @@ class PyDBCRunner(Runner):
                 # my_debug(result_string)
                 if record.result.find(result_string) != -1:
                     cmp_flag = True
+            elif record.res_format == ResultFormat.REGEX:
+                cmp_flag, result_string = helper.regex_compare(
+                    results, record)
             else:
                 logging.warning("Error record result format!")
 

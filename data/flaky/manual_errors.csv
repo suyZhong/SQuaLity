@@ -29,4 +29,3 @@ sql-alter-alter_col-test_not_null_multi_tran.csv, -1, -1
 sql-alter-alter_type-test_alter_type_transactions.csv, -1, -1
 sql-transactions-test_from_update_conflict.csv, -1, -1
 sql-transactions-test_basic_transactions.csv, -1, -1
-sql-returning-returning_update.csv, -1, -1

@@ -18,6 +18,7 @@ class ResultFormat(Enum):
     VALUE_WISE = 1
     ROW_WISE = 2
     HASH = 3
+    REGEX = 4
 
 
 class RecordType(Enum):
@@ -381,6 +382,22 @@ class ResultHelper():
         actual_result_list = sorted(actual_result_list, key=str)
         cmp_flag, result_string = self._row_wise_compare_str(
             actual_result_list, expected_result_list)
+        return cmp_flag, result_string
+
+    def regex_compare(self, results, record: Record):
+        cmp_flag = False
+        if len(results) != 0:
+            result_string = '\n'.join(['\t'.join(
+                [str(item).replace('\0', '\\0') if item != None else 'NULL' for item in row]) for row in results])
+            want_match = record.result.find('<REGEX>') != -1
+            regex = re.sub(r'.*<REGEX>:', '', record.result) if want_match else re.sub(r'.*<\!REGEX>:', '', record.result)
+            my_debug("regex = %s", regex)
+            if want_match:
+                cmp_flag = re.search(regex, result_string, re.DOTALL) != None
+            else:
+                cmp_flag = re.search(regex, result_string, re.DOTALL) == None
+        else:
+            result_string = ''
         return cmp_flag, result_string
 
     def cast_result_list(self, results: str, old, new):

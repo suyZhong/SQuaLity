@@ -580,6 +580,11 @@ class DTParser(SLTParser):
                 record.is_hash = True
                 self.records.append(record)
                 self.record_id += 1
+            elif record.result.find('<REGEX>') >= 0 or record.result.find('<!REGEX>') >= 0:
+                my_debug("regex")
+                record.set_resformat(ResultFormat.REGEX)
+                self.records.append(record)
+                self.record_id += 1
             else:
                 cols = len(record.data_type)
                 # If the result has a sort type, then it is value wise
