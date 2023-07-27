@@ -239,7 +239,7 @@ class ResultHelper():
 
     def int_format(self, item):
         if isinstance(item, int):
-            return str(item)
+            return str(int(item))
         elif item == None:
             return "NULL"
         else:

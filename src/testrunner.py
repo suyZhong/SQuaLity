@@ -195,7 +195,7 @@ class Runner():
         Args:
             mode (str, optional): a means add, 'w' means cover write. Defaults to 'a'.
         """
-        dump_name = self.dbms_name if self.filter_dict == {} else f"{self.dbms_name}_filter"
+        dump_name = self.dbms_name
         self.bug_dumper.dump_to_csv(dump_name, mode=mode)
 
     def handle_wrong_query(self, query: Query, result: str, **kwargs):
