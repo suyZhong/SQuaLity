@@ -87,7 +87,7 @@ if __name__ == "__main__":
     elif dbms_name == 'postgresql':
         r = testrunner.PostgreSQLRunner()
     elif dbms_name == 'psql':
-        r = testrunner.PSQLRunner(p.setup_records)
+        r = testrunner.PSQLRunner()
     else:
         sys.exit("Not implement yet")
     r.init_filter(filter_flaky)
