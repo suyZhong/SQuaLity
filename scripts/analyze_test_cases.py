@@ -40,7 +40,7 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
     plt.yscale('log')
     plt.ylabel("Length of Test Cases")
     # plt.show()
-    plt.savefig(os.path.join(output, "test_case_length.png"))
+    plt.savefig(os.path.join(output, "test_case_length.svg"))
 
 def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',output:str = Table_Dir):
     db_dict = {}
@@ -97,7 +97,13 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
     plt.xlabel("SQL Type")
     plt.ylabel("Percentage")
     plt.tight_layout()
-    plt.savefig(os.path.join(output, f"all_sql_type.png"))
+    plt.savefig(os.path.join(output, f"all_sql_type.svg"))
+    
+    
+    # table the standard percentage
+    std_df = pd.DataFrame({'DBMS': db_names, 'Percentage of Standard SQL': standard_percentage_overall, 'Percentage of Standard SQL Files': standard_percentage_perfile})
+    std_df.style.to_latex(os.path.join(Table_Dir, f"standard_percentage.tex"), siunitx=True)
+    print(std_df)
     
     plt.figure()
     fig, ax = plt.subplots()
@@ -113,7 +119,7 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
 
     ax.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(output, f"standard_percentage.png"))
+    plt.savefig(os.path.join(output, f"standard_percentage.svg"))
 
 def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',output:str = Table_Dir, break_down:bool = True):
     top_type_cnt = pd.read_csv(input, index_col=0)
@@ -150,7 +156,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
         plt.xlabel("SQL Type")
         plt.ylabel("Percentage")
         plt.tight_layout()
-        plt.savefig(os.path.join(output, f"all_sql_type.png"))
+        plt.savefig(os.path.join(output, f"all_sql_type.svg"))
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1,sharex=True, figsize=(12, 5))
         lower_limit = 0
@@ -185,7 +191,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
                 label.set_weight('bold')
         plt.xlabel("SQL Type")
         plt.tight_layout()
-        plt.savefig(os.path.join(output, f"all_sql_type_breakdown.png"))
+        plt.savefig(os.path.join(output, f"all_sql_type_breakdown.svg"))
 
     # xtext = plt.xticks(rotation=45, ha='right')
 
@@ -197,8 +203,8 @@ if __name__ == "__main__":
     output = arguments.output
 
     if arguments.mode == 'length':
-        plot_test_case_length()
+        plot_test_case_length(db_names=['sqlite', 'mysql', 'postgresql', 'duckdb'])
     elif arguments.mode == 'dist':
-        generate_test_case_data(db_names=['sqlite'], output=output)
+        generate_test_case_data(db_names=['sqlite', 'postgresql', 'duckdb'], output=output)
     elif arguments.mode == 'dist_cache':
         generate_test_case_data_from_cache(input="data/all_sql_type.csv", output=output, break_down=True)
