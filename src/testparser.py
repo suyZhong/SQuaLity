@@ -557,7 +557,7 @@ class DTParser(SLTParser):
             if len(tokens) > 2:
                 return
             status = (tokens[1] == 'ok')
-            statements = (" ".join([strip_comment_suffix(line)
+            statements = (" ".join([re.sub(r'--.*', '', line)
                           for line in lines[1:]])).strip().split(';\n')
             statements = list(filter(None, statements))
             for stmt in statements:
