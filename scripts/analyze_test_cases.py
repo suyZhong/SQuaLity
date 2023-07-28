@@ -12,7 +12,7 @@ from matplotlib import rc
 import pandas as pd
 import numpy as np
 
-Supported_DBMS = ['SQLite', 'MySQL', 'DuckDB', 'CockroachDB', 'PostgreSQL']
+Supported_DBMS = ['SQLite', 'MySQL', 'DuckDB', 'PostgreSQL']
 Image_Dir = "../SQuaLity-Paper/assets/img"
 Table_Dir = "../SQuaLity-Paper/assets/table"
 
@@ -40,7 +40,7 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
     plt.yscale('log')
     plt.ylabel("Length of Test Cases")
     # plt.show()
-    plt.savefig(os.path.join(output, "test_case_length.svg"))
+    plt.savefig(os.path.join(output, "test_case_length.pdf"))
 
 def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',output:str = Table_Dir):
     db_dict = {}
@@ -97,7 +97,7 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
     plt.xlabel("SQL Type")
     plt.ylabel("Percentage")
     plt.tight_layout()
-    plt.savefig(os.path.join(output, f"all_sql_type.svg"))
+    plt.savefig(os.path.join(output, f"all_sql_type.pdf"))
     
     
     # table the standard percentage
@@ -119,7 +119,7 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
 
     ax.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(output, f"standard_percentage.svg"))
+    plt.savefig(os.path.join(output, f"standard_percentage.pdf"))
 
 def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',output:str = Table_Dir, break_down:bool = True):
     top_type_cnt = pd.read_csv(input, index_col=0)
@@ -156,7 +156,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
         plt.xlabel("SQL Type")
         plt.ylabel("Percentage")
         plt.tight_layout()
-        plt.savefig(os.path.join(output, f"all_sql_type.svg"))
+        plt.savefig(os.path.join(output, f"all_sql_type.pdf"))
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1,sharex=True, figsize=(12, 5))
         lower_limit = 0
@@ -191,7 +191,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
                 label.set_weight('bold')
         plt.xlabel("SQL Type")
         plt.tight_layout()
-        plt.savefig(os.path.join(output, f"all_sql_type_breakdown.svg"))
+        plt.savefig(os.path.join(output, f"all_sql_type_breakdown.pdf"))
 
     # xtext = plt.xticks(rotation=45, ha='right')
 
