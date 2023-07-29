@@ -1,0 +1,374 @@
+SQL,ERROR_REASON,ERROR_MSG,ACTUAL_RESULT,EXPECTED_RESULT,SUPER_TAG,TAG,DESCRIPTION
+SELECT enum_range(null::rainbow),2,Result MisMatch,"['red', 'orange', 'yellow', 'green', 'blue', 'purple']","[red, orange, yellow, green, blue, purple]",Client,Data Type,Different representation for nested data structure
+"SELECT i, pk, fk
+FROM r2l3r4l5i4i2l3v_dim
+LEFT OUTER JOIN r2l3r4l5i4i2l3v
+ON r2l3r4l5i4i2l3v_dim.pk = r2l3r4l5i4i2l3v.fk
+ORDER BY i",2,Result MisMatch,"1	{'x': [{'l4': [51], 'i4': 41}], 'y': ['a']}	{'x': [{'l4': [51], 'i4': 41}], 'y': ['a']}
+2	{'x': [None], 'y': [None]}	{'x': [None], 'y': [None]}
+3	{'x': [], 'y': []}	{'x': [], 'y': []}
+4	{'x': [{'l4': [52, 53], 'i4': 42}, {'l4': [54, 55], 'i4': 43}], 'y': ['Branta Canadensis', 'c']}	{'x': [{'l4': [52, 53], 'i4': 42}, {'l4': [54, 55], 'i4': 43}], 'y': ['Branta Canadensis', 'c']}
+NULL	NULL	NULL","NULL	NULL	NULL
+1	{'x': [{'l4': [51], 'i4': 41}], 'y': [a]}	{'x': [{'l4': [51], 'i4': 41}], 'y': [a]}
+2	{'x': [NULL], 'y': [NULL]}	{'x': [NULL], 'y': [NULL]}
+3	{'x': [], 'y': []}	{'x': [], 'y': []}
+4	{'x': [{'l4': [52, 53], 'i4': 42}, {'l4': [54, 55], 'i4': 43}], 'y': [Branta Canadensis, c]}	{'x': [{'l4': [52, 53], 'i4': 42}, {'l4': [54, 55], 'i4': 43}], 'y': [Branta Canadensis, c]}",Client,Data Type,Different representation for nested data structure
+SELECT * FROM tbl1 JOIN tbl2 ON tbl1.union_struct.str = tbl2.struct_union.alt.k,2,Result MisMatch,"key2	{'str': 'key2', 'alt': 'key2'}
+key2	{'str': 'key4', 'alt': 'key2'}","key2	{'str': key4, 'alt': key2}
+key2	{'str': key2, 'alt': key2}",Client,Data Type,Different representation for nested data structure
+"SELECT CAST('{""can''t""=""you''re"", ""i''m""=""q''u''o''t''e""}' AS MAP(VARCHAR, VARCHAR));",2,Result MisMatch,"{'key': [""can't"", ""i'm""], 'value': [""you're"", ""q'u'o't'e""]}","{can't=you're, i'm=q'u'o't'e}",Client,Data Type,Different representation for nested data structure
+SELECT d from ducks,2,Result MisMatch,"['a', 'b', 'c']
+['🦆', 'a', 'b']","[🦆, a, b]
+[a, b, c]",Client,Data Type,Different representation for nested data structure
+SELECT MAP { [i]: [i + 1] } FROM range(5) t(i);,2,Result MisMatch,"{'key': [[0]], 'value': [[1]]}
+{'key': [[1]], 'value': [[2]]}
+{'key': [[2]], 'value': [[3]]}
+{'key': [[3]], 'value': [[4]]}
+{'key': [[4]], 'value': [[5]]}","{[0]=[1]}
+{[1]=[2]}
+{[2]=[3]}
+{[3]=[4]}
+{[4]=[5]}",Client,Data Type,Different representation for nested data structure
+"select regexp_extract_all('abcdef', 'a.c.*f')",2,Result MisMatch,['abcdef'],[abcdef],Client,Data Type,Different representation for nested data structure
+"WITH sample AS
+( 
+  SELECT s FROM
+  ( 
+    VALUES 
+    ('https://docs.fluentd.org/v0.12/articles/out_file'),
+    ('https://docs.fluentd.org/v0.12/articles/out_forward'),
+    ('https://www.fluentd.org/v0.12/articles/out_file'),
+    ('out_file/article/docs.fluentd.org/')
+  ) AS t(s)
+)
+SELECT
+  s, REGEXP_EXTRACT_ALL(s,'docs.fluentd.org.*out_file') AS match_strs1,
+     REGEXP_EXTRACT_ALL(s,'docs.fluentd.org|out_file') AS match_strs2
+FROM sample",2,Result MisMatch,"https://docs.fluentd.org/v0.12/articles/out_file	['docs.fluentd.org/v0.12/articles/out_file']	['docs.fluentd.org', 'out_file']
+https://docs.fluentd.org/v0.12/articles/out_forward	[]	['docs.fluentd.org']
+https://www.fluentd.org/v0.12/articles/out_file	[]	['out_file']
+out_file/article/docs.fluentd.org/	[]	['out_file', 'docs.fluentd.org']","https://docs.fluentd.org/v0.12/articles/out_file	[docs.fluentd.org/v0.12/articles/out_file]	[docs.fluentd.org, out_file]
+https://docs.fluentd.org/v0.12/articles/out_forward	[]	[docs.fluentd.org]
+https://www.fluentd.org/v0.12/articles/out_file	[]	[out_file]
+out_file/article/docs.fluentd.org/	[]	[out_file, docs.fluentd.org]",Client,Data Type,Different representation for nested data structure
+"SELECT pk, p FROM structs ORDER BY pk;",2,Result MisMatch,"1	{'x': 1, 'y': 'a'}
+2	{'x': None, 'y': None}
+3	{'x': 0, 'y': ''}
+4	{'x': 2, 'y': 'c'}
+5	{'x': 9, 'y': 'i'}
+NULL	{'x': 13, 'y': 'Somateria mollissima'}","NULL	{'x': 13, 'y': Somateria mollissima}
+1	{'x': 1, 'y': a}
+2	{'x': NULL, 'y': NULL}
+3	{'x': 0, 'y': }
+4	{'x': 2, 'y': c}
+5	{'x': 9, 'y': i}",Client,Data Type,Different representation for nested data structure
+"select struct_insert({'a': 1, 'b': 'abc', 'c': true}, d := {'a': 'new stuff'})",2,Result MisMatch,"{'a': 1, 'b': 'abc', 'c': True, 'd': {'a': 'new stuff'}}","{'a': 1, 'b': abc, 'c': true, 'd': {'a': new stuff}}",Client,Data Type,Different representation for nested data structure
+"SELECT CAST('{ [12,     13,14]=val, [       8, 9         ]      =val, [ 4    ]=val   }' AS MAP(INT[], VARCHAR));",2,Result MisMatch,"{'key': [[12, 13, 14], [8, 9], [4]], 'value': ['val', 'val', 'val']}","{[12, 13, 14]=val, [8, 9]=val, [4]=val}",Client,Data Type,Different representation for nested data structure
+SELECT s[0:1] FROM lists,2,Result MisMatch,"NULL
+['b']
+['h']
+['w']","[h]
+[w]
+[b]
+NULL",Client,Data Type,Different representation for nested data structure
+"SELECT i, pk, fk FROM strlistdim, strlists WHERE pk = fk ORDER BY i",2,Result MisMatch,"1	['a']	['a']
+2	[None]	[None]
+3	[]	[]
+5	['i', 'j', 'k']	['i', 'j', 'k']","1	[a]	[a]
+2	[NULL]	[NULL]
+3	[]	[]
+5	[i, j, k]	[i, j, k]",Client,Data Type,Different representation for nested data structure
+"SELECT list_apply(range(8), x -> list_aggr(list_apply(range(8),
+y -> list_element('▁▂▃▄▅▆▇█', 1+abs(y-x))), 'string_agg', ''));",2,Result MisMatch,"['▁▂▃▄▅▆▇█', '▂▁▂▃▄▅▆▇', '▃▂▁▂▃▄▅▆', '▄▃▂▁▂▃▄▅', '▅▄▃▂▁▂▃▄', '▆▅▄▃▂▁▂▃', '▇▆▅▄▃▂▁▂', '█▇▆▅▄▃▂▁']","[▁▂▃▄▅▆▇█, ▂▁▂▃▄▅▆▇, ▃▂▁▂▃▄▅▆, ▄▃▂▁▂▃▄▅, ▅▄▃▂▁▂▃▄, ▆▅▄▃▂▁▂▃, ▇▆▅▄▃▂▁▂, █▇▆▅▄▃▂▁]",Client,Data Type,Different representation for nested data structure
+"INSERT INTO table2(a, b) VALUES ('duckdb', 97) RETURNING {'a': a, 'b': b};",2,Result MisMatch,"{'a': 'duckdb', 'b': 97}","{'a': duckdb, 'b': 97}",Client,Data Type,Different representation for nested data structure
+"SELECT CAST('[[Hello World!], hello, universe]' AS VARCHAR[]);",2,Result MisMatch,"['[Hello World!]', 'hello', 'universe']","[[Hello World!], hello, universe]",Client,Data Type,Different representation for nested data structure
+"SELECT ref_2.struct_of_arrays AS c3 FROM main.all_types AS ref_0 RIGHT JOIN main.all_types AS ref_1 INNER JOIN main.all_types AS ref_2 ON (ref_1.""smallint"" = ref_2.""smallint"") ON (NULL)",2,Result MisMatch,"{'a': None, 'b': None}
+{'a': [42, 999, None, None, -42], 'b': ['🦆🦆🦆🦆🦆🦆', 'goose', None]}","{'a': NULL, 'b': NULL}
+{'a': [42, 999, NULL, NULL, -42], 'b': [🦆🦆🦆🦆🦆🦆, goose, NULL]}",Client,Data Type,Different representation for nested data structure
+EXECUTE v8('hello world'),2,Result MisMatch,['hello world'],[hello world],Client,Data Type,Different representation for nested data structure
+"SELECT i, pk, fk
+FROM struct_lint_lstr
+RIGHT OUTER JOIN struct_lint_lstr_dim
+ON struct_lint_lstr_dim.pk = struct_lint_lstr.fk
+ORDER BY i",2,Result MisMatch,"1	{'x': [1], 'y': ['a']}	{'x': [1], 'y': ['a']}
+2	{'x': [None], 'y': [None]}	{'x': [None], 'y': [None]}
+3	{'x': [], 'y': []}	{'x': [], 'y': []}
+4	{'x': [2, 3], 'y': ['Branta Canadensis', 'c']}	{'x': [2, 3], 'y': ['Branta Canadensis', 'c']}
+NULL	NULL	NULL","NULL	NULL	NULL
+1	{'x': [1], 'y': [a]}	{'x': [1], 'y': [a]}
+2	{'x': [NULL], 'y': [NULL]}	{'x': [NULL], 'y': [NULL]}
+3	{'x': [], 'y': []}	{'x': [], 'y': []}
+4	{'x': [2, 3], 'y': [Branta Canadensis, c]}	{'x': [2, 3], 'y': [Branta Canadensis, c]}",Client,Data Type,Different representation for nested data structure
+SELECT aliases FROM duckdb_extensions() WHERE extension_name='postgres_scanner';,2,Result MisMatch,['postgres'],[postgres],Client,Data Type,Different representation for nested data structure
+"SELECT CAST('   { { a:[2,    3], b:  Duckster      }=         {50.0        =50}, {a    : [9,1,4], b:Duck          }
+                ={  1      =    0}  }' AS MAP(STRUCT(a INT[], b VARCHAR), MAP(INT, DOUBLE)));",2,Result MisMatch,"{'key': [{'a': [2, 3], 'b': 'Duckster'}, {'a': [9, 1, 4], 'b': 'Duck'}], 'value': [{'key': [50], 'value': [50.0]}, {'key': [1], 'value': [0.0]}]}","{{'a': [2, 3], 'b': Duckster}={50=50.0}, {'a': [9, 1, 4], 'b': Duck}={1=0.0}}",Client,Data Type,Different representation for nested data structure
+select histogram(1),2,Result MisMatch,"{'key': [1], 'value': [1]}",{1=1},Client,Data Type,Different representation for nested data structure
+"SELECT i, CASE WHEN i%2=0 THEN {'i': 'hello'} ELSE {'i': 'world'} END FROM range(6) tbl(i)",2,Result MisMatch,"0	{'i': 'hello'}
+1	{'i': 'world'}
+2	{'i': 'hello'}
+3	{'i': 'world'}
+4	{'i': 'hello'}
+5	{'i': 'world'}","0	{'i': hello}
+1	{'i': world}
+2	{'i': hello}
+3	{'i': world}
+4	{'i': hello}
+5	{'i': world}",Client,Data Type,Different representation for nested data structure
+"SELECT MAP(
+	[
+		{'foo': True}, {'foo': False}, {'foo': NULL}
+	],
+	[
+		4,2,0
+	]
+);",2,Result MisMatch,"{'key': [{'foo': True}, {'foo': False}, {'foo': None}], 'value': [4, 2, 0]}","{{'foo': true}=4, {'foo': false}=2, {'foo': NULL}=0}",Client,Data Type,Different representation for nested data structure
+"SELECT ARRAY[[1, 2], [3, 4]]::VARCHAR[]",2,Result MisMatch,"['[1, 2]', '[3, 4]']","[[1, 2], [3, 4]]",Client,Data Type,Different representation for nested data structure
+"SELECT map_entries(map_from_entries([
+	('a', 5), ('b', 6), ('x', 21), ('abc', 0)
+]));",2,Result MisMatch,"[{'k': 'a', 'v': 5}, {'k': 'b', 'v': 6}, {'k': 'x', 'v': 21}, {'k': 'abc', 'v': 0}]","[{'k': a, 'v': 5}, {'k': b, 'v': 6}, {'k': x, 'v': 21}, {'k': abc, 'v': 0}]",Client,Data Type,Different representation for nested data structure
+"SELECT fk, pk, p
+FROM r2l3r4l5i4i2l3v RIGHT OUTER JOIN integers ON integers.fk=r2l3r4l5i4i2l3v.pk
+ORDER BY fk, pk",2,Result MisMatch,"1	1	{'x': [{'l4': [51], 'i4': 41}], 'y': ['a']}
+2	2	{'x': [None], 'y': [None]}
+3	3	{'x': [], 'y': []}
+5	5	{'x': [{'l4': [56], 'i4': 44}, {'l4': [57, 58], 'i4': 45}, {'l4': [59, 60, 61], 'i4': 46}], 'y': ['i', 'j', 'k']}
+NULL	NULL	NULL","NULL	NULL	NULL
+1	1	{'x': [{'l4': [51], 'i4': 41}], 'y': [a]}
+2	2	{'x': [NULL], 'y': [NULL]}
+3	3	{'x': [], 'y': []}
+5	5	{'x': [{'l4': [56], 'i4': 44}, {'l4': [57, 58], 'i4': 45}, {'l4': [59, 60, 61], 'i4': 46}], 'y': [i, j, k]}",Client,Data Type,Different representation for nested data structure
+"select map_concat(map([], []), map([], []))",2,Result MisMatch,"{'key': [], 'value': []}",{},Client,Data Type,Different representation for nested data structure
+"SELECT '{{1=100, 2=200}=value}'::MAP(MAP(INT, INT), VARCHAR);",2,Result MisMatch,"{'key': [{'key': [1, 2], 'value': [100, 200]}], 'value': ['value']}","{{1=100, 2=200}=value}",Client,Data Type,Different representation for nested data structure
+select * from blob_key;,2,Result MisMatch,"{'key': [b'\xf0\x9f\xa6\x86', b'\xf0\x9f\xa6\x87'], 'value': ['x', 'y']}","{\xF0\x9F\xA6\x86=x, \xF0\x9F\xA6\x87=y}",Client,Data Type,Different representation for nested data structure
+"SELECT MAP_FROM_ENTRIES(ARRAY[([1,2], 2), ([3,4], 4)]);",2,Result MisMatch,"{'key': [[1, 2], [3, 4]], 'value': [2, 4]}","{[1, 2]=2, [3, 4]=4}",Client,Data Type,Different representation for nested data structure
+"SELECT MAP([key], [val])[key] FROM tbl
+WHERE key <> '2';",2,Result MisMatch,"['duck']
+['duckDB']","[duck]
+[duckDB]",Client,Data Type,Different representation for nested data structure
+select * from a,2,Result MisMatch,{'end': 'hello'},{'end': hello},Client,Data Type,Different representation for nested data structure
+"SELECT arg_max({d: ""DATE"", ts: ""TIMESTAMP"", i: ""INTEGER"", b: ""BIGINT"", f: ""DOUBLE""}, ""VARCHAR"")
+FROM tbl;",2,Result MisMatch,"{'d': datetime.date(1993, 1, 1), 'ts': datetime.datetime(1993, 1, 1, 23, 20, 11), 'i': 8400, 'b': 999999999, 'f': 100.5}","{'d': 1993-01-01, 'ts': 1993-01-01 23:20:11, 'i': 8400, 'b': 999999999, 'f': 100.5}",Client,Data Type,Different representation for nested data structure
+select MAP(),2,Result MisMatch,"{'key': [], 'value': []}",{},Client,Data Type,Different representation for nested data structure
+"SELECT list_filter(['x', 'abc', 'z'], x -> contains(x || '0', 'a'))",2,Result MisMatch,['abc'],[abc],Client,Data Type,Different representation for nested data structure
+"select regexp_extract_all('this_is__a___Test', '(.*?)(?:_|$)')",2,Result MisMatch,"['this_', 'is_', '_', 'a_', '_', '_', 'Test', '']","[this_, is_, _, a_, _, _, Test, ]",Client,Data Type,Different representation for nested data structure
+"SELECT arg_max({d: ""DATE"", ts: ""TIMESTAMP"", i: ""INTEGER"", b: ""BIGINT"", s: ""VARCHAR""}, ""DOUBLE"")
+FROM tbl;",2,Result MisMatch,"{'d': datetime.date(1993, 1, 1), 'ts': datetime.datetime(1993, 1, 1, 23, 20, 11), 'i': 8400, 'b': 999999999, 's': 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'}","{'d': 1993-01-01, 'ts': 1993-01-01 23:20:11, 'i': 8400, 'b': 999999999, 's': zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz}",Client,Data Type,Different representation for nested data structure
+"DELETE FROM table2
+WHERE b=4
+RETURNING [a, b];",2,Result MisMatch,"['mysql', '4']","[mysql, 4]",Client,Data Type,Different representation for nested data structure
+"select regexp_extract_all('щцф', '.{2}')",2,Result MisMatch,['щц'],[щц],Client,Data Type,Different representation for nested data structure
+"SELECT str, 
+  REGEXP_EXTRACT_ALL(str,'(ab)+cd') AS matched
+FROM (
+  VALUES ('bcd'), ('abcd'), ('abbcd'), ('ababcd'), ('ababxcd')
+) AS t(str)",2,Result MisMatch,"ababcd	['ababcd']
+ababxcd	[]
+abbcd	[]
+abcd	['abcd']
+bcd	[]","bcd	[]
+abcd	[abcd]
+abbcd	[]
+ababcd	[ababcd]
+ababxcd	[]",Client,Data Type,Different representation for nested data structure
+select col[True] from boolean_key;,2,Result MisMatch,['x'],[x],Client,Data Type,Different representation for nested data structure
+"SELECT CAST('{}' AS MAP(INT, INT));",2,Result MisMatch,"{'key': [], 'value': []}",{},Client,Data Type,Different representation for nested data structure
+SELECT * FROM a,2,Result MisMatch,"[{'a': 3, 'b': None}, None, {'a': None, 'b': 'hello'}]","[{'a': 3, 'b': NULL}, NULL, {'a': NULL, 'b': hello}]",Client,Data Type,Different representation for nested data structure
+"select regexp_extract_all('abc=111, def=222, ghi=333', '(""[^""]+""|\w+)=(""[^""]+""|\w+)', 1);",2,Result MisMatch,"['abc', 'def', 'ghi']","[abc, def, ghi]",Client,Data Type,Different representation for nested data structure
+SELECT histogram(2) FROM range(100);,2,Result MisMatch,"{'key': [2], 'value': [100]}",{2=100},Client,Data Type,Different representation for nested data structure
+SELECT list_histogram(['2021-08-20'::TIMESTAMP_MS]),2,Result MisMatch,"{'key': [datetime.datetime(2021, 8, 20, 0, 0)], 'value': [1]}",{2021-08-20 00:00:00=1},Client,Data Type,Different representation for nested data structure
+"select list_resize(a, b) from string_tbl;",2,Result MisMatch,"['abc', 'def', None]
+['d', 'ef', 'ghij', None, None, None, None, None]
+['here is a little story about a duck,', 'whose name is harold.', 'He is a cool duck who lives in a cool world', None, None]
+['lmnopqrs', None, None, None, None]","[abc, def, NULL]
+[d, ef, ghij, NULL, NULL, NULL, NULL, NULL]
+[lmnopqrs, NULL, NULL, NULL, NULL]
+[here is a little story about a duck,, whose name is harold., He is a cool duck who lives in a cool world, NULL, NULL]",Client,Data Type,Different representation for nested data structure
+UPDATE hugeints SET h=h+1 WHERE h=100,7,"Catalog Error: Table with name hugeints does not exist!
+Did you mean ""pg_settings""?
+LINE 1: UPDATE hugeints SET h=h+1 WHERE h=100
+               ^",False,True,Misc,Function,Unsupported test runner function: multiple connection
+SELECT  min((SELECT  min((SELECT  min((SELECT  min((SELECT  min((SELECT  min((SELECT  min((SELECT  min((SELECT  min(i + i) FROM tbl) + i) FROM tbl) + i) FROM tbl) + i) FROM tbl) + i) FROM tbl) + i) FROM tbl) + i) FROM tbl) + i) FROM tbl) + i) FROM tbl,1,"Catalog Error: Table with name tbl does not exist!
+Did you mean ""information_schema.tables""?
+LINE 1: ... i) FROM tbl) + i) FROM tbl) + i) FROM tbl
+                                                  ^",False,True,Environment,File Paths,Environment variable leads to wrong file paths
+"CREATE TABLE integers2 AS SELECT i%4 i, i j FROM range(0, 5000) tbl(i)",1,IO Error: No such file or directory,False,True,Environment,File Paths,Environment variable leads to wrong file paths
+"select regr_syy(a, b) from t group by b%2;",1,"Catalog Error: Table with name t does not exist!
+Did you mean ""bool""?
+LINE 1: select regr_syy(a, b) from t group by b%2;
+                                   ^",False,"41666666650000
+41666666650000",Environment,File Paths,Environment variable leads to wrong file paths
+"select regr_avgx(a, b) from t group by b%2;",1,"Catalog Error: Table with name t does not exist!
+Did you mean ""bool""?
+LINE 1: select regr_avgx(a, b) from t group by b%2;
+                                    ^",False,"4
+5",Environment,File Paths,Environment variable leads to wrong file paths
+"select regr_intercept(a, b) from t group by b%2;",1,"Catalog Error: Table with name t does not exist!
+Did you mean ""bool""?
+LINE 1: select regr_intercept(a, b) from t group by b%2;
+                                         ^",False,"49995
+49995",Environment,File Paths,Environment variable leads to wrong file paths
+"select alias(columns(*)) from read_csv_auto('__TEST_DIR__/bad_file.csv', names=['a','b','c','d'], HIVE_PARTITIONING=0) LIMIT 1;",1,"IO Error: No files found that match the pattern ""__TEST_DIR__/bad_file.csv""",False,a	b	c	d,Environment,File Paths,Environment variable leads to wrong file paths
+SELECT * FROM s1.table01 ORDER BY i;,1,"Catalog Error: Table with name table01 does not exist!
+Did you mean ""information_schema.tables""?
+LINE 1: SELECT * FROM s1.table01 ORDER BY i;
+                      ^",False,"3	3
+4	4",Environment,File Paths,Environment variable leads to wrong file paths
+"select arg_min(b,a), arg_max(b,a) from t;",1,"Catalog Error: Table with name t does not exist!
+Did you mean ""bool""?
+LINE 1: select arg_min(b,a), arg_max(b,a) from t;
+                                               ^",False,0	9,Environment,File Paths,Environment variable leads to wrong file paths
+"SELECT * FROM read_csv('__TEST_DIR__/test.json', columns={'json': 'VARCHAR'}, sep='🦆');",1,"IO Error: No files found that match the pattern ""__TEST_DIR__/test.json""",False,,Environment,File Paths,Environment variable leads to wrong file paths
+"select alias(columns(*)) from read_csv_auto('__TEST_DIR__/csv_partition_2/**', names=['a','b','c','d']) LIMIT 1;",1,"IO Error: No files found that match the pattern ""__TEST_DIR__/csv_partition_2/**""",False,a	b	c	d	month	year,Environment,File Paths,Environment variable leads to wrong file paths
+PRAGMA all_profiling_output,1,IO Error: No such file or directory,False,True,Environment,File Paths,Environment variable leads to wrong file paths
+SELECT INTERVAL '9223372036854775807' MICROSECONDS;,6,Result MisMatch,"106751991 days, 4:00:54.775807",2562047788:00:54.775807,Client,Data Type,Datetime object difference
+"select k, mode(v) from timestamps group by k;",6,Result MisMatch,"1	2021-05-02 12:11:49.500000
+2	2020-02-29 06:30:00
+3	2004-09-01 21:15:22","1	2021-05-02 12:11:49.5
+2	2020-02-29 06:30:00
+3	2004-09-01 21:15:22",Client,Data Type,Datetime object difference
+SELECT value FROM duckdb_settings() WHERE name='preserve_identifier_case',6,Result MisMatch,false,False,Client,Data Type,Datetime object difference
+"SELECT p.begin, e.value
+FROM probe0 p ASOF JOIN events0 e
+ON p.begin >= e.begin
+ORDER BY p.begin ASC",6,Conversion Error: Date out of range in timestamp conversion,False,"2023-03-21 13:00:00	0
+2023-03-21 14:00:00	1
+2023-03-21 15:00:00	2
+2023-03-21 16:00:00	3
+2023-03-21 17:00:00	3
+2023-03-21 18:00:00	3
+2023-03-21 19:00:00	3
+2023-03-21 20:00:00	3
+2023-03-21 21:00:00	3
+infinity	9",Client,Data Type,Datetime object difference
+"SELECT quantile_cont(('2021-01-01'::TIMESTAMP + interval (r/100) hour)::TIMESTAMPTZ, [0.25, 0.5, 0.75])
+FROM quantiles",6,Result MisMatch,"[datetime.datetime(2021, 4, 14, 19, 45), datetime.datetime(2021, 7, 27, 23, 30), datetime.datetime(2021, 11, 9, 3, 15)]","[2021-04-15 03:45:00+00, 2021-07-28 07:30:00+00, 2021-11-09 11:15:00+00]",Client,Data Type,Datetime object difference
+"select t, time_bucket(null::interval, t, '1990-01-06 08:08:10'::timestamp) from timestamps;",6,Conversion Error: Date out of range in timestamp conversion,False,"-infinity	NULL
+3000-01-02 (BC) 03:16:23.003003	NULL
+1024-04-10 (BC) 12:35:40.003003	NULL
+0044-06-15 (BC) 12:35:40.003003	NULL
+0678-06-30 02:02:03.003003	NULL
+0794-07-03 02:02:04.003003	NULL
+1700-01-01 00:00:00	NULL
+1962-12-31 00:00:00	NULL
+1970-01-01 00:00:00	NULL
+1985-12-07 02:02:08.003003	NULL
+1989-10-18 02:02:09.003003	NULL
+1990-01-21 02:02:10.003003	NULL
+1991-02-10 02:02:11.003003	NULL
+1992-09-11 02:02:12.003003	NULL
+1994-12-26 02:02:13.003003	NULL
+1997-05-13 02:02:14.003003	NULL
+1999-02-14 02:02:15.003003	NULL
+2000-01-01 00:00:00	NULL
+2000-01-03 00:00:00	NULL
+2008-09-17 02:02:18.003003	NULL
+2010-08-18 02:02:19.003003	NULL
+2013-03-19 02:02:20.003003	NULL
+2014-11-20 02:02:21.003003	NULL
+2016-02-21 02:02:22.003003	NULL
+2018-08-22 02:02:23.003003	NULL
+2019-01-23 02:02:24.003003	NULL
+2020-02-24 02:02:25.003003	NULL
+2022-07-25 02:02:26.003003	NULL
+2024-02-25 02:02:26.003003	NULL
+2032-09-25 02:02:26.003003	NULL
+infinity	NULL",Client,Data Type,Datetime object difference
+"select strptime('2020-12-30 23:25:58.745232-04', '%Y-%m-%d %H:%M:%S.%f%z');",6,Result MisMatch,2020-12-31 03:25:58.745232,2020-12-31 03:25:58.745232+00,Client,Data Type,Datetime object difference
+"select k, mode(v) from intervals group by k;",6,Result MisMatch,"1	152 days, 12:11:49
+2	89 days, 6:30:00
+3	271 days, 21:15:22","1	5 months 2 days 12:11:49
+2	2 months 29 days 06:30:00
+3	9 months 1 day 21:15:22",Client,Data Type,Datetime object difference
+"SELECT quantile_cont('1990-01-01'::DATE + interval (r/100) day, [0.25, 0.5, 0.75]) FROM quantiles",6,Result MisMatch,"[datetime.datetime(1996, 11, 4, 18, 0), datetime.datetime(2003, 9, 9, 12, 0), datetime.datetime(2010, 7, 14, 6, 0)]","[1996-11-04 18:00:00, 2003-09-09 12:00:00, 2010-07-14 06:00:00]",Client,Data Type,Datetime object difference
+"SELECT micro::TIMESTAMP_S, micro::TIMESTAMP_MS,micro::TIMESTAMP_NS from timestamp;",6,Result MisMatch,2008-01-01 00:00:01	2008-01-01 00:00:01.889000	2008-01-01 00:00:01.889260,2008-01-01 00:00:01	2008-01-01 00:00:01.889	2008-01-01 00:00:01.88926,Client,Data Type,Datetime object difference
+select mode(v) from times;,6,Result MisMatch,12:11:49.500000,12:11:49.5,Client,Data Type,Datetime object difference
+"SELECT try_strptime('Mon Oct 17 2022 22:00:00 GMT+0000 (GMT', '%a %b %d %Y %X GMT%z (%Z') as working;",6,Result MisMatch,2022-10-17 22:00:00,2022-10-17 22:00:00+00,Client,Data Type,Datetime object difference
+"SELECT strptime('Mon Oct 17 2022 22:00:00 GMT+0000 (GMT)', '%a %b %d %Y %X GMT%z (%Z)') as fixed;",6,Result MisMatch,2022-10-17 22:00:00,2022-10-17 22:00:00+00,Client,Data Type,Datetime object difference
+"COPY Sales.SalesTaxRate FROM 'test/sqlserver/data/SalesTaxRate.csv.gz' (DELIMITER '	', AUTO_DETECT TRUE)",3,"IO Error: No files found that match the pattern ""test/sqlserver/data/SalesTaxRate.csv.gz""",False,True,Environment,File Paths,Environment difference of file structures
+"SELECT Department, LastName, Rate, HireDate, LAST_VALUE(HireDate) OVER (PARTITION BY Department ORDER BY Rate, LastName) AS LastValue FROM HumanResources.vEmployeeDepartmentHistory AS edh INNER JOIN HumanResources.EmployeePayHistory AS eph ON eph.BusinessEntityID = edh.BusinessEntityID INNER JOIN HumanResources.Employee AS e ON e.BusinessEntityID = edh.BusinessEntityID WHERE Department IN (N'Information Services',N'Document Control') ORDER BY 1, 3, 2, 4, 5;",3,Result MisMatch,,"Document Control	Berge	10.2500	2009-02-09	2009-02-09
+Document Control	Chai	10.2500	2009-01-22	2009-01-22
+Document Control	Kharatishvili	16.8269	2008-12-16	2008-12-16
+Document Control	Norred	16.8269	2009-03-06	2009-03-06
+Document Control	Arifin	17.7885	2009-01-04	2009-01-04
+Information Services	Bacon	27.4038	2009-01-11	2009-01-11
+Information Services	Berg	27.4038	2009-02-16	2009-02-16
+Information Services	Bueno	27.4038	2008-12-23	2008-12-23
+Information Services	Meyyappan	27.4038	2009-02-03	2009-02-03
+Information Services	Connelly	32.4519	2009-02-23	2009-02-23
+Information Services	Sharma	32.4519	2008-12-04	2008-12-04
+Information Services	Ajenstat	38.4615	2009-01-17	2009-01-17
+Information Services	Wilson	38.4615	2009-01-22	2009-01-22
+Information Services	Conroy	39.6635	2009-02-04	2009-02-04
+Information Services	Trenary	50.4808	2008-12-11	2008-12-11",Environment,File Paths,Environment difference of file structures
+"COPY HumanResources.EmployeeDepartmentHistory FROM 'test/sqlserver/data/EmployeeDepartmentHistory.csv.gz' (DELIMITER '	', AUTO_DETECT TRUE)",3,"IO Error: No files found that match the pattern ""test/sqlserver/data/EmployeeDepartmentHistory.csv.gz""",False,True,Environment,File Paths,Environment difference of file structures
+"COPY actor FROM 'test/sakila/data/actor.csv' (HEADER, DELIMITER '|')",3,"IO Error: No files found that match the pattern ""test/sakila/data/actor.csv""",False,True,Environment,File Paths,Environment difference of file structures
+SELECT MAX(TaxRate) FROM Sales.SalesTaxRate;,3,Result MisMatch,,19.600000,Environment,File Paths,Environment difference of file structures
+"COPY rental FROM 'test/sakila/data/rental.csv' (HEADER, DELIMITER '|')",3,"IO Error: No files found that match the pattern ""test/sakila/data/rental.csv""",False,True,Environment,File Paths,Environment difference of file structures
+"COPY Sales.SalesPersonQuotaHistory FROM 'test/sqlserver/data/SalesPersonQuotaHistory.csv.gz' (DELIMITER '	', AUTO_DETECT TRUE)",3,"IO Error: No files found that match the pattern ""test/sqlserver/data/SalesPersonQuotaHistory.csv.gz""",False,True,Environment,File Paths,Environment difference of file structures
+"COPY customer FROM 'test/sakila/data/customer.csv' (HEADER, DELIMITER '|')",3,"IO Error: No files found that match the pattern ""test/sakila/data/customer.csv""",False,True,Environment,File Paths,Environment difference of file structures
+insert into test_table SELECT * FROM test_table_view,3,"Catalog Error: Table with name test_table_view does not exist!
+Did you mean ""test_table""?",False,True,Environment,File Paths,Environment difference of file structures
+"SELECT IFELSE(0,'true','false')",12,Result MisMatch,false,False,Client,Data Type,Boolean
+"SELECT IFELSE(a = 1, 'true', 'false') FROM integers",12,Result MisMatch,true,True,Client,Data Type,Boolean
+"SELECT
+    col1 IN (SELECT ColID FROM tbl_ProductSales)
+FROM another_T
+GROUP BY ROLLUP(col1)",12,Result MisMatch,"False
+False
+False
+NULL
+True","0
+0
+0
+1
+NULL",Client,Data Type,Boolean
+"SELECT
+    DISTINCT
+    NOT col1 IN (SELECT col2 FROM another_T GROUP BY col2)
+FROM another_T
+GROUP BY ROLLUP(col1)",12,Result MisMatch,"NULL
+True","1
+NULL",Client,Data Type,Boolean
+"SELECT IFELSE(1,'true','false')",12,Result MisMatch,true,True,Client,Data Type,Boolean
+select list_entropy(k) from aggr;,5,Result MisMatch,"0.0
+0.0
+2.321928094887362
+2.321928094887362
+NULL","2.321928
+0
+0
+NULL
+2.321928",Client,Numeric,Float point precision
+"select k, regr_avgx(v, v2) from aggr group by k;",5,Result MisMatch,"1	NULL
+2	22.666666666666668","1	NULL
+2	22.666667",Client,Numeric,Float point precision
+"select regr_intercept(v, v2) from aggr;",5,Result MisMatch,1.1547344110854496,1.154734,Client,Numeric,Float point precision
+"select k, regr_intercept(v, v2) from aggr group by k;",5,Result MisMatch,"1	NULL
+2	1.1547344110854496","1	NULL
+2	1.154734",Client,Numeric,Float point precision
+"select  regr_avgx(v, v2) over (partition by k)
+    from aggr;",5,Result MisMatch,"22.666666666666668
+22.666666666666668
+22.666666666666668
+22.666666666666668
+NULL","22.666667
+22.666667
+22.666667
+22.666667
+NULL",Client,Numeric,Float point precision
+"select jaro_winkler_similarity('01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000', '00000000000000000000000000000000000000000000000000000000000000000')",5,Result MisMatch,0.85234375,0.85234,Client,Numeric,Float point precision
+"select jaro_winkler_similarity('elephant', 'hippo')",5,Result MisMatch,0.44166666666666665,0.44,Client,Numeric,Float point precision
+"SELECT regexp_matches(s, '^a') FROM TEST;",11,Result MisMatch,True,aaa,Misc,Parser,Mislead by the result provided by test suite
+select LTRIM(a) FROM strings,11,Result MisMatch,"Both 
+Leading","(empty)
+Leading
+Both 
+(empty)",Misc,Parser,Mislead by the result provided by test suite
+"SELECT UNNEST(string_split(' 🦆🦆  🦆🦆', '  '))",11,Result MisMatch,"🦆🦆
+🦆🦆"," 🦆🦆
+🦆🦆",Misc,Parser,Mislead by the result provided by test suite
+SELECT b::FLOAT FROM bits;,10,Result MisMatch,2.1019476964872256e-44,2.1e-44,Client,Numeric,Big integer representation
+SELECT CAST('\x12' AS BLOB),8,Result MisMatch,b'\x12',\x12,Client,Numeric,Binary object difference
+"insert into insertconflicttest values(0, 'Crowberry') on conflict (key) do update set fruit = excluded.fruit where excluded.fruit != 'Elderberry'; statement ok insert into insertconflicttest values (0, 'Bilberry') on conflict (key) do update set fruit = excluded.fruit where insertconflicttest.fruit != 'Lime' returning *",9,"Parser Error: syntax error at or near ""statement""
+LINE 1: ... where excluded.fruit != 'Elderberry'; statement ok insert into insertconflict...
+                                                  ^",False,True,Misc,Parser,Nested comments

@@ -1,0 +1,550 @@
+SQL,ERROR_REASON,ERROR_MSG,ACTUAL_RESULT,EXPECTED_RESULT,DBMS,SUPER_TAG,TAG,DESCRIPTION,INFORMATION
+"SELECT * FROM documents WHERE fts_match(id, 'QUÁCK BÁRK')",GENERAL,"function fts_match(character varying, unknown) does not exist
+LINE 1: SELECT * FROM documents WHERE fts_match(id, 'QUÁCK BÁRK')
+                                      ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,"doc1	 QUÁCK+QUÁCK+QUÁCK
+doc2	 BÁRK+BÁRK+BÁRK+BÁRK",postgresql,Func Syntax,GENERAL,no such function: ,
+"select list_has_any(l1, l2) from list_data;",GENERAL,"function list_has_any(integer[], integer[]) does not exist
+LINE 1: select list_has_any(l1, l2) from list_data;
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,"NULL
+NULL
+NULL
+1
+1
+0
+1
+1",postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT list_count(a), list_approx_count_distinct(a), list_approx_count_distinct(b) from list_ints_2",GENERAL,"function list_count(integer[]) does not exist
+LINE 1: SELECT list_count(a), list_approx_count_distinct(a), list_ap...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,2000	1991	10,postgresql,Func Syntax,GENERAL,no such function: ,
+"select printf('%_d', 123456789)",GENERAL,"function printf(unknown, integer) does not exist
+LINE 1: select printf('%_d', 123456789)
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,123_456_789,postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT TRY_CAST(i AS UBIGINT) FROM hugeints ORDER BY i,GENERAL,"syntax error at or near ""AS""
+LINE 1: SELECT TRY_CAST(i AS UBIGINT) FROM hugeints ORDER BY i
+                          ^
+",False,"NULL
+0
+NULL",postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT total_seats
+FROM (
+SELECT list(distinct {'key': gen_random_uuid(), 'val': 1 }) as l FROM range(0, 1600)
+) as m, (
+  select sum(a.val) as value
+  FROM (
+	SELECT UNNEST(l) a
+  ) x
+) as l(total_seats)",GENERAL,"syntax error at or near ""{""
+LINE 3: SELECT list(distinct {'key': gen_random_uuid(), 'val': 1 }) ...
+                             ^
+",False,1600,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT strftime(d, '%B') FROM dates ORDER BY d;",GENERAL,"function strftime(date, unknown) does not exist
+LINE 1: SELECT strftime(d, '%B') FROM dates ORDER BY d;
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,"NULL
+January
+March
+August
+August",postgresql,Func Syntax,GENERAL,no such function: ,
+PREPARE v3 AS SELECT flatten(?),GENERAL,"syntax error at or near "")""
+LINE 1: PREPARE v3 AS SELECT flatten(?)
+                                      ^
+",False,True,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT (SELECT tbl2.a['i'] + tbl.b['j'] FROM (VALUES ({'i': 1, 'j': 2})) tbl(b)) FROM (VALUES ({'i': 1, 'j': 2})) tbl2(a);",GENERAL,"syntax error at or near ""{""
+LINE 1: ...CT (SELECT tbl2.a['i'] + tbl.b['j'] FROM (VALUES ({'i': 1, '...
+                                                             ^
+",False,3,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT mismatches('hallo', 'aloha')",GENERAL,"function mismatches(unknown, unknown) does not exist
+LINE 1: SELECT mismatches('hallo', 'aloha')
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,5,postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT false=1;,GENERAL,"operator does not exist: boolean = integer
+LINE 1: SELECT false=1;
+                    ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+",False,False,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT e, STRUCT_PACK(e) FROM struct_data ORDER BY e LIMIT 2",GENERAL,"function struct_pack(integer) does not exist
+LINE 1: SELECT e, STRUCT_PACK(e) FROM struct_data ORDER BY e LIMIT 2
+                  ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,"NULL	{'e': NULL}
+1	{'e': 1}",postgresql,Func Syntax,GENERAL,no such function: ,
+"INSERT INTO t1 VALUES (ARRAY[(6, 'h'), (7,'g')])",GENERAL,"relation ""t1"" does not exist
+LINE 1: INSERT INTO t1 VALUES (ARRAY[(6, 'h'), (7,'g')])
+                    ^
+",False,True,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT instr(v, chr(0)) FROM null_byte",GENERAL,"relation ""null_byte"" does not exist
+LINE 1: SELECT instr(v, chr(0)) FROM null_byte
+                                     ^
+",False,4,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT damerau_levenshtein(NULL, s) from strings",GENERAL,"function damerau_levenshtein(unknown, character varying) does not exist
+LINE 1: SELECT damerau_levenshtein(NULL, s) from strings
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,,postgresql,Func Syntax,GENERAL,no such function: ,
+"CREATE TABLE t1 AS (SELECT ARRAY[(1, 'x'), (2, 'y'), (4, 's')] AS list)",GENERAL,"column ""list"" has pseudo-type record[]
+",False,True,postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT stats(EXTRACT(minute FROM i)) FROM times LIMIT 1,GENERAL,"function stats(numeric) does not exist
+LINE 1: SELECT stats(EXTRACT(minute FROM i)) FROM times LIMIT 1
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,<REGEX>:.*0.*60.*true.*,postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT bar FROM unit,GENERAL,"relation ""unit"" does not exist
+LINE 1: SELECT bar FROM unit
+                        ^
+",False,6,postgresql,Func Syntax,GENERAL,no such function: ,
+"select UNNEST(string_split('1|2|3|', '|'))",GENERAL,"function string_split(unknown, unknown) does not exist
+LINE 1: select UNNEST(string_split('1|2|3|', '|'))
+                      ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,"1
+2
+3
+(empty)",postgresql,Func Syntax,GENERAL,no such function: ,
+FROM integers LIMIT 2,GENERAL,"syntax error at or near ""FROM""
+LINE 1: FROM integers LIMIT 2
+        ^
+",False,"1
+2",postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT '1970-01-01'::DATE::VARCHAR == '1970-01-01',GENERAL,"operator does not exist: character varying == unknown
+LINE 1: SELECT '1970-01-01'::DATE::VARCHAR == '1970-01-01'
+                                           ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+",False,1,postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT * FROM grouped_table ORDER BY COLUMNS('index[0-9]');,GENERAL,"function columns(unknown) does not exist
+LINE 1: SELECT * FROM grouped_table ORDER BY COLUMNS('index[0-9]');
+                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,"2	13	14
+1	42	84",postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT try_strptime('juk', '%b')",GENERAL,"function try_strptime(unknown, unknown) does not exist
+LINE 1: SELECT try_strptime('juk', '%b')
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,,postgresql,Func Syntax,GENERAL,no such function: ,
+"select time_bucket('1 month 1 day'::interval, null::timestamp, '2022-12-20 10:00:00'::timestamp);",GENERAL,"function time_bucket(interval, timestamp without time zone, timestamp without time zone) does not exist
+LINE 1: select time_bucket('1 month 1 day'::interval, null::timestam...
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT strptime('1', '%W')",GENERAL,"function strptime(unknown, unknown) does not exist
+LINE 1: SELECT strptime('1', '%W')
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,1900-01-07 00:00:00,postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT rowid * 0 FROM test,GENERAL,"column ""rowid"" does not exist
+LINE 1: SELECT rowid * 0 FROM test
+               ^
+",False,"0
+0",postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT tbl1.a, tbl1.id, tbl2.id FROM tbl2 FULL OUTER JOIN tbl1 ON tbl1.a = tbl2.b ORDER BY ALL;",GENERAL,"syntax error at or near ""ALL""
+LINE 1: ...M tbl2 FULL OUTER JOIN tbl1 ON tbl1.a = tbl2.b ORDER BY ALL;
+                                                                   ^
+",False,"NULL	NULL	5
+NULL	4	NULL
+1	1	3
+1	5	3
+2	2	4
+bar	4	2
+foo	3	1",postgresql,Func Syntax,GENERAL,no such function: ,
+"INSERT INTO tbl4 VALUES (union_value(b := NULL::BLOB)), (union_value(b := NULL)), (NULL), (NULL::BLOB)",GENERAL,"relation ""tbl4"" does not exist
+LINE 1: INSERT INTO tbl4 VALUES (union_value(b := NULL::BLOB)), (uni...
+                    ^
+",False,True,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT g, UNNEST(l) u FROM (SELECT g, LIST(e) l FROM list_data GROUP BY g) u1 ORDER BY u",GENERAL,"function list(integer) does not exist
+LINE 1: SELECT g, UNNEST(l) u FROM (SELECT g, LIST(e) l FROM list_da...
+                                              ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,"5	NULL
+1	1
+1	2
+2	3
+2	4
+2	5
+3	6",postgresql,Func Syntax,GENERAL,no such function: ,
+SELECT count(i) FROM integers WHERE i < 4,GENERAL,Result MisMatch,0,4500,postgresql,Func Syntax,GENERAL,no such function: ,
+PREPARE v15 AS SELECT ?=NULL,GENERAL,"operator does not exist: ?= unknown
+LINE 1: PREPARE v15 AS SELECT ?=NULL
+                              ^
+HINT:  No operator matches the given name and argument type. You might need to add an explicit type cast.
+",False,True,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT array_aggregate([1, 2], 'min')",GENERAL,"syntax error at or near ""[""
+LINE 1: SELECT array_aggregate([1, 2], 'min')
+                               ^
+",False,1,postgresql,Func Syntax,GENERAL,no such function: ,
+"SELECT suffix('abcd', 'd')",GENERAL,"function suffix(unknown, unknown) does not exist
+LINE 1: SELECT suffix('abcd', 'd')
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,1,postgresql,Func Syntax,GENERAL,no such function: ,
+"WITH d(y) AS (
+	SELECT UNNEST(range(
+		'2023-05-11 4:00:00'::TIMESTAMP,
+		'2023-05-11 4:00:00'::TIMESTAMP + TO_DAYS(7),
+		TO_HOURS(6)
+	))
+)
+SELECT
+	y,
+	y - ('2023-05-11 4:00:00'::TIMESTAMP) AS x
+FROM d
+WHERE
+	x BETWEEN TO_HOURS(-44) AND TO_HOURS(44)",GENERAL,"function to_days(integer) does not exist
+LINE 4:   '2023-05-11 4:00:00'::TIMESTAMP + TO_DAYS(7),
+                                            ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+",False,,postgresql,Func Syntax,GENERAL,no such function: ,
+INSERT INTO t0(c0) VALUES (0),TYPE,"column ""c0"" is of type boolean but expression is of type integer
+LINE 1: INSERT INTO t0(c0) VALUES (0)
+                                   ^
+HINT:  You will need to rewrite or cast the expression.
+",False,True,postgresql,Operation,TYPE,Need to cast the expression,
+"UPDATE ""t1"" SET ""ref"" = ( 	SELECT ""id"" 	FROM ""t2"" 	WHERE ""t2"".""i"" == ""t1"".""i"" AND ""t2"".""j"" == ""t1"".""j"" )",TYPE,"operator does not exist: integer == integer
+LINE 1: ...""ref"" = (  SELECT ""id""  FROM ""t2""  WHERE ""t2"".""i"" == ""t1"".""i...
+                                                             ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+",False,True,postgresql,Operation,TYPE,Need to cast the expression,
+SELECT * FROM integers WHERE a<2 AND 0,TYPE,"argument of AND must be type boolean, not type integer
+LINE 1: SELECT * FROM integers WHERE a<2 AND 0
+                                             ^
+",False,,postgresql,Operation,TYPE,Need to cast the expression,
+SELECT BIGCOLUMN FROM MyTable,SCHEMA,"relation ""mytable"" does not exist
+LINE 1: SELECT BIGCOLUMN FROM MyTable
+                              ^
+",False,True,postgresql,Function,SCHEMA,Quote in Postgresql <> DuckDB,
+SELECT -42::BIGINT::USMALLINT,TYPENE,"type ""usmallint"" does not exist
+LINE 1: SELECT -42::BIGINT::USMALLINT
+                            ^
+",False,65494,postgresql,Func Syntax,TYPENE,Type not exist,
+"INSERT INTO timestamp VALUES ('2008-01-01 00:00:11','2008-01-01 00:00:01.794','2008-01-01 00:00:01.98926','2008-01-01 00:00:01.899268321' )",TYPENE,"relation ""timestamp"" does not exist
+LINE 1: INSERT INTO timestamp VALUES ('2008-01-01 00:00:11','2008-01...
+                    ^
+",False,True,postgresql,Func Syntax,TYPENE,Type not exist,
+"SELECT cast(col as STRUCT(a VARCHAR, b INT)).a FROM tbl WHERE cast(col as STRUCT(a VARCHAR, b INT)).b=12;",TYPENE,"syntax error at or near ""VARCHAR""
+LINE 1: SELECT cast(col as STRUCT(a VARCHAR, b INT)).a FROM tbl WHER...
+                                    ^
+",False,DUCK,postgresql,Func Syntax,TYPENE,Type not exist,
+"select CONCAT_WS('@','PREFIX', b) FROM strings",TYPENE,"relation ""strings"" does not exist
+LINE 1: select CONCAT_WS('@','PREFIX', b) FROM strings
+                                               ^
+",False,"PREFIX@World
+PREFIX
+PREFIX@RÄcks",postgresql,Func Syntax,TYPENE,Type not exist,
+"SELECT ('{a: ""can''t"", b: ""you''re"", c: ""i''m""}'::STRUCT(a VARCHAR, b VARCHAR, c VARCHAR));",TYPENE,"syntax error at or near ""VARCHAR""
+LINE 1: ...{a: ""can''t"", b: ""you''re"", c: ""i''m""}'::STRUCT(a VARCHAR, b...
+                                                             ^
+",False,"{'a': can't, 'b': you're, 'c': i'm}",postgresql,Func Syntax,TYPENE,Type not exist,
+create table names (name string[]),TYPENE,"type ""string[]"" does not exist
+LINE 1: create table names (name string[])
+                                 ^
+",False,True,postgresql,Func Syntax,TYPENE,Type not exist,
+"SELECT c0, c1, ((t0.c0)!~(((t0.c0)/(t0.c1)))) FROM t0;",TYPENE,"relation ""t0"" does not exist
+LINE 1: SELECT c0, c1, ((t0.c0)!~(((t0.c0)/(t0.c1)))) FROM t0;
+                                                           ^
+",False,"0.5	0	NULL
+0.5	1	False
+0.5	NULL	NULL
+0.5	NULL	NULL
+0.5	NULL	NULL",postgresql,Func Syntax,TYPENE,Type not exist,
+SELECT * FROM a,TYPENE,Result MisMatch,,"1	[[1, 2, 3], [4, 5]]",postgresql,Func Syntax,TYPENE,Type not exist,
+"SELECT list_contains([NULL,7], 7)",TYPENE,"syntax error at or near ""[""
+LINE 1: SELECT list_contains([NULL,7], 7)
+                             ^
+",False,1,postgresql,Func Syntax,TYPENE,Type not exist,
+SELECT COLUMNS([x for x in (*) if x LIKE 'i']) FROM integers i1 JOIN integers i2 USING (i),TYPENE,"syntax error at or near ""[""
+LINE 1: SELECT COLUMNS([x for x in (*) if x LIKE 'i']) FROM integers...
+                       ^
+",False,"42
+13",postgresql,Func Syntax,TYPENE,Type not exist,
+SELECT * FROM b ORDER BY 1,TYPENE,"relation ""b"" does not exist
+LINE 1: SELECT * FROM b ORDER BY 1
+                      ^
+",False,"1
+2
+3
+4
+5",postgresql,Func Syntax,TYPENE,Type not exist,
+SET default_null_order='nulls_first',TYPENE,"unrecognized configuration parameter ""default_null_order""
+",False,True,postgresql,Func Syntax,TYPENE,Type not exist,
+"SELECT id, UNNEST(i), UNNEST(j) FROM (VALUES (1, ['abcd', 'efgh'], ['123456789abcd']), (2, NULL, ['123456789efgh', '123456789klmnop']), (3, ['hello', NULL, 'world'], [NULL])) tbl(id, i, j)",TYPENE,"syntax error at or near ""[""
+LINE 1: SELECT id, UNNEST(i), UNNEST(j) FROM (VALUES (1, ['abcd', 'e...
+                                                         ^
+",False,"1	abcd	123456789abcd
+1	efgh	NULL
+2	NULL	123456789efgh
+2	NULL	123456789klmnop
+3	hello	NULL
+3	NULL	NULL
+3	world	NULL",postgresql,Func Syntax,TYPENE,Type not exist,
+SELECT ['duck'] IS NOT DISTINCT FROM ['duck'],TYPENE,"syntax error at or near ""[""
+LINE 1: SELECT ['duck'] IS NOT DISTINCT FROM ['duck']
+               ^
+",False,True,postgresql,Func Syntax,TYPENE,Type not exist,
+"SELECT i, pk, fk FROM intlistdim LEFT OUTER JOIN intlists ON intlistdim.pk=intlists.fk ORDER BY i",TYPENE,"relation ""intlistdim"" does not exist
+LINE 1: SELECT i, pk, fk FROM intlistdim LEFT OUTER JOIN intlists ON...
+                              ^
+",False,"NULL	NULL	NULL
+1	[1]	[1]
+2	[NULL]	[NULL]
+3	[]	[]
+5	[9, 10, 11]	[9, 10, 11]",postgresql,Func Syntax,TYPENE,Type not exist,
+SELECT i FROM UNNEST([]::INT[]) AS tbl(i);,TYPENE,"syntax error at or near ""[""
+LINE 1: SELECT i FROM UNNEST([]::INT[]) AS tbl(i);
+                             ^
+",False,,postgresql,Func Syntax,TYPENE,Type not exist,
+"CREATE VIEW v3 AS SELECT * FROM (VALUES (1, [[1, 2], [3]]), (2, NULL), (3, [[NULL, 3], [4]])) tbl (a, b)",TYPENE,"syntax error at or near ""[""
+LINE 1: CREATE VIEW v3 AS SELECT * FROM (VALUES (1, [[1, 2], [3]]), ...
+                                                    ^
+",False,True,postgresql,Func Syntax,TYPENE,Type not exist,
+SELECT '3' GLOB '[0-9]',TYPENE,"syntax error at or near ""'[0-9]'""
+LINE 1: SELECT '3' GLOB '[0-9]'
+                        ^
+",False,1,postgresql,Func Syntax,TYPENE,Type not exist,
+pragma enable_verification,SQL,"syntax error at or near ""pragma""
+LINE 1: pragma enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA disable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA disable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+pragma enable_verification,SQL,"syntax error at or near ""pragma""
+LINE 1: pragma enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+"SELECT * FROM xt(id,1);",SQL,"column ""id"" does not exist
+LINE 1: SELECT * FROM xt(id,1);
+                         ^
+",False,1	tom,postgresql,Command,SQL,Unstandardize SQL,
+"CREATE MACRO cte_sq(a,b) AS (WITH cte AS (SELECT a * 2 AS c) SELECT cte.c + sq.d FROM cte, (SELECT b * 3 AS d) AS sq)",SQL,"syntax error at or near ""MACRO""
+LINE 1: CREATE MACRO cte_sq(a,b) AS (WITH cte AS (SELECT a * 2 AS c)...
+               ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+pragma verify_external,SQL,"syntax error at or near ""pragma""
+LINE 1: pragma verify_external
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+PRAGMA enable_verification,SQL,"syntax error at or near ""PRAGMA""
+LINE 1: PRAGMA enable_verification
+        ^
+",False,True,postgresql,Command,SQL,Unstandardize SQL,
+"SELECT g, STRING_AGG(x ORDER BY x DESC) FROM strings GROUP BY g ORDER BY 1, 2",RANGE,"relation ""strings"" does not exist
+LINE 1: SELECT g, STRING_AGG(x ORDER BY x DESC) FROM strings GROUP B...
+                                                     ^
+",False,200 values hashing to d9069f92649cccb595d30934b2c25cbc,postgresql,Func Syntax,RANGE,Range not supported,
+update strings set i = 'zorro' where i = 'pedro',RANGE,"relation ""strings"" does not exist
+LINE 1: update strings set i = 'zorro' where i = 'pedro'
+               ^
+",False,True,postgresql,Func Syntax,RANGE,Range not supported,
+SELECT * FROM vals1 WHERE i<=0 AND j<i,RANGE,"relation ""vals1"" does not exist
+LINE 1: SELECT * FROM vals1 WHERE i<=0 AND j<i
+                      ^
+",False,0	-1,postgresql,Func Syntax,RANGE,Range not supported,
+SELECT * FROM integers WHERE i=2;,RANGE,Result MisMatch,,2,postgresql,Func Syntax,RANGE,Range not supported,
+"select lhs.*, rhs.*
+from list_int lhs, list_int rhs
+where lhs.i2 = rhs.i2 and lhs.l3 <= rhs.l3
+order by lhs.i, rhs.i;",RANGE,"relation ""list_int"" does not exist
+LINE 2: from list_int lhs, list_int rhs
+             ^
+",False,"0	0	[0, 1, 2]	0	0	[0, 1, 2]
+0	0	[0, 1, 2]	2	0	[2, 3, 4]
+0	0	[0, 1, 2]	4	0	[4, 5, 6]
+0	0	[0, 1, 2]	6	0	[6, 7, 8]
+0	0	[0, 1, 2]	8	0	[8, 9, 10]
+1	1	[1, 2, 3]	1	1	[1, 2, 3]
+1	1	[1, 2, 3]	3	1	[3, 4, 5]
+1	1	[1, 2, 3]	5	1	[5, 6, 7]
+1	1	[1, 2, 3]	7	1	[7, 8, 9]
+1	1	[1, 2, 3]	9	1	[9, 10, 11]
+2	0	[2, 3, 4]	2	0	[2, 3, 4]
+2	0	[2, 3, 4]	4	0	[4, 5, 6]
+2	0	[2, 3, 4]	6	0	[6, 7, 8]
+2	0	[2, 3, 4]	8	0	[8, 9, 10]
+3	1	[3, 4, 5]	3	1	[3, 4, 5]
+3	1	[3, 4, 5]	5	1	[5, 6, 7]
+3	1	[3, 4, 5]	7	1	[7, 8, 9]
+3	1	[3, 4, 5]	9	1	[9, 10, 11]
+4	0	[4, 5, 6]	4	0	[4, 5, 6]
+4	0	[4, 5, 6]	6	0	[6, 7, 8]
+4	0	[4, 5, 6]	8	0	[8, 9, 10]
+5	1	[5, 6, 7]	5	1	[5, 6, 7]
+5	1	[5, 6, 7]	7	1	[7, 8, 9]
+5	1	[5, 6, 7]	9	1	[9, 10, 11]
+6	0	[6, 7, 8]	6	0	[6, 7, 8]
+6	0	[6, 7, 8]	8	0	[8, 9, 10]
+7	1	[7, 8, 9]	7	1	[7, 8, 9]
+7	1	[7, 8, 9]	9	1	[9, 10, 11]
+8	0	[8, 9, 10]	8	0	[8, 9, 10]
+9	1	[9, 10, 11]	9	1	[9, 10, 11]",postgresql,Func Syntax,RANGE,Range not supported,
+"SELECT COUNT( a),approx_count_distinct(a),approx_count_distinct(b) from t",RANGE,"relation ""t"" does not exist
+LINE 1: ... a),approx_count_distinct(a),approx_count_distinct(b) from t
+                                                                      ^
+",False,2000	1991	10,postgresql,Func Syntax,RANGE,Range not supported,
+"select max(base), max(referenced), sum(refined), sum(unrefined) from (
+    select
+    	row_number() over w AS base,
+    	row_number() over (w) as referenced,
+    	sum(i % 4) over (w rows between 1 preceding and 1 following) AS refined,
+    	sum(i % 4) over (rows between 1 preceding and 1 following) AS unrefined
+    from integers
+    WINDOW w AS (partition by i // 4 order by i % 4)
+) q;",RANGE,"relation ""integers"" does not exist
+LINE 7:     from integers
+                 ^
+",False,4	4	60	69,postgresql,Func Syntax,RANGE,Range not supported,
+EXPLAIN SELECT * FROM (SELECT * FROM vals1 WHERE i=5) tbl1 LEFT JOIN (SELECT * FROM vals1) AS tbl2 ON tbl1.i=tbl2.i,RANGE,"relation ""vals1"" does not exist
+LINE 1: EXPLAIN SELECT * FROM (SELECT * FROM vals1 WHERE i=5) tbl1 L...
+                                             ^
+",False,physical_plan	<REGEX>:.*=5.*=5.*,postgresql,Func Syntax,RANGE,Range not supported,
+DEALLOCATE s1,SYNTAX,"prepared statement ""s1"" does not exist
+",False,True,postgresql,Operation,SYNTAX,syntax error,
+"SELECT * FROM t0 WHERE REGEXP_MATCHES(t0.c0, '1');",SYNTAX,"set-returning functions are not allowed in WHERE
+LINE 1: SELECT * FROM t0 WHERE REGEXP_MATCHES(t0.c0, '1');
+                               ^
+",False,0.1,postgresql,Operation,SYNTAX,syntax error,
+"select distinct on(a) a, b from foo order by b asc;",SYNTAX,"SELECT DISTINCT ON expressions must match initial ORDER BY expressions
+LINE 1: select distinct on(a) a, b from foo order by b asc;
+                           ^
+",False,"1	69
+2	69",postgresql,Operation,SYNTAX,syntax error,
+"SELECT CASE
+       WHEN ( value = 10 or value = 20)
+            THEN TRUE
+            ELSE FALSE
+       END
+       FROM (select mode(v) as value from aggr) AS T",SYNTAX,"WITHIN GROUP is required for ordered-set aggregate mode
+LINE 6:        FROM (select mode(v) as value from aggr) AS T
+                            ^
+",False,1,postgresql,Operation,SYNTAX,syntax error,
+ SELECT * FROM (SELECT 42) t(i) WHERE i IN (SELECT k FROM (SELECT 42) t(k) WHERE k IN (SELECT l FROM (SELECT 42 l) t4(l) WHERE i-k IN (SELECT * FROM (SELECT 0))));,SYNTAX,"subquery in FROM must have an alias
+LINE 1: ...M (SELECT 42 l) t4(l) WHERE i-k IN (SELECT * FROM (SELECT 0)...
+                                                             ^
+HINT:  For example, FROM (SELECT ...) [AS] foo.
+",False,42,postgresql,Operation,SYNTAX,syntax error,
+"SELECT GROUPING(course), GROUPING(type), avg(distinct value), course, type, COUNT(*), sum(distinct value), FROM students GROUP BY CUBE(course, type) ORDER BY all;",SYNTAX,"syntax error at or near ""FROM""
+LINE 1: ...ue), course, type, COUNT(*), sum(distinct value), FROM stude...
+                                                             ^
+",False,"0	0	11.0	CS	NULL	2	22
+0	0	12.0	CS	PhD	1	12
+0	0	12.0	Math	NULL	2	12
+0	0	12.0	Math	Masters	1	12
+0	0	34.0	CS	Bachelor	2	34
+0	1	12.0	Math	NULL	3	12
+0	1	18.666666666666668	CS	NULL	5	56
+1	0	11.0	NULL	NULL	4	22
+1	0	12.0	NULL	Masters	1	12
+1	0	12.0	NULL	PhD	1	12
+1	0	34.0	NULL	Bachelor	2	34
+1	1	18.666666666666668	NULL	NULL	8	56",postgresql,Operation,SYNTAX,syntax error,
+"SELECT 3-i=1, 1=3-i FROM integers ORDER BY i",BOOL,Result MisMatch,"False	False
+False	False
+NULL	NULL
+True	True","NULL	NULL
+0	0
+1	1
+0	0",postgresql,Function,BOOL,BOOL value representation,
+"SELECT GROUPING(course), GROUPING(type), course, type, COUNT(*) FROM students GROUP BY course, type ORDER BY 1, 2, 3, 4, 5;",NULLF,Result MisMatch,"0	0	CS	Bachelor	2
+0	0	CS	PhD	1
+0	0	CS	NULL	2
+0	0	Math	Masters	1
+0	0	Math	NULL	1","0	0	CS	NULL	2
+0	0	CS	Bachelor	2
+0	0	CS	PhD	1
+0	0	Math	NULL	1
+0	0	Math	Masters	1",postgresql,Setting,NULLF,DUckDB set null values first,
+"SELECT GROUPING(course), GROUPING(type), course, type, COUNT(*) FROM students GROUP BY CUBE(course, type) HAVING GROUPING(course)=0 ORDER BY 1, 2, 3, 4, 5;",NULLF,Result MisMatch,"0	0	CS	Bachelor	2
+0	0	CS	PhD	1
+0	0	CS	NULL	2
+0	0	Math	Masters	1
+0	0	Math	NULL	1
+0	1	CS	NULL	5
+0	1	Math	NULL	2","0	0	CS	NULL	2
+0	0	CS	Bachelor	2
+0	0	CS	PhD	1
+0	0	Math	NULL	1
+0	0	Math	Masters	1
+0	1	CS	NULL	5
+0	1	Math	NULL	2",postgresql,Setting,NULLF,DUckDB set null values first,
+select '-1e308'::float;,BIGFLOAT,Result MisMatch,-1e+308,-inf,postgresql,Function,BIGFLOAT,BIG float representation,
+CREATE TABLE prods AS SELECT LIST(2) AS i FROM range(100 // 2) t1(i),OPERATOR,"operator does not exist: integer // integer
+LINE 1: ...TABLE prods AS SELECT LIST(2) AS i FROM range(100 // 2) t1(i...
+                                                             ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+",False,True,postgresql,Func Syntax,OPERATOR,Operator not exist,
+SELECT COUNT(*) FROM a;,MISC,Result MisMatch,0,1,postgresql,Misc,MISC,Issues of runner,
+SELECT FROM (SELECT 42) v1,SYNTAX2,None,True,False,postgresql,Operation,SYNTAX2,supported syntax,
+ALTER TABLE t0 DROP c0,SYNTAX2,None,True,False,postgresql,Operation,SYNTAX2,supported syntax,
+EXPLAIN SELECT i<3 FROM integers JOIN integers2 USING (i);,EXPLAIN,Result MisMatch,"Merge Join  (cost=359.57..941.28 rows=32512 width=1)
+  Merge Cond: (integers.i = integers2.i)
+  ->  Sort  (cost=179.78..186.16 rows=2550 width=4)
+        Sort Key: integers.i
+        ->  Seq Scan on integers  (cost=0.00..35.50 rows=2550 width=4)
+  ->  Sort  (cost=179.78..186.16 rows=2550 width=4)
+        Sort Key: integers2.i
+        ->  Seq Scan on integers2  (cost=0.00..35.50 rows=2550 width=4)",logical_opt	<REGEX>:.*\(i < 3\).*,postgresql,Function,EXPLAIN,query plan difference,
