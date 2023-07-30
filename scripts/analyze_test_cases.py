@@ -19,6 +19,7 @@ Table_Dir = "../SQuaLity-Paper/assets/table"
 def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
     db_dict = {}
     parser = testparser.Parser()
+    index_file_num = 0
     for db_name in db_names:
         files = testcollector.find_local_tests(db_name)
         file_lengths = []
@@ -27,7 +28,11 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
         for file in files:
             # get the length of the file and append it to the list
             try:
-                file_length = len(parser.read_file(file, byline=True))
+                file_content = parser.read_file(file, byline=True)
+                file_length = len(file_content)
+                if db_name == 'sqlite':
+                    if any(line.find('CREATE INDEX') >= 0 for line in file_content) or any(line.find('CREATE UNIQUE INDEX') >= 0 for line in file_content):
+                        index_file_num += 1
             except UnicodeDecodeError:
                 # print(f"UnicodeDecodeError: {file}")
                 continue
@@ -35,6 +40,9 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
             #     print(f"file_length: {file_length}, file: {file}")
             file_lengths.append(file_length)
             db_dict[db_name] = file_lengths
+        print(db_name, len(files))
+        if db_name == 'sqlite':
+            print(index_file_num)
     # begin plotting
     plt.boxplot(db_dict.values(), labels=db_dict.keys())
     plt.yscale('log')
@@ -160,7 +168,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1,sharex=True, figsize=(12, 5))
         lower_limit = 0
-        break_limit = 0.06
+        break_limit = 0.04
         upper_limit = 1
         
         for i, type_cnt in enumerate(bar_value):

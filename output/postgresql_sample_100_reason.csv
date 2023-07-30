@@ -1,310 +1,464 @@
 SQL,ERROR_REASON,ERROR_MSG,ACTUAL_RESULT,EXPECTED_RESULT,SUPER_TAG,TAG,DESCRIPTION
-"CREATE FUNCTION test_opclass_options_func(internal)
-    RETURNS void
-    AS :'regresslib', 'test_opclass_options_func'
-    LANGUAGE C",14,"ERROR:  could not access file ""/usr/lib/postgresql/15/lib/regress.so"": No such file or directory",False,,Extension,Shared Library,Expected shared library
-"SELECT cursor_to_xmlschema('xc'::refcursor, false, true, '')",14,Result MisMatch,"ERROR:  unsupported XML feature
-DETAIL:  This functionality requires the server to be built with libxml support.",</xsd:schema>,Extension,Shared Library,Expected shared library
-"SELECT query_to_xmlschema('SELECT * FROM testxmlschema.test1', false, false, '')",14,Result MisMatch,"ERROR:  unsupported XML feature
-DETAIL:  This functionality requires the server to be built with libxml support.",</xsd:schema>,Extension,Shared Library,Expected shared library
-SELECT test_canonicalize_path('./abc/././def/.'),14,Result MisMatch,"ERROR:  function test_canonicalize_path(unknown) does not exist
-LINE 1: SELECT test_canonicalize_path('./abc/././def/.');
+SELECT count(*) FROM testjsonb WHERE j @@ '$.wait == null',3,Result MisMatch,0,1,Environment,File Paths,Environment difference of file structures
+SELECT count(*) FROM test_tsvector WHERE a @@ '(eq&yt)|(wr&qh)',3,Result MisMatch,0,23,Environment,File Paths,Environment difference of file structures
+select * from agg_view1,3,Result MisMatch,"ERROR:  relation ""agg_view1"" does not exist
+LINE 1: select * from agg_view1;
+                      ^","{""(0,,)"",""(1,3,foo)"",""(2,2,bar)"",""(3,1,baz)""}",Environment,File Paths,Environment difference of file structures
+"SELECT count(*) FROM testjsonb WHERE j @? '$.array ? (@[*] == ""bar"")'",3,Result MisMatch,0,3,Environment,File Paths,Environment difference of file structures
+SELECT * FROM array_index_op_test WHERE t && '{AAAAAAA80240}' ORDER BY seqno,3,Result MisMatch,,"19	{52,82,17,74,23,46,69,51,75}	{AAAAAAAAAAAAA73084,AAAAA75968,AAAAAAAAAAAAAAAA14047,AAAAAAA80240,AAAAAAAAAAAAAAAAAAA1205,A68938}
+30	{26,81,47,91,34}	{AAAAAAAAAAAAAAAAAAA70104,AAAAAAA80240}
+64	{26,19,34,24,81,78}	{A96617,AAAAAAAAAAAAAAAAAAA70104,A68938,AAAAAAAAAAA53908,AAAAAAAAAAAAAAA453,AA17009,AAAAAAA80240}
+82	{34,60,4,79,78,16,86,89,42,50}	{AAAAA40681,AAAAAAAAAAAAAAAAAA12591,AAAAAAA80240,AAAAAAAAAAAAAAAA55798,AAAAAAAAAAAAAAAAAAA70104}
+88	{41,90,77,24,6,24}	{AAAA35194,AAAA35194,AAAAAAA80240,AAAAAAAAAAA46154,AAAAAA58494,AAAAAAAAAAAAAAAAAAA17075,AAAAAAAAAAAAAAAAAA59334,AAAAAAAAAAAAAAAAAAA91804,AA74433}
+97	{54,2,86,65}	{47735,AAAAAAA99836,AAAAAAAAAAAAAAAAA6897,AAAAAAAAAAAAAAAA29150,AAAAAAA80240,AAAAAAAAAAAAAAAA98414,AAAAAAA56483,AAAAAAAAAAAAAAAA29150,AAAAAAA39692,AA21643}
+100	{85,32,57,39,49,84,32,3,30}	{AAAAAAA80240,AAAAAAAAAAAAAAAA1729,AAAAA60038,AAAAAAAAAAA92631,AAAAAAAA9523}",Environment,File Paths,Environment difference of file structures
+SELECT * FROM array_op_test WHERE t @> '{AAAAAAAA72908}' ORDER BY seqno,3,Result MisMatch,,"22	{11,6,56,62,53,30}	{AAAAAAAA72908}
+45	{99,45}	{AAAAAAAA72908,AAAAAAAAAAAAAAAAAAA17075,AA88409,AAAAAAAAAAAAAAAAAA36842,AAAAAAA48038,AAAAAAAAAAAAAA10611}
+72	{22,1,16,78,20,91,83}	{47735,AAAAAAA56483,AAAAAAAAAAAAA93788,AA42406,AAAAAAAAAAAAA73084,AAAAAAAA72908,AAAAAAAAAAAAAAAAAA61286,AAAAA66674,AAAAAAAAAAAAAAAAA50407}
+79	{45}	{AAAAAAAAAA646,AAAAAAAAAAAAAAAAAAA70415,AAAAAA43678,AAAAAAAA72908}",Environment,File Paths,Environment difference of file structures
+"SELECT lo_export(loid, :'filename') FROM lotest_stash_values",3,Result MisMatch,,1,Environment,File Paths,Environment difference of file structures
+"SELECT ts_rewrite( query, 'SELECT keyword, sample FROM test_tsquery' ) FROM to_tsquery('english', 'moscow & hotel') AS query",3,Result MisMatch,'moscow' & 'hotel','hotel' & ( 'moskva'	'moscow' ),Environment,File Paths,Environment difference of file structures
+SELECT sum(b) AS avg_431_773 FROM aggtest,3,Result MisMatch,,431.773,Environment,File Paths,Environment difference of file structures
+"SELECT count(*) FROM testjsonb WHERE j = '{""pos"":98, ""line"":371, ""node"":""CBA"", ""indexed"":true}'",3,Result MisMatch,0,1,Environment,File Paths,Environment difference of file structures
+SELECT * FROM array_index_op_test WHERE i && '{32}' AND t @> '{AAAAAAA80240}' ORDER BY seqno,3,Result MisMatch,,"100	{85,32,57,39,49,84,32,3,30}	{AAAAAAA80240,AAAAAAAAAAAAAAAA1729,AAAAA60038,AAAAAAAAAAA92631,AAAAAAAA9523}",Environment,File Paths,Environment difference of file structures
+SELECT COUNT(*) FROM test_tsquery WHERE keyword >  'new <-> york',3,Result MisMatch,0,3,Environment,File Paths,Environment difference of file structures
+SELECT * FROM array_op_test WHERE i && '{32}' ORDER BY seqno,3,Result MisMatch,,"6	{39,35,5,94,17,92,60,32}	{AAAAAAAAAAAAAAA35875,AAAAAAAAAAAAAAAA23657}
+74	{32}	{AAAAAAAAAAAAAAAA1729,AAAAAAAAAAAAA22860,AAAAAA99807,AAAAA17383,AAAAAAAAAAAAAAA67062,AAAAAAAAAAA15165,AAAAAAAAAAA50956}
+77	{97,15,32,17,55,59,18,37,50,39}	{AAAAAAAAAAAA67946,AAAAAA54032,AAAAAAAA81587,55847,AAAAAAAAAAAAAA28620,AAAAAAAAAAAAAAAAA43052,AAAAAA75463,AAAA49534,AAAAAAAA44066}
+89	{40,32,17,6,30,88}	{AA44673,AAAAAAAAAAA6119,AAAAAAAAAAAAAAAA23657,AAAAAAAAAAAAAAAAAA47955,AAAAAAAAAAAAAAAA33598,AAAAAAAAAAA33576,AA44673}
+98	{38,34,32,89}	{AAAAAAAAAAAAAAAAAA71621,AAAA8857,AAAAAAAAAAAAAAAAAAA65037,AAAAAAAAAAAAAAAA31334,AAAAAAAAAA48845}
+100	{85,32,57,39,49,84,32,3,30}	{AAAAAAA80240,AAAAAAAAAAAAAAAA1729,AAAAA60038,AAAAAAAAAAA92631,AAAAAAAA9523}",Environment,File Paths,Environment difference of file structures
+"SELECT ts_rewrite('bar & qq & foo & (new <-> york)', 'SELECT keyword, sample FROM test_tsquery'::text )",3,Result MisMatch,'foo' & 'bar' & 'qq' & 'new' <-> 'york','citi' & 'foo' & ( 'bar'	'qq' ) & ( 'nyc'	'big' <-> 'appl'	'new' <-> 'york' ),Environment,File Paths,Environment difference of file structures
+"SELECT * FROM point_tbl WHERE f1 <@ '(-10,-10),(10,10)':: box ORDER BY f1 <-> '0,1'",17,Result MisMatch,"ERROR:  relation ""point_tbl"" does not exist
+LINE 1: SELECT * FROM point_tbl WHERE f1 <@ '(-10,-10),(10,10)':: bo...
+                      ^","(1e-300,-1e-300)
+(0,0)
+(-3,4)
+(-10,0)
+(10,10)",Environment,Set up,Internal dependencies between test files
+"select unique1, count(*), sum(twothousand) from tenk1
+group by unique1
+having sum(fivethous) > 4975
+order by sum(twothousand)",17,Result MisMatch,"ERROR:  relation ""tenk1"" does not exist
+LINE 1: select unique1, count(*), sum(twothousand) from tenk1
+                                                        ^","4976	1	976
+4977	1	977
+4978	1	978
+4979	1	979
+4980	1	980
+4981	1	981
+4982	1	982
+4983	1	983
+4984	1	984
+4985	1	985
+4986	1	986
+4987	1	987
+4988	1	988
+4989	1	989
+4990	1	990
+4991	1	991
+4992	1	992
+4993	1	993
+4994	1	994
+4995	1	995
+4996	1	996
+4997	1	997
+4998	1	998
+4999	1	999
+9976	1	1976
+9977	1	1977
+9978	1	1978
+9979	1	1979
+9980	1	1980
+9981	1	1981
+9982	1	1982
+9983	1	1983
+9984	1	1984
+9985	1	1985
+9986	1	1986
+9987	1	1987
+9988	1	1988
+9989	1	1989
+9990	1	1990
+9991	1	1991
+9992	1	1992
+9993	1	1993
+9994	1	1994
+9995	1	1995
+9996	1	1996
+9997	1	1997
+9998	1	1998
+9999	1	1999",Environment,Set up,Internal dependencies between test files
+"select round(avg(aa)), sum(aa) from a_star a4",17,Result MisMatch,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",14	355,Environment,Set up,Internal dependencies between test files
+"select * from
+  (select *, 12 as phv from parttbl) as ss
+  right join int4_tbl on true
+where ss.a = ss.phv and f1 = 0",17,Result MisMatch,"ERROR:  relation ""int4_tbl"" does not exist
+LINE 3:   right join int4_tbl on true
+                     ^",12	12	0,Environment,Set up,Internal dependencies between test files
+select * from dfview,17,Result MisMatch,"ERROR:  relation ""dfview"" does not exist
+LINE 1: select * from dfview;
+                      ^","123	456	456	123
+123	4567890123456789	4567890123456789	123
+4567890123456789	123	4567890123456789	123
+4567890123456789	4567890123456789	4567890123456789	4567890123456789
+4567890123456789	-4567890123456789	4567890123456789	-4567890123456789",Environment,Set up,Internal dependencies between test files
+SELECT * FROM INT8_TBL WHERE q2 <> 4567890123456789,17,Result MisMatch,"ERROR:  relation ""int8_tbl"" does not exist
+LINE 1: SELECT * FROM INT8_TBL WHERE q2 <> 4567890123456789;
+                      ^","123	456
+4567890123456789	123
+4567890123456789	-4567890123456789",Environment,Set up,Internal dependencies between test files
+CLOSE foo6,17,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,Set up,Internal dependencies between test files
+"CREATE TABLE hash_parted (
+	a int,
+	b int
+) PARTITION BY HASH (a part_test_int4_ops)",17,"ERROR:  operator class ""part_test_int4_ops"" does not exist for access method ""hash""",False,,Environment,Set up,Internal dependencies between test files
+"SELECT  thousand
+		FROM onek WHERE thousand < 5
+		ORDER BY thousand FETCH FIRST 2 ROW ONLY",17,Result MisMatch,"ERROR:  relation ""onek"" does not exist
+LINE 2:   FROM onek WHERE thousand < 5
+               ^","0
+0",Environment,Set up,Internal dependencies between test files
+"CREATE INDEX dupindexcols_i ON dupindexcols (f1, id, f1 text_pattern_ops)",17,"ERROR:  relation ""dupindexcols"" does not exist",False,,Environment,Set up,Internal dependencies between test files
+set enable_material = false,17,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,Set up,Internal dependencies between test files
+SELECT * FROM INT8_TBL WHERE q2 > '456'::int2,17,Result MisMatch,"ERROR:  relation ""int8_tbl"" does not exist
+LINE 1: SELECT * FROM INT8_TBL WHERE q2 > '456'::int2;
+                      ^","123	4567890123456789
+4567890123456789	4567890123456789",Environment,Set up,Internal dependencies between test files
+CLOSE foo20,17,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,Set up,Internal dependencies between test files
+"EXPLAIN (COSTS OFF)
+SELECT count(*) FROM point_tbl WHERE f1 <@ box '(0,0,100,100)'",17,Result MisMatch,"ERROR:  relation ""point_tbl"" does not exist
+LINE 2: SELECT count(*) FROM point_tbl WHERE f1 <@ box '(0,0,100,100...
+                             ^","Aggregate
+->  Index Only Scan using gpointind on point_tbl
+Index Cond: (f1 <@ '(100,100),(0,0)'::box)",Environment,Set up,Internal dependencies between test files
+SELECT q1 FROM int8_tbl UNION ALL (((SELECT q2 FROM int8_tbl EXCEPT SELECT q1 FROM int8_tbl ORDER BY 1))),17,Result MisMatch,"ERROR:  relation ""int8_tbl"" does not exist
+LINE 1: SELECT q1 FROM int8_tbl UNION ALL (((SELECT q2 FROM int8_tbl...
+                       ^","123
+123
+4567890123456789
+4567890123456789
+4567890123456789
+-4567890123456789
+456",Environment,Set up,Internal dependencies between test files
+SET LOCAL parallel_setup_cost = 10,17,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,Set up,Internal dependencies between test files
+"explain (verbose, costs off)
+select x from int8_tbl, extractq2_2_opt(int8_tbl) f(x)",17,Result MisMatch,"ERROR:  relation ""int8_tbl"" does not exist
+LINE 2: select x from int8_tbl, extractq2_2_opt(int8_tbl) f(x);
+                      ^","Seq Scan on public.int8_tbl
+Output: int8_tbl.q2",Environment,Set up,Internal dependencies between test files
+"SELECT sum(unique1) over (order by four range between 2::int8 preceding and 1::int2 preceding exclude group),
+	unique1, four
+FROM tenk1 WHERE unique1 < 10",17,Result MisMatch,"ERROR:  relation ""tenk1"" does not exist
+LINE 3: FROM tenk1 WHERE unique1 < 10;
+             ^","	0	0
+	8	0
+	4	0
+12	5	1
+12	9	1
+12	1	1
+27	6	2
+27	2	2
+23	3	3
+23	7	3",Environment,Set up,Internal dependencies between test files
+drop table float8multirange_test,17,"ERROR:  table ""float8multirange_test"" does not exist",False,,Environment,Set up,Internal dependencies between test files
+"EXPLAIN (COSTS OFF)
+SELECT * FROM point_tbl WHERE f1 <@ '(-10,-10),(10,10)':: box ORDER BY f1 <-> '0,1'",17,Result MisMatch,"ERROR:  relation ""point_tbl"" does not exist
+LINE 2: SELECT * FROM point_tbl WHERE f1 <@ '(-10,-10),(10,10)':: bo...
+                      ^","Sort
+Sort Key: ((f1 <-> '(0,1)'::point))
+->  Bitmap Heap Scan on point_tbl
+Recheck Cond: (f1 <@ '(10,10),(-10,-10)'::box)
+->  Bitmap Index Scan on gpointind
+Index Cond: (f1 <@ '(10,10),(-10,-10)'::box)",Environment,Set up,Internal dependencies between test files
+"PREPARE q6 AS
+    SELECT * FROM tenk1 WHERE unique1 = $1 AND stringu1 = $2",17,"ERROR:  relation ""tenk1"" does not exist
+LINE 2:     SELECT * FROM tenk1 WHERE unique1 = $1 AND stringu1 = $2...
+                          ^",False,,Environment,Set up,Internal dependencies between test files
+"EXPLAIN (COSTS OFF)
+SELECT count(*) FROM quad_point_tbl WHERE p << '(5000, 4000)'",17,Result MisMatch,"ERROR:  relation ""quad_point_tbl"" does not exist
+LINE 2: SELECT count(*) FROM quad_point_tbl WHERE p << '(5000, 4000)...
+                             ^","Aggregate
+->  Bitmap Heap Scan on quad_point_tbl
+Recheck Cond: (p << '(5000,4000)'::point)
+->  Bitmap Index Scan on sp_quad_ind
+Index Cond: (p << '(5000,4000)'::point)",Environment,Set up,Internal dependencies between test files
+"SELECT variance(unique1::int8), avg(unique1::numeric)
+FROM (SELECT * FROM tenk1
+      UNION ALL SELECT * FROM tenk1
+      UNION ALL SELECT * FROM tenk1
+      UNION ALL SELECT * FROM tenk1) u",17,Result MisMatch,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",8333541.588539713493	4999.5000000000000000,Environment,Set up,Internal dependencies between test files
+CREATE INDEX tenk1_unique2 ON tenk1 USING btree(unique2 int4_ops),17,"ERROR:  relation ""tenk1"" does not exist",False,,Environment,Set up,Internal dependencies between test files
+"select count(*) from tenk1 x where
+  x.unique1 in (select a.f1 from int4_tbl a,float8_tbl b where a.f1=b.f1) and
+  x.unique1 = 0 and
+  x.unique1 in (select aa.f1 from int4_tbl aa,float8_tbl bb where aa.f1=bb.f1)",17,Result MisMatch,"ERROR:  relation ""tenk1"" does not exist
+LINE 1: select count(*) from tenk1 x where
+                             ^",1,Environment,Set up,Internal dependencies between test files
+"EXPLAIN (COSTS OFF)
+SELECT * FROM tenk1
+  WHERE thousand = 42 AND (tenthous = 1 OR tenthous = 3 OR tenthous = 42)",17,Result MisMatch,"ERROR:  relation ""tenk1"" does not exist
+LINE 2: SELECT * FROM tenk1
+                      ^","Bitmap Heap Scan on tenk1
+Recheck Cond: (((thousand = 42) AND (tenthous = 1)) OR ((thousand = 42) AND (tenthous = 3)) OR ((thousand = 42) AND (tenthous = 42)))
+->  BitmapOr
+->  Bitmap Index Scan on tenk1_thous_tenthous
+Index Cond: ((thousand = 42) AND (tenthous = 1))
+->  Bitmap Index Scan on tenk1_thous_tenthous
+Index Cond: ((thousand = 42) AND (tenthous = 3))
+->  Bitmap Index Scan on tenk1_thous_tenthous
+Index Cond: ((thousand = 42) AND (tenthous = 42))",Environment,Set up,Internal dependencies between test files
+"EXPLAIN (COSTS OFF)
+SELECT count(*) FROM point_tbl p WHERE p.f1 >> '(0.0, 0.0)'",17,Result MisMatch,"ERROR:  relation ""point_tbl"" does not exist
+LINE 2: SELECT count(*) FROM point_tbl p WHERE p.f1 >> '(0.0, 0.0)';
+                             ^","Aggregate
+->  Index Only Scan using gpointind on point_tbl p
+Index Cond: (f1 >> '(0,0)'::point)",Environment,Set up,Internal dependencies between test files
+"SELECT count(*) FROM quad_point_tbl WHERE p ~= '(4585, 365)'",17,Result MisMatch,"ERROR:  relation ""quad_point_tbl"" does not exist
+LINE 1: SELECT count(*) FROM quad_point_tbl WHERE p ~= '(4585, 365)'...
+                             ^",1,Environment,Set up,Internal dependencies between test files
+select row_to_json(tt3::tt2::tt1) from tt3,17,Result MisMatch,"ERROR:  relation ""tt3"" does not exist
+LINE 1: select row_to_json(tt3::tt2::tt1) from tt3;
+                                               ^","{""q1"":33,""q2"":44}",Environment,Set up,Internal dependencies between test files
+select textmultirange(),17,Result MisMatch,"ERROR:  function textmultirange() does not exist
+LINE 1: select textmultirange();
                ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.",abc/def,Extension,Shared Library,Expected shared library
-ALTER TABLE cmpart1 ALTER COLUMN f1 SET COMPRESSION pglz,14,"ERROR:  relation ""cmpart1"" does not exist",False,,Extension,Shared Library,Expected shared library
-ALTER FOREIGN DATA WRAPPER foo HANDLER test_fdw_handler,14,Result MisMatch,ERROR:  function test_fdw_handler() does not exist,WARNING:  changing the foreign-data wrapper handler can change behavior of existing foreign tables,Extension,Shared Library,Expected shared library
-"INSERT INTO indtoasttest(descr, f1, f2) VALUES('one-toasted,one-null, via indirect', repeat('1234567890',30000), NULL)",14,"ERROR:  function make_tuple_indirect(indtoasttest) does not exist
-LINE 1: NEW := make_tuple_indirect(NEW)
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.",{},Environment,Set up,Internal dependencies between test files
+SELECT * FROM foo,17,Result MisMatch,"1	test	42	141
+2	more	42	141
+123	child	999	1098",2	more	42	141,Environment,Set up,Internal dependencies between test files
+"SELECT i.f1, i.f1 - int4 '2' AS x FROM INT2_TBL i",17,Result MisMatch,"ERROR:  relation ""int2_tbl"" does not exist
+LINE 1: SELECT i.f1, i.f1 - int4 '2' AS x FROM INT2_TBL i;
+                                               ^","0	-2
+1234	1232
+-1234	-1236
+32767	32765
+-32767	-32769",Environment,Set up,Internal dependencies between test files
+"INSERT INTO RANDOM_TBL (random)
+  SELECT count(*)
+  FROM onek WHERE random() < 1.0/10",17,"ERROR:  relation ""random_tbl"" does not exist
+LINE 1: INSERT INTO RANDOM_TBL (random)
+                    ^",False,,Environment,Set up,Internal dependencies between test files
+"EXPLAIN (COSTS OFF)
+SELECT count(*) FROM radix_text_tbl WHERE t =    'Aztec                         Ct  '",17,Result MisMatch,"ERROR:  relation ""radix_text_tbl"" does not exist
+LINE 2: SELECT count(*) FROM radix_text_tbl WHERE t =    'Aztec     ...
+                             ^","Aggregate
+->  Bitmap Heap Scan on radix_text_tbl
+Recheck Cond: (t = 'Aztec                         Ct  '::text)
+->  Bitmap Index Scan on sp_radix_ind
+Index Cond: (t = 'Aztec                         Ct  '::text)",Environment,Set up,Internal dependencies between test files
+"select count(*) from
+  (select 1 from tenk1 a
+   where unique1 IN (select hundred from tenk1 b)) ss",17,Result MisMatch,"ERROR:  relation ""tenk1"" does not exist
+LINE 2:   (select 1 from tenk1 a
+                         ^",100,Environment,Set up,Internal dependencies between test files
+SELECT q1 FROM int8_tbl EXCEPT SELECT q2 FROM int8_tbl ORDER BY 1,17,Result MisMatch,"ERROR:  relation ""int8_tbl"" does not exist
+LINE 1: SELECT q1 FROM int8_tbl EXCEPT SELECT q2 FROM int8_tbl ORDER...
+                       ^",,Environment,Set up,Internal dependencies between test files
+"GRANT SELECT, UPDATE ON rw_view2 TO regress_view_user3",17,"ERROR:  relation ""rw_view2"" does not exist",False,,Environment,Set up,Internal dependencies between test files
+select currval('testseq'),17,Result MisMatch,"ERROR:  currval of sequence ""testseq"" is not yet defined in this session",10,Environment,Set up,Internal dependencies between test files
+DROP TABLE base_tbl CASCADE,17,Result MisMatch,"ERROR:  table ""base_tbl"" does not exist","NOTICE:  drop cascades to 2 other objects
+DETAIL:  drop cascades to view rw_view1
+drop cascades to view rw_view2",Environment,Set up,Internal dependencies between test files
+"select * from
+  int8_tbl x left join (select q1,coalesce(q2,0) q2 from int8_tbl) y on x.q2 = y.q1,
+  lateral (values(x.q1,y.q1,y.q2)) v(xq1,yq1,yq2)",17,Result MisMatch,"ERROR:  relation ""int8_tbl"" does not exist
+LINE 2:   int8_tbl x left join (select q1,coalesce(q2,0) q2 from int...
+          ^","123	456			123		
+123	4567890123456789	4567890123456789	-4567890123456789	123	4567890123456789	-4567890123456789
+123	4567890123456789	4567890123456789	4567890123456789	123	4567890123456789	4567890123456789
+123	4567890123456789	4567890123456789	123	123	4567890123456789	123
+4567890123456789	123	123	4567890123456789	4567890123456789	123	4567890123456789
+4567890123456789	123	123	456	4567890123456789	123	456
+4567890123456789	4567890123456789	4567890123456789	-4567890123456789	4567890123456789	4567890123456789	-4567890123456789
+4567890123456789	4567890123456789	4567890123456789	4567890123456789	4567890123456789	4567890123456789	4567890123456789
+4567890123456789	4567890123456789	4567890123456789	123	4567890123456789	4567890123456789	123
+4567890123456789	-4567890123456789			4567890123456789		",Environment,Set up,Internal dependencies between test files
+"drop function mki8(bigint, bigint)",17,"ERROR:  function mki8(bigint, bigint) does not exist",False,,Environment,Set up,Internal dependencies between test files
+select avg(unique1::int8) from tenk1,17,Result MisMatch,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",4999.5000000000000000,Environment,Set up,Internal dependencies between test files
+"select '{((,z)}'::textmultirange",17,Result MisMatch,"ERROR:  type ""textmultirange"" does not exist
+LINE 1: select '{((,z)}'::textmultirange;
+                          ^","{(""("",z)}",Environment,Set up,Internal dependencies between test files
+"EXPLAIN (COSTS OFF)
+SELECT count(*) FROM radix_text_tbl WHERE t ^@	 'Worth'",17,Result MisMatch,"ERROR:  relation ""radix_text_tbl"" does not exist
+LINE 2: SELECT count(*) FROM radix_text_tbl WHERE t ^@  'Worth';
+                             ^","Aggregate
+->  Index Only Scan using sp_radix_ind on radix_text_tbl
+Index Cond: (t ^@ 'Worth'::text)",Environment,Set up,Internal dependencies between test files
+DECLARE foo23 SCROLL CURSOR FOR SELECT * FROM tenk1 ORDER BY unique2,17,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,Set up,Internal dependencies between test files
+"SELECT p.name, p.age FROM person* p",17,Result MisMatch,"ERROR:  relation ""person"" does not exist
+LINE 1: SELECT p.name, p.age FROM person* p;
+                                  ^","mike	40
+joe	20
+sally	34
+sandra	19
+alex	30
+sue	50
+denise	24
+sarah	88
+teresa	38
+nan	28
+leah	68
+wendy	78
+melissa	28
+joan	18
+mary	8
+jane	58
+liza	38
+jean	28
+jenifer	38
+juanita	58
+susan	78
+zena	98
+martie	88
+chris	78
+pat	18
+zola	58
+louise	98
+edna	18
+bertha	88
+sumi	38
+koko	88
+gina	18
+rean	48
+sharon	78
+paula	68
+julie	68
+belinda	38
+karen	48
+carina	58
+diane	18
+esther	98
+trudy	88
+fanny	8
+carmen	78
+lita	25
+pamela	48
+sandy	38
+trisha	88
+uma	78
+velma	68
+sharon	25
+sam	30
+bill	20
+fred	28
+larry	60
+jeff	23
+cim	30
+linda	19",Environment,Set up,Internal dependencies between test files
+CLOSE foo19,17,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,Set up,Internal dependencies between test files
+SELECT * FROM unbounded_syntax_test1b(2),17,Result MisMatch,"ERROR:  function unbounded_syntax_test1b(integer) does not exist
+LINE 1: SELECT * FROM unbounded_syntax_test1b(2);
+                      ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.","7	4	0
+13	2	2
+22	1	1
+26	6	2
+29	9	1
+31	8	0
+32	5	1
+23	3	3
+15	7	3
+10	0	0",Environment,Set up,Internal dependencies between test files
+"SELECT lead(ten * 2, 1, -1) OVER (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHERE unique2 < 10",17,Result MisMatch,"ERROR:  relation ""tenk1"" does not exist
+LINE 1: ... (PARTITION BY four ORDER BY ten), ten, four FROM tenk1 WHER...
+                                                             ^","0	0	0
+8	0	0
+-1	4	0
+2	1	1
+14	1	1
+18	7	1
+-1	9	1
+-1	0	2
+6	1	3
+-1	3	3",Environment,Set up,Internal dependencies between test files
+CREATE FUNCTION priv_testfunc1(int) RETURNS int AS 'select 2 * $1;' LANGUAGE sql,23,ERROR:  permission denied for schema public,False,,Environment,Set up,Unsuccessful privilege setup
+"CREATE TABLE pa_target (tid integer, balance float, val text)
+	PARTITION BY LIST (tid)",23,"ERROR:  permission denied for schema public
+LINE 1: CREATE TABLE pa_target (tid integer, balance float, val text...
+                     ^",False,,Environment,Set up,Unsuccessful privilege setup
+UPDATE clustertest SET key = 80 WHERE key = 70,23,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,Set up,Unsuccessful privilege setup
+"INSERT INTO cj_source1 VALUES (3, 10, 400)",23,"ERROR:  relation ""cj_source1"" does not exist
+LINE 1: INSERT INTO cj_source1 VALUES (3, 10, 400);
+                    ^",False,,Environment,Set up,Unsuccessful privilege setup
+CREATE MATERIALIZED VIEW IF NOT EXISTS mvtest_mv_foo AS SELECT * FROM mvtest_foo_data,23,Result MisMatch,"ERROR:  relation ""mvtest_foo_data"" does not exist
+LINE 1: ...VIEW IF NOT EXISTS mvtest_mv_foo AS SELECT * FROM mvtest_foo...
+                                                             ^","NOTICE:  relation ""mvtest_mv_foo"" already exists, skipping",Environment,Set up,Unsuccessful privilege setup
+"SELECT explain_merge('
+MERGE INTO ex_mtarget t USING ex_msource s ON t.a = s.a
+WHEN MATCHED THEN
+	UPDATE SET b = t.b + 1')",23,Result MisMatch,"ERROR:  function explain_merge(unknown) does not exist
+LINE 1: SELECT explain_merge('
                ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.","Merge on ex_mtarget t (actual rows=0 loops=1)
+Tuples: updated=50
+->  Merge Join (actual rows=50 loops=1)
+Merge Cond: (t.a = s.a)
+->  Sort (actual rows=50 loops=1)
+Sort Key: t.a
+Sort Method: quicksort  Memory: xxx
+->  Seq Scan on ex_mtarget t (actual rows=50 loops=1)
+->  Sort (actual rows=100 loops=1)
+Sort Key: s.a
+Sort Method: quicksort  Memory: xxx
+->  Seq Scan on ex_msource s (actual rows=100 loops=1)",Environment,Set up,Unsuccessful privilege setup
+DROP TABLE pa_target CASCADE,23,"ERROR:  table ""pa_target"" does not exist",False,,Environment,Set up,Unsuccessful privilege setup
+CREATE SEQUENCE seq3,23,ERROR:  permission denied for schema public,False,,Environment,Set up,Unsuccessful privilege setup
+"CREATE TABLE errtst_part_2(secret1 text, secret2 text, a text, c text, b text NOT NULL)",23,"ERROR:  permission denied for schema public
+LINE 1: CREATE TABLE errtst_part_2(secret1 text, secret2 text, a tex...
+                     ^",False,,Environment,Set up,Unsuccessful privilege setup
+"INSERT INTO new_measurement VALUES (1, '2006-03-27', NULL, NULL)",23,"ERROR:  relation ""new_measurement"" does not exist
+LINE 1: INSERT INTO new_measurement VALUES (1, '2006-03-27', NULL, N...
+                    ^",False,,Environment,Set up,Unsuccessful privilege setup
+"CREATE TABLE msource (a int, b text)",23,"ERROR:  permission denied for schema public
+LINE 1: CREATE TABLE msource (a int, b text);
+                     ^",False,,Environment,Set up,Unsuccessful privilege setup
+"MERGE INTO wq_target t
+USING wq_source s ON t.tid = s.sid
+WHEN NOT MATCHED AND s.balance = 100 THEN
+	INSERT (tid) VALUES (s.sid)",23,"ERROR:  relation ""wq_target"" does not exist
+LINE 1: MERGE INTO wq_target t
+                   ^",False,,Environment,Set up,Unsuccessful privilege setup
+CREATE TYPE deptest_enum AS ENUM ('red'),23,ERROR:  permission denied for schema public,False,,Environment,Set up,Unsuccessful privilege setup
+GRANT SELECT (two) ON atest5 TO regress_priv_user4,23,"ERROR:  relation ""atest5"" does not exist",False,,Environment,Set up,Unsuccessful privilege setup
+"CREATE TABLE sq_source (delta integer, sid integer, balance integer DEFAULT 0)
+  WITH (autovacuum_enabled=off)",23,"ERROR:  permission denied for schema public
+LINE 1: CREATE TABLE sq_source (delta integer, sid integer, balance ...
+                     ^",False,,Environment,Set up,Unsuccessful privilege setup
+CREATE TRIGGER merge_bru BEFORE UPDATE ON target FOR EACH ROW EXECUTE PROCEDURE merge_trigfunc (),23,ERROR:  function merge_trigfunc() does not exist,False,,Environment,Set up,Unsuccessful privilege setup
+GRANT SELECT ON atest4 TO regress_priv_user3,23,"ERROR:  relation ""atest4"" does not exist",False,,Environment,Set up,Unsuccessful privilege setup
+update trigtest set a = 2 where a = 1 returning *,14,Result MisMatch,2	True	xyzzy	42,1	True	xyzzy	42,Extension,Shared Library,Expected shared library
+"CREATE FUNCTION test_canonicalize_path(text)
+   RETURNS text
+   AS :'regresslib'
+   LANGUAGE C STRICT IMMUTABLE",14,"ERROR:  could not access file "":libdir/regress:dlsuffix"": No such file or directory",False,,Extension,Shared Library,Expected shared library
+"with test_bytes as (
+  select
+    inbytes,
+    description,
+    (test_conv(inbytes || repeat('.', 3)::bytea, 'utf8', 'utf8')).error
+  from utf8_verification_inputs
+), test_padded as (
+  select
+    description,
+    (test_conv(repeat('.', 64 - length(inbytes))::bytea || inbytes || repeat('.', 64)::bytea, 'utf8', 'utf8')).error
+  from test_bytes
+)
+select
+  description,
+  b.error as orig_error,
+  p.error as error_after_padding
+from test_padded p
+join test_bytes b
+using (description)
+where p.error is distinct from b.error
+order by description",14,Result MisMatch,"ERROR:  function test_enc_conversion(bytea, text, text, boolean) does not exist
+LINE 1: select *                       from test_enc_conversion(inpu...
+                                            ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
-QUERY:  NEW := make_tuple_indirect(NEW)
-CONTEXT:  PL/pgSQL function update_using_indirect() line 3 at assignment",False,,Extension,Shared Library,Expected shared library
-SELECT test_canonicalize_path('/abc/./../def/ghi//'),14,Result MisMatch,"ERROR:  function test_canonicalize_path(unknown) does not exist
-LINE 1: SELECT test_canonicalize_path('/abc/./../def/ghi//');
-               ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.",/def/ghi,Extension,Shared Library,Expected shared library
-SELECT test_canonicalize_path('/./../../abc/def/'),14,Result MisMatch,"ERROR:  function test_canonicalize_path(unknown) does not exist
-LINE 1: SELECT test_canonicalize_path('/./../../abc/def/');
-               ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.",/abc/def,Extension,Shared Library,Expected shared library
-"SELECT table_to_xml_and_xmlschema('testxmlschema.test1', true, false, '')",14,Result MisMatch,"ERROR:  unsupported XML feature
-DETAIL:  This functionality requires the server to be built with libxml support.",,Extension,Shared Library,Expected shared library
-"CREATE FUNCTION reverse_name(name)
-   RETURNS name
-   AS :'regresslib'
-   LANGUAGE C STRICT",14,"ERROR:  could not access file ""/usr/lib/postgresql/15/lib/regress.so"": No such file or directory",False,,Extension,Shared Library,Expected shared library
-SELECT pg_column_compression(f1) FROM cmdata,14,Result MisMatch,"pglz
-pglz","pglz
-lz4",Extension,Shared Library,Expected shared library
-SELECT pg_column_compression(f1) FROM cmpart1,14,Result MisMatch,"ERROR:  relation ""cmpart1"" does not exist
-LINE 1: SELECT pg_column_compression(f1) FROM cmpart1;
-                                              ^",lz4,Extension,Shared Library,Expected shared library
-"CREATE FUNCTION widget_in(cstring)
-   RETURNS widget
-   AS :'regresslib'
-   LANGUAGE C STRICT IMMUTABLE",14,Result MisMatch,"NOTICE:  type ""widget"" is not yet defined
-DETAIL:  Creating a shell type definition.
-ERROR:  could not access file ""/usr/lib/postgresql/15/lib/regress.so"": No such file or directory","NOTICE:  type ""widget"" is not yet defined
-DETAIL:  Creating a shell type definition.",Extension,Shared Library,Expected shared library
-"SELECT c1.opcname, c1.opcfamily
-FROM pg_opclass AS c1
-WHERE NOT EXISTS(SELECT 1 FROM pg_amop AS a1
-                 WHERE a1.amopfamily = c1.opcfamily
-                   AND binary_coercible(c1.opcintype, a1.amoplefttype))",14,Result MisMatch,"ERROR:  function binary_coercible(oid, oid) does not exist
-LINE 5:                    AND binary_coercible(c1.opcintype, a1.amo...
-                               ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.",,Extension,Shared Library,Expected shared library
-\d+ compressmv,14,Result MisMatch,,"                                Materialized view ""public.compressmv""
- Column | Type | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+------+-----------+----------+---------+----------+-------------+--------------+-------------
- x      | text |           |          |         | extended | lz4         |              | 
-View definition:
- SELECT cmdata1.f1 AS x
-   FROM cmdata1;",Extension,Shared Library,Expected shared library
-"EXPLAIN (COSTS OFF)
-SELECT * FROM tenk1 a JOIN tenk1 b ON a.unique1 = b.unique1
-WHERE my_int_eq(a.unique2, 42)",14,Result MisMatch,"Hash Join
-Hash Cond: (b.unique1 = a.unique1)
-->  Seq Scan on tenk1 b
-->  Hash
-->  Seq Scan on tenk1 a
-Filter: my_int_eq(unique2, 42)","Nested Loop
-->  Seq Scan on tenk1 a
-Filter: my_int_eq(unique2, 42)
-->  Index Scan using tenk1_unique1 on tenk1 b
-Index Cond: (unique1 = a.unique1)",Extension,Shared Library,Expected shared library
-"SELECT table_to_xmlschema('testxmlschema.test1', false, true, 'foo')",14,Result MisMatch,"ERROR:  unsupported XML feature
-DETAIL:  This functionality requires the server to be built with libxml support.",</xsd:schema>,Extension,Shared Library,Expected shared library
-"SELECT cursor_to_xmlschema('xc'::refcursor, true, false, '')",14,Result MisMatch,"ERROR:  unsupported XML feature
-DETAIL:  This functionality requires the server to be built with libxml support.",</xsd:schema>,Extension,Shared Library,Expected shared library
-"CREATE FUNCTION int44out(city_budget)
-   RETURNS cstring
-   AS :'regresslib'
-   LANGUAGE C STRICT IMMUTABLE",14,Result MisMatch,ERROR:  type city_budget does not exist,NOTICE:  argument type city_budget is only a shell,Extension,Shared Library,Expected shared library
-"SELECT table_to_xmlschema('testxmlschema.test1', false, false, '')",14,Result MisMatch,"ERROR:  unsupported XML feature
-DETAIL:  This functionality requires the server to be built with libxml support.",</xsd:schema>,Extension,Shared Library,Expected shared library
-"CREATE FUNCTION widget_out(widget)
-   RETURNS cstring
-   AS :'regresslib'
-   LANGUAGE C STRICT IMMUTABLE",14,Result MisMatch,ERROR:  type widget does not exist,NOTICE:  argument type widget is only a shell,Extension,Shared Library,Expected shared library
-"EXPLAIN (COSTS OFF)
-SELECT unique1 FROM tenk1 t0
-WHERE unique1 < 3
-  AND EXISTS (
-	SELECT 1 FROM tenk1 t1
-	INNER JOIN tenk1 t2 ON t1.unique1 = t2.hundred
-	WHERE t0.ten = t1.twenty AND t0.two <> t2.four OFFSET 0)",14,Result MisMatch,"Seq Scan on tenk1 t0
-Filter: ((unique1 < 3) AND (SubPlan 1))
-SubPlan 1
-->  Nested Loop
-Join Filter: (t1.unique1 = t2.hundred)
-->  Seq Scan on tenk1 t2
-Filter: (t0.two <> four)
-->  Materialize
-->  Seq Scan on tenk1 t1
-Filter: (t0.ten = twenty)","Index Scan using tenk1_unique1 on tenk1 t0
-Index Cond: (unique1 < 3)
-Filter: (SubPlan 1)
-SubPlan 1
-->  Nested Loop
-->  Index Scan using tenk1_hundred on tenk1 t2
-Filter: (t0.two <> four)
-->  Memoize
-Cache Key: t2.hundred
-Cache Mode: logical
-->  Index Scan using tenk1_unique1 on tenk1 t1
-Index Cond: (unique1 = t2.hundred)
-Filter: (t0.ten = twenty)",Extension,Shared Library,Expected shared library
-ALTER OPERATOR FAMILY alt_opf19 USING btree ADD FUNCTION 5 (int4) test_opclass_options_func(internal),14,ERROR:  function test_opclass_options_func(internal) does not exist,False,,Extension,Shared Library,Expected shared library
-select * from trigtest,14,Result MisMatch,2	True	xyzzy	42,1	True	xyzzy	42,Extension,Shared Library,Expected shared library
-"CREATE FUNCTION test_fdw_handler()
-    RETURNS fdw_handler
-    AS :'regresslib', 'test_fdw_handler'
-    LANGUAGE C",14,"ERROR:  could not access file ""/usr/lib/postgresql/15/lib/regress.so"": No such file or directory",False,,Extension,Shared Library,Expected shared library
-CREATE TABLE cmdata1(f1 TEXT COMPRESSION lz4),14,"ERROR:  compression method lz4 not supported
-DETAIL:  This functionality requires the server to be built with lz4 support.",False,,Extension,Shared Library,Expected shared library
-\d+ testpub_tbl2,13,Result MisMatch,"Table ""public.testpub_tbl2""
- Column |  Type   | Collation | Nullable |                 Default                  | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+------------------------------------------+----------+-------------+--------------+-------------
- id     | integer |           | not null | nextval('testpub_tbl2_id_seq'::regclass) | plain    |             |              | 
- data   | text    |           |          |                                          | extended |             |              | 
-Indexes:
-    ""testpub_tbl2_pkey"" PRIMARY KEY, btree (id)
-Publications:
-    ""testpub_foralltables""
-Access method: heap","                                                Table ""public.testpub_tbl2""
- Column |  Type   | Collation | Nullable |                 Default                  | Storage  | Stats target | Description 
---------+---------+-----------+----------+------------------------------------------+----------+--------------+-------------
- id     | integer |           | not null | nextval('testpub_tbl2_id_seq'::regclass) | plain    |              | 
- data   | text    |           |          |                                          | extended |              | 
-Indexes:
-    ""testpub_tbl2_pkey"" PRIMARY KEY, btree (id)
-Publications:
-    ""testpub_foralltables""",Extension,Load,Expect extension not loaded but actually loaded
-\d+ fd_pt1,13,Result MisMatch,"Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- c1     | integer |           | not null |         | plain    |             |              | 
- c2     | text    |           |          |         | extended |             |              | 
- c3     | date    |           |          |         | plain    |             |              | 
-Child tables: ft2
-Access method: heap","                                   Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- c1     | integer |           | not null |         | plain    |              | 
- c2     | text    |           |          |         | extended |              | 
- c3     | date    |           |          |         | plain    |              | 
-Child tables: ft2",Extension,Load,Expect extension not loaded but actually loaded
-\d+ test_constraints,13,Result MisMatch,"Table ""public.test_constraints""
- Column |       Type        | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+-------------------+-----------+----------+---------+----------+-------------+--------------+-------------
- id     | integer           |           |          |         | plain    |             |              | 
- val1   | character varying |           |          |         | extended |             |              | 
- val2   | integer           |           |          |         | plain    |             |              | 
-Indexes:
-    ""test_constraints_val1_val2_key"" UNIQUE CONSTRAINT, btree (val1, val2)
-Child tables: test_constraints_inh
-Access method: heap","                                   Table ""public.test_constraints""
- Column |       Type        | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+-------------------+-----------+----------+---------+----------+--------------+-------------
- id     | integer           |           |          |         | plain    |              | 
- val1   | character varying |           |          |         | extended |              | 
- val2   | integer           |           |          |         | plain    |              | 
-Indexes:
-    ""test_constraints_val1_val2_key"" UNIQUE CONSTRAINT, btree (val1, val2)
-Child tables: test_constraints_inh",Extension,Load,Expect extension not loaded but actually loaded
-\d+ mcrparted5_common_0_to_10,13,Result MisMatch,"Table ""public.mcrparted5_common_0_to_10""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- a      | text    |           |          |         | extended |             |              | 
- b      | integer |           |          |         | plain    |             |              | 
-Partition of: mcrparted FOR VALUES FROM ('common', 0) TO ('common', 10)
-Partition constraint: ((a IS NOT NULL) AND (b IS NOT NULL) AND (a = 'common'::text) AND (b >= 0) AND (b < 10))
-Access method: heap","                         Table ""public.mcrparted5_common_0_to_10""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- a      | text    |           |          |         | extended |              | 
- b      | integer |           |          |         | plain    |              | 
-Partition of: mcrparted FOR VALUES FROM ('common', 0) TO ('common', 10)
-Partition constraint: ((a IS NOT NULL) AND (b IS NOT NULL) AND (a = 'common'::text) AND (b >= 0) AND (b < 10))",Extension,Load,Expect extension not loaded but actually loaded
-\d+ ct3,13,Result MisMatch,"Table ""public.ct3""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- c1     | integer |           | not null |         | plain    |             |              | 
- c2     | text    |           |          |         | extended |             |              | 
- c3     | date    |           |          |         | plain    |             |              | 
- c4     | integer |           |          |         | plain    |             |              | 
- c5     | integer |           |          | 0       | plain    |             |              | 
- c6     | integer |           |          |         | plain    |             |              | 
- c7     | integer |           | not null |         | plain    |             |              | 
- c8     | integer |           |          |         | plain    |             |              | 
-Inherits: ft2
-Access method: heap","                                    Table ""public.ct3""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- c1     | integer |           | not null |         | plain    |              | 
- c2     | text    |           |          |         | extended |              | 
- c3     | date    |           |          |         | plain    |              | 
- c4     | integer |           |          |         | plain    |              | 
- c5     | integer |           |          | 0       | plain    |              | 
- c6     | integer |           |          |         | plain    |              | 
- c7     | integer |           | not null |         | plain    |              | 
- c8     | integer |           |          |         | plain    |              | 
-Inherits: ft2",Extension,Load,Expect extension not loaded but actually loaded
-\d+ fd_pt1,13,Result MisMatch,"Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- c1     | integer |           | not null |         | plain    |             | 10000        | 
- c2     | text    |           |          |         | extended |             |              | 
- c3     | date    |           |          |         | plain    |             |              | 
-Check constraints:
-    ""fd_pt1chk3"" CHECK (c2 <> ''::text) NOT VALID
-Child tables: ft2
-Access method: heap","                                   Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- c1     | integer |           | not null |         | plain    | 10000        | 
- c2     | text    |           |          |         | extended |              | 
- c3     | date    |           |          |         | plain    |              | 
-Check constraints:
-    ""fd_pt1chk3"" CHECK (c2 <> ''::text) NOT VALID
-Child tables: ft2",Extension,Load,Expect extension not loaded but actually loaded
-\d+ fd_pt1,13,Result MisMatch,"Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- c1     | integer |           | not null |         | plain    |             |              | 
- c2     | text    |           |          |         | extended |             |              | 
- c3     | date    |           |          |         | plain    |             |              | 
-Access method: heap","                                   Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- c1     | integer |           | not null |         | plain    |              | 
- c2     | text    |           |          |         | extended |              | 
- c3     | date    |           |          |         | plain    |              | ",Extension,Load,Expect extension not loaded but actually loaded
-\d+ mv_unspecified_types,13,Result MisMatch,"Materialized view ""public.mv_unspecified_types""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- i      | integer |           |          |         | plain    |             |              | 
- num    | numeric |           |          |         | main     |             |              | 
- u      | text    |           |          |         | extended |             |              | 
- u2     | text    |           |          |         | extended |             |              | 
- n      | text    |           |          |         | extended |             |              | 
-View definition:
- SELECT 42 AS i,
-    42.5 AS num,
-    'foo'::text AS u,
-    'foo'::text AS u2,
-    NULL::text AS n;
-Access method: heap","                      Materialized view ""public.mv_unspecified_types""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- i      | integer |           |          |         | plain    |              | 
- num    | numeric |           |          |         | main     |              | 
- u      | text    |           |          |         | extended |              | 
- u2     | text    |           |          |         | extended |              | 
- n      | text    |           |          |         | extended |              | 
-View definition:
- SELECT 42 AS i,
-    42.5 AS num,
-    'foo'::text AS u,
-    'foo'::text AS u2,
-    NULL::text AS n;",Extension,Load,Expect extension not loaded but actually loaded
-\d+ inhts,13,Result MisMatch,"Table ""public.inhts""
- Column |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- aaaa   | integer |           |          |         | plain   |             |              | 
- b      | integer |           |          |         | plain   |             |              | 
- x      | integer |           |          |         | plain   |             |              | 
- c      | integer |           |          |         | plain   |             |              | 
- d      | integer |           |          |         | plain   |             |              | 
-Inherits: inht2,
-          inhs1
-Access method: heap","                                   Table ""public.inhts""
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
---------+---------+-----------+----------+---------+---------+--------------+-------------
- aaaa   | integer |           |          |         | plain   |              | 
- b      | integer |           |          |         | plain   |              | 
- x      | integer |           |          |         | plain   |              | 
- c      | integer |           |          |         | plain   |              | 
- d      | integer |           |          |         | plain   |              | 
-Inherits: inht2,
-          inhs1",Extension,Load,Expect extension not loaded but actually loaded
-\d+ fd_pt2,13,Result MisMatch,"Partitioned table ""public.fd_pt2""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- c1     | integer |           | not null |         | plain    |             |              | 
- c2     | text    |           |          |         | extended |             |              | 
- c3     | date    |           |          |         | plain    |             |              | 
-Partition key: LIST (c1)
-Partitions: fd_pt2_1 FOR VALUES IN (1)","                             Partitioned table ""public.fd_pt2""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- c1     | integer |           | not null |         | plain    |              | 
- c2     | text    |           |          |         | extended |              | 
- c3     | date    |           |          |         | plain    |              | 
-Partition key: LIST (c1)
-Partitions: fd_pt2_1 FOR VALUES IN (1)",Extension,Load,Expect extension not loaded but actually loaded
-\d+ part_document,13,Result MisMatch,"Partitioned table ""regress_rls_schema.part_document""
+QUERY:  select *                       from test_enc_conversion(input, src_encoding, dst_encoding, true)
+CONTEXT:  PL/pgSQL function test_conv(bytea,text,text) line 11 at SQL statement",,Extension,Shared Library,Expected shared library
+\d+ part_document,14,Result MisMatch,"Partitioned table ""regress_rls_schema.part_document""
  Column  |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
 ---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
  did     | integer |           |          |         | plain    |             |              | 
@@ -342,8 +496,47 @@ Policies:
       USING ((cid < 55))
 Partitions: part_document_fiction FOR VALUES FROM (11) TO (12),
             part_document_nonfiction FOR VALUES FROM (99) TO (100),
-            part_document_satire FOR VALUES FROM (55) TO (56)",Extension,Load,Expect extension not loaded but actually loaded
-\d+ testpub_tbl7,13,Result MisMatch,"Table ""public.testpub_tbl7""
+            part_document_satire FOR VALUES FROM (55) TO (56)",Extension,Shared Library,Expected shared library
+\d+ test_ex_constraints,14,Result MisMatch,"Table ""public.test_ex_constraints""
+ Column |  Type  | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+--------+--------+-----------+----------+---------+---------+-------------+--------------+-------------
+ c      | circle |           |          |         | plain   |             |              | 
+Indexes:
+    ""test_ex_constraints_c_excl"" EXCLUDE USING gist (c WITH &&)
+Child tables: test_ex_constraints_inh
+Access method: heap","                           Table ""public.test_ex_constraints""
+ Column |  Type  | Collation | Nullable | Default | Storage | Stats target | Description 
+--------+--------+-----------+----------+---------+---------+--------------+-------------
+ c      | circle |           |          |         | plain   |              | 
+Indexes:
+    ""test_ex_constraints_c_excl"" EXCLUDE USING gist (c WITH &&)
+Child tables: test_ex_constraints_inh",Extension,Shared Library,Expected shared library
+\d+ list_parted,14,Result MisMatch,"Partitioned table ""public.list_parted""
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ a      | text    |           |          |         | extended |             |              | 
+ b      | integer |           |          |         | plain    |             |              | 
+Partition key: LIST (lower(a))
+Partitions: part_aa_bb FOR VALUES IN ('aa', 'bb'),
+            part_cc_dd FOR VALUES IN ('cc', 'dd'),
+            part_ee_ff FOR VALUES IN ('ee', 'ff'), PARTITIONED,
+            part_gg FOR VALUES IN ('gg'), PARTITIONED,
+            part_null FOR VALUES IN (NULL),
+            part_xx_yy FOR VALUES IN ('xx', 'yy'), PARTITIONED,
+            part_default DEFAULT, PARTITIONED","                          Partitioned table ""public.list_parted""
+ Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+--------------+-------------
+ a      | text    |           |          |         | extended |              | 
+ b      | integer |           |          |         | plain    |              | 
+Partition key: LIST (lower(a))
+Partitions: part_aa_bb FOR VALUES IN ('aa', 'bb'),
+            part_cc_dd FOR VALUES IN ('cc', 'dd'),
+            part_ee_ff FOR VALUES IN ('ee', 'ff'), PARTITIONED,
+            part_gg FOR VALUES IN ('gg'), PARTITIONED,
+            part_null FOR VALUES IN (NULL),
+            part_xx_yy FOR VALUES IN ('xx', 'yy'), PARTITIONED,
+            part_default DEFAULT, PARTITIONED",Extension,Shared Library,Expected shared library
+\d+ testpub_tbl7,14,Result MisMatch,"Table ""public.testpub_tbl7""
  Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
 --------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
  a      | integer |           | not null |         | plain    |             |              | 
@@ -362,1486 +555,46 @@ Access method: heap","                                Table ""public.testpub_tbl
 Indexes:
     ""testpub_tbl7_pkey"" PRIMARY KEY, btree (a)
 Publications:
-    ""testpub_fortable"" (a, b)",Extension,Load,Expect extension not loaded but actually loaded
-\d+ ab1,13,Result MisMatch,"Table ""public.ab1""
- Column |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- a      | integer |           |          |         | plain   |             |              | 
- b      | integer |           |          |         | plain   |             |              | 
-Statistics objects:
-    ""public.ab1_a_b_stats"" ON a, b FROM ab1
-Access method: heap","                                    Table ""public.ab1""
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
---------+---------+-----------+----------+---------+---------+--------------+-------------
- a      | integer |           |          |         | plain   |              | 
- b      | integer |           |          |         | plain   |              | 
-Statistics objects:
-    ""public.ab1_a_b_stats"" ON a, b FROM ab1",Extension,Load,Expect extension not loaded but actually loaded
-\d+ mvtest_bb,13,Result MisMatch,"Materialized view ""public.mvtest_bb""
-  Column  |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
-----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- grandtot | numeric |           |          |         | main    |             |              | 
-Indexes:
-    ""mvtest_aa"" btree (grandtot)
-View definition:
- SELECT mvtest_tvvmv.grandtot
-   FROM mvtest_tvvmv;
-Access method: heap","                            Materialized view ""public.mvtest_bb""
-  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
-----------+---------+-----------+----------+---------+---------+--------------+-------------
- grandtot | numeric |           |          |         | main    |              | 
-Indexes:
-    ""mvtest_aa"" btree (grandtot)
-View definition:
- SELECT mvtest_tvvmv.grandtot
-   FROM mvtest_tvvmv;",Extension,Load,Expect extension not loaded but actually loaded
-\d+ test_replica_identity4,13,Result MisMatch,"Partitioned table ""public.test_replica_identity4""
- Column |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- id     | integer |           | not null |         | plain   |             |              | 
-Partition key: LIST (id)
-Indexes:
-    ""test_replica_identity4_pkey"" PRIMARY KEY, btree (id) REPLICA IDENTITY
-Partitions: test_replica_identity4_1 FOR VALUES IN (1)","                    Partitioned table ""public.test_replica_identity4""
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
---------+---------+-----------+----------+---------+---------+--------------+-------------
- id     | integer |           | not null |         | plain   |              | 
-Partition key: LIST (id)
-Indexes:
-    ""test_replica_identity4_pkey"" PRIMARY KEY, btree (id) REPLICA IDENTITY
-Partitions: test_replica_identity4_1 FOR VALUES IN (1)",Extension,Load,Expect extension not loaded but actually loaded
-\d+ fd_pt1,13,Result MisMatch,"Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- c1     | integer |           | not null |         | plain    |             | 10000        | 
- c2     | text    |           |          |         | extended |             |              | 
- c3     | date    |           |          |         | plain    |             |              | 
-Check constraints:
-    ""fd_pt1chk1"" CHECK (c1 > 0) NO INHERIT
-    ""fd_pt1chk2"" CHECK (c2 <> ''::text)
-Child tables: ft2
-Access method: heap","                                   Table ""public.fd_pt1""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- c1     | integer |           | not null |         | plain    | 10000        | 
- c2     | text    |           |          |         | extended |              | 
- c3     | date    |           |          |         | plain    |              | 
-Check constraints:
-    ""fd_pt1chk1"" CHECK (c1 > 0) NO INHERIT
-    ""fd_pt1chk2"" CHECK (c2 <> ''::text)
-Child tables: ft2",Extension,Load,Expect extension not loaded but actually loaded
-\d+ cmdata2,13,Result MisMatch,"Table ""public.cmdata2""
- Column |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- f1     | integer |           |          |         | plain   |             |              | 
-Access method: heap","                                         Table ""public.cmdata2""
- Column |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- f1     | integer |           |          |         | plain   |             |              | ",Extension,Load,Expect extension not loaded but actually loaded
-\d+ inhts,13,Result MisMatch,"Table ""public.inhts""
- Column |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- aa     | integer |           |          |         | plain   |             |              | 
- b      | integer |           |          |         | plain   |             |              | 
- c      | integer |           |          |         | plain   |             |              | 
- dd     | integer |           |          |         | plain   |             |              | 
-Inherits: inht1,
-          inhs1
-Access method: heap","                                   Table ""public.inhts""
- Column |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
---------+---------+-----------+----------+---------+---------+--------------+-------------
- aa     | integer |           |          |         | plain   |              | 
- b      | integer |           |          |         | plain   |              | 
- c      | integer |           |          |         | plain   |              | 
- dd     | integer |           |          |         | plain   |              | 
-Inherits: inht1,
-          inhs1",Extension,Load,Expect extension not loaded but actually loaded
-\d+ mvtest_tvmm,13,Result MisMatch,"Materialized view ""public.mvtest_tvmm""
-  Column  |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
-----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
- grandtot | numeric |           |          |         | main    |             |              | 
-Indexes:
-    ""mvtest_tvmm_expr"" UNIQUE, btree ((grandtot > 0::numeric))
-    ""mvtest_tvmm_pred"" UNIQUE, btree (grandtot) WHERE grandtot < 0::numeric
-View definition:
- SELECT sum(mvtest_tvm.totamt) AS grandtot
-   FROM mvtest_mvschema.mvtest_tvm;
-Access method: heap","                           Materialized view ""public.mvtest_tvmm""
-  Column  |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
-----------+---------+-----------+----------+---------+---------+--------------+-------------
- grandtot | numeric |           |          |         | main    |              | 
-Indexes:
-    ""mvtest_tvmm_expr"" UNIQUE, btree ((grandtot > 0::numeric))
-    ""mvtest_tvmm_pred"" UNIQUE, btree (grandtot) WHERE grandtot < 0::numeric
-View definition:
- SELECT sum(mvtest_tvm.totamt) AS grandtot
-   FROM mvtest_mvschema.mvtest_tvm;",Extension,Load,Expect extension not loaded but actually loaded
-"SELECT pk, c_int, c_bpchar, c_text, c_date, c_timestamp,
-       c_timestamp_null, c_array, c_small, c_small_null,
-       c_big, c_num, c_time, c_interval,
-       c_hugetext = repeat('abcdefg',1000) as c_hugetext_origdef,
-       c_hugetext = repeat('poiuyt', 1000) as c_hugetext_newdef
-FROM T ORDER BY pk",13,Result MisMatch,"1	1	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-2	1	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-3	2	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-4	2	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-5	2	dog	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-6	2	dog	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-7	2	dog	cat	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-8	2	dog	cat	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-9	2	dog	cat	01-01-2010	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-10	2	dog	cat	01-01-2010	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-11	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-12	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-13	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-14	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	-5		180000000000018	1.00000000001	12:00:00	1 day	True	False
-15	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	180000000000018	1.00000000001	12:00:00	1 day	True	False
-16	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	180000000000018	1.00000000001	12:00:00	1 day	True	False
-17	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	1.00000000001	12:00:00	1 day	True	False
-18	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	1.00000000001	12:00:00	1 day	True	False
-19	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	12:00:00	1 day	True	False
-20	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	12:00:00	1 day	True	False
-21	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	1 day	True	False
-22	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	1 day	True	False
-23	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	03:00:00	True	False
-24	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	03:00:00	True	False
-25	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59		False	True
-26	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59		False	True
-27	2					Thu Sep 29 12:00:00 2016			13						
-28	2					Thu Sep 29 12:00:00 2016			13","1	1	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-2	1	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-3	2	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-4	2	hello	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-5	2	dog	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-6	2	dog	world	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-7	2	dog	cat	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-8	2	dog	cat	06-02-2016	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-9	2	dog	cat	01-01-2010	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-10	2	dog	cat	01-01-2010	Thu Sep 01 12:00:00 2016		{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-11	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-12	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,the,real,world}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-13	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-14	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	-5		180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-15	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-16	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	180000000000018	1.00000000001	12:00:00	@ 1 day	True	False
-17	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	1.00000000001	12:00:00	@ 1 day	True	False
-18	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	1.00000000001	12:00:00	@ 1 day	True	False
-19	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	12:00:00	@ 1 day	True	False
-20	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	12:00:00	@ 1 day	True	False
-21	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	@ 1 day	True	False
-22	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	@ 1 day	True	False
-23	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	@ 3 hours	True	False
-24	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59	@ 3 hours	True	False
-25	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59		False	True
-26	2	dog	cat	01-01-2010	Thu Dec 31 11:12:13 1970	Thu Sep 29 12:00:00 2016	{This,is,no,fantasy}	9	13	-9999999999999999	2.000000000000002	23:59:59		False	True
-27	2					Thu Sep 29 12:00:00 2016			13						
-28	2					Thu Sep 29 12:00:00 2016			13						",Extension,Load,Expect extension not loaded but actually loaded
-SELECT pg_column_compression(f1) FROM cmpart1,13,Result MisMatch,"ERROR:  relation ""cmpart1"" does not exist
-LINE 1: SELECT pg_column_compression(f1) FROM cmpart1;
-                                              ^","lz4
-pglz",Extension,Load,Expect extension not loaded but actually loaded
-\d+ mcrparted2_b,13,Result MisMatch,"Table ""public.mcrparted2_b""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- a      | text    |           |          |         | extended |             |              | 
- b      | integer |           |          |         | plain    |             |              | 
-Partition of: mcrparted FOR VALUES FROM ('b', MINVALUE) TO ('c', MINVALUE)
-Partition constraint: ((a IS NOT NULL) AND (b IS NOT NULL) AND (a >= 'b'::text) AND (a < 'c'::text))
-Access method: heap","                                Table ""public.mcrparted2_b""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- a      | text    |           |          |         | extended |              | 
- b      | integer |           |          |         | plain    |              | 
-Partition of: mcrparted FOR VALUES FROM ('b', MINVALUE) TO ('c', MINVALUE)
-Partition constraint: ((a IS NOT NULL) AND (b IS NOT NULL) AND (a >= 'b'::text) AND (a < 'c'::text))",Extension,Load,Expect extension not loaded but actually loaded
-\d+ mcrparted4_common_lt_0,13,Result MisMatch,"Table ""public.mcrparted4_common_lt_0""
- Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
- a      | text    |           |          |         | extended |             |              | 
- b      | integer |           |          |         | plain    |             |              | 
-Partition of: mcrparted FOR VALUES FROM ('common', MINVALUE) TO ('common', 0)
-Partition constraint: ((a IS NOT NULL) AND (b IS NOT NULL) AND (a = 'common'::text) AND (b < 0))
-Access method: heap","                           Table ""public.mcrparted4_common_lt_0""
- Column |  Type   | Collation | Nullable | Default | Storage  | Stats target | Description 
---------+---------+-----------+----------+---------+----------+--------------+-------------
- a      | text    |           |          |         | extended |              | 
- b      | integer |           |          |         | plain    |              | 
-Partition of: mcrparted FOR VALUES FROM ('common', MINVALUE) TO ('common', 0)
-Partition constraint: ((a IS NOT NULL) AND (b IS NOT NULL) AND (a = 'common'::text) AND (b < 0))",Extension,Load,Expect extension not loaded but actually loaded
-"SELECT ts_rewrite( query, 'SELECT keyword, sample FROM test_tsquery' ) FROM to_tsquery('english', 'moscow') AS query",3,Result MisMatch,'moscow','moskva'	'moscow',Environment,File Paths,Environment difference of file structures
-"SELECT * FROM fast_emp4000
-    WHERE home_base <@ '(200,200),(2000,1000)'::box
-    ORDER BY (home_base[0])[0]",3,Result MisMatch,"ERROR:  current transaction is aborted, commands ignored until end of transaction block","(337,455),(240,359)
-(1444,403),(1346,344)",Environment,File Paths,Environment difference of file structures
-SELECT keyword FROM test_tsquery WHERE keyword @> 'moscow',3,Result MisMatch,,'moscow',Environment,File Paths,Environment difference of file structures
-"EXPLAIN (COSTS OFF)
-SELECT * FROM fast_emp4000
-    WHERE home_base <@ '(200,200),(2000,1000)'::box
-    ORDER BY (home_base[0])[0]",3,Result MisMatch,"ERROR:  current transaction is aborted, commands ignored until end of transaction block","Sort
-Sort Key: ((home_base[0])[0])
-->  Index Only Scan using grect2ind2 on fast_emp4000
-Index Cond: (home_base <@ '(2000,1000),(200,200)'::box)",Environment,File Paths,Environment difference of file structures
-SET enable_bitmapscan = OFF,3,"ERROR:  current transaction is aborted, commands ignored until end of transaction block",False,,Environment,File Paths,Environment difference of file structures
-"SELECT ts_rewrite( query, 'SELECT keyword, sample FROM test_tsquery' ) FROM to_tsquery('english', 'moscow & hotel') AS query",3,Result MisMatch,'moscow' & 'hotel','hotel' & ( 'moskva'	'moscow' ),Environment,File Paths,Environment difference of file structures
-"SELECT '""\v""'::jsonb;			
-",3,Result MisMatch,"ERROR:  invalid input syntax for type json
-LINE 1: SELECT '""\v""'::jsonb;
+    ""testpub_fortable"" (a, b)",Extension,Shared Library,Expected shared library
+"SELECT format_type(atttypid,atttypmod) FROM pg_attribute
+WHERE attrelid = 'mytab'::regclass AND attnum > 0",14,Result MisMatch,"ERROR:  relation ""mytab"" does not exist
+LINE 2: WHERE attrelid = 'mytab'::regclass AND attnum > 0;
+                         ^","widget(42,13)",Extension,Shared Library,Expected shared library
+"select description, inbytes, (test_conv(inbytes, 'iso8859-5', 'iso8859-5')).* from iso8859_5_inputs",14,Result MisMatch,"ERROR:  function test_enc_conversion(bytea, text, text, boolean) does not exist
+LINE 1: select *                       from test_enc_conversion(inpu...
+                                            ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+QUERY:  select *                       from test_enc_conversion(input, src_encoding, dst_encoding, true)
+CONTEXT:  PL/pgSQL function test_conv(bytea,text,text) line 11 at SQL statement","valid, pure ASCII	\x666f6f	\x666f6f		
+valid	\xe4dede	\xe4dede		
+invalid, NUL byte	\x00	\x	\x00	invalid byte sequence for encoding ""ISO_8859_5"": 0x00
+invalid, NUL byte	\xe400dede	\xe4	\x00dede	invalid byte sequence for encoding ""ISO_8859_5"": 0x00
+invalid, NUL byte	\xe4dede00	\xe4dede	\x00	invalid byte sequence for encoding ""ISO_8859_5"": 0x00",Extension,Shared Library,Expected shared library
+SELECT test_canonicalize_path('/./abc/def/'),14,Result MisMatch,"ERROR:  function test_canonicalize_path(unknown) does not exist
+LINE 1: SELECT test_canonicalize_path('/./abc/def/');
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.",/abc/def,Extension,Shared Library,Expected shared library
+REVOKE CREATE ON DATABASE regression FROM regress_publication_user2,21,"ERROR:  database ""regression"" does not exist",False,,Environment,Set up,Different schema names
+"SELECT c, max(a) FROM test_having
+	GROUP BY c HAVING count(*) > 2 OR min(a) = max(a)
+	ORDER BY c",24,Result MisMatch,"bbbb	5
+XXXX	0","XXXX	0
+bbbb	5",Environment,Setting,Locale
+SELECT '2011-03-27 02:59:59'::timestamp AT TIME ZONE 'MSK',15,Result MisMatch,2011-03-26 22:59:59+00,Sat Mar 26 22:59:59 2011 UTC,Environment,Setting,Timestamp representation difference
+"SELECT timestamptz(date '1994-01-01', time '10:00') AS ""Jan_01_1994_9am""",15,Result MisMatch,Sat Jan 01 10:00:00 1994 +08,Sat Jan 01 10:00:00 1994 PST,Environment,Setting,Timestamp representation difference
+"SELECT to_timestamp('5527', 'IIWID')",15,Result MisMatch,2006-01-01 00:00:00+08,Sun Jan 01 00:00:00 2006 PST,Environment,Setting,Timestamp representation difference
+SELECT '2014-10-25 21:59:59 UTC'::timestamptz,15,Result MisMatch,2014-10-26 01:59:59+04,Sun Oct 26 01:59:59 2014 MSK,Environment,Setting,Timestamp representation difference
+"SELECT to_timestamp('2005300', 'YYYYDDD')",15,Result MisMatch,2005-10-27 00:00:00+08,Thu Oct 27 00:00:00 2005 PDT,Environment,Setting,Timestamp representation difference
+SELECT '4714-11-24 BC'::date::timestamptz,15,Result MisMatch,ERROR:  date out of range for timestamp,Mon Nov 24 00:00:00 4714 PST BC,Environment,Setting,Timestamp representation difference
+"SELECT '""\v""'::json;			
+",9,Result MisMatch,"ERROR:  invalid input syntax for type json
+LINE 1: SELECT '""\v""'::json;
                ^
 DETAIL:  Escape sequence ""\v"" is invalid.
-CONTEXT:  JSON data, line 1: ""\v...","LINE 1: SELECT '""\v""'::jsonb;
+CONTEXT:  JSON data, line 1: ""\v...","LINE 1: SELECT '""\v""'::json;
                ^
 DETAIL:  Escape sequence ""\v"" is invalid.
 CONTEXT:  JSON data, line 1: ""\v...
--- see json_encoding test for input with unicode escapes",Environment,File Paths,Environment difference of file structures
-"explain (costs off)
-select count(*) from
-  ( select unique1 from tenk1 intersect select fivethous from tenk1 ) ss",3,Result MisMatch,"Aggregate
-->  Subquery Scan on ss
-->  SetOp Intersect
-->  Sort
-Sort Key: ""*SELECT* 2"".fivethous
-->  Append
-->  Subquery Scan on ""*SELECT* 2""
-->  Seq Scan on tenk1
-->  Subquery Scan on ""*SELECT* 1""
-->  Seq Scan on tenk1 tenk1_1","Aggregate
-->  Subquery Scan on ss
-->  SetOp Intersect
-->  Sort
-Sort Key: ""*SELECT* 2"".fivethous
-->  Append
-->  Subquery Scan on ""*SELECT* 2""
-->  Seq Scan on tenk1
-->  Subquery Scan on ""*SELECT* 1""
-->  Index Only Scan using tenk1_unique1 on tenk1 tenk1_1",Environment,File Paths,Environment difference of file structures
-"SELECT d1 - timestamp without time zone '1997-01-02' AS diff
-   FROM TIMESTAMP_TBL WHERE d1 BETWEEN '1902-01-01' AND '2038-01-01'",15,Result MisMatch,"-9863 days
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:02
-39 days 17:32:01.4
-39 days 17:32:01.5
-39 days 17:32:01.6
-00:00:00
-03:04:05
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-159 days 17:32:01
-1724 days 18:19:20
-1168 days 08:14:01
-1168 days 13:14:02
-1168 days 12:14:03
-1168 days 03:14:04
-1168 days 02:14:05
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:00
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-39 days 17:32:01
-159 days 18:32:01
-39 days 17:32:01
-40 days 17:32:01
-41 days 17:32:01
-42 days 17:32:01
-43 days 17:32:01
-44 days 17:32:01
-45 days 17:32:01
-45 days 17:32:01
--308 days -06:27:59
--307 days -06:27:59
--306 days -06:27:59
--2 days -06:27:59
--1 days -06:27:59
--06:27:59
-57 days 17:32:01
-58 days 17:32:01
-362 days 17:32:01
-363 days 17:32:01
-1093 days 17:32:01
-1094 days 17:32:01
-1459 days 17:32:01
-1460 days 17:32:01","@ 9863 days ago
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 2 secs
-@ 39 days 17 hours 32 mins 1.4 secs
-@ 39 days 17 hours 32 mins 1.5 secs
-@ 39 days 17 hours 32 mins 1.6 secs
-@ 0
-@ 3 hours 4 mins 5 secs
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 159 days 17 hours 32 mins 1 sec
-@ 1724 days 18 hours 19 mins 20 secs
-@ 1168 days 8 hours 14 mins 1 sec
-@ 1168 days 13 hours 14 mins 2 secs
-@ 1168 days 12 hours 14 mins 3 secs
-@ 1168 days 3 hours 14 mins 4 secs
-@ 1168 days 2 hours 14 mins 5 secs
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 159 days 18 hours 32 mins 1 sec
-@ 39 days 17 hours 32 mins 1 sec
-@ 40 days 17 hours 32 mins 1 sec
-@ 41 days 17 hours 32 mins 1 sec
-@ 42 days 17 hours 32 mins 1 sec
-@ 43 days 17 hours 32 mins 1 sec
-@ 44 days 17 hours 32 mins 1 sec
-@ 45 days 17 hours 32 mins 1 sec
-@ 45 days 17 hours 32 mins 1 sec
-@ 308 days 6 hours 27 mins 59 secs ago
-@ 307 days 6 hours 27 mins 59 secs ago
-@ 306 days 6 hours 27 mins 59 secs ago
-@ 2 days 6 hours 27 mins 59 secs ago
-@ 1 day 6 hours 27 mins 59 secs ago
-@ 6 hours 27 mins 59 secs ago
-@ 57 days 17 hours 32 mins 1 sec
-@ 58 days 17 hours 32 mins 1 sec
-@ 362 days 17 hours 32 mins 1 sec
-@ 363 days 17 hours 32 mins 1 sec
-@ 1093 days 17 hours 32 mins 1 sec
-@ 1094 days 17 hours 32 mins 1 sec
-@ 1459 days 17 hours 32 mins 1 sec
-@ 1460 days 17 hours 32 mins 1 sec",Environment,Setting,Timestamp representation difference
-"SELECT d1.f1 AS timestamp1, d2.f1 AS timestamp2, d1.f1 - d2.f1 AS difference
-  FROM TEMP_TIMESTAMP d1, TEMP_TIMESTAMP d2
-  ORDER BY timestamp1, timestamp2, difference",15,Result MisMatch,"Thu Jan 01 00:00:00 1970 PST	Thu Jan 01 00:00:00 1970 PST	00:00:00
-Thu Jan 01 00:00:00 1970 PST	Wed Feb 28 17:32:01 1996 PST	-9554 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Thu Feb 29 17:32:01 1996 PST	-9555 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Fri Mar 01 17:32:01 1996 PST	-9556 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Mon Dec 30 17:32:01 1996 PST	-9860 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Tue Dec 31 17:32:01 1996 PST	-9861 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Fri Dec 31 17:32:01 1999 PST	-10956 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Sat Jan 01 17:32:01 2000 PST	-10957 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 02:14:05 2000 PST	-11031 days -02:14:05
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 03:14:04 2000 PST	-11031 days -03:14:04
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 08:14:01 2000 PST	-11031 days -08:14:01
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 12:14:03 2000 PST	-11031 days -12:14:03
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 13:14:02 2000 PST	-11031 days -13:14:02
-Thu Jan 01 00:00:00 1970 PST	Sun Dec 31 17:32:01 2000 PST	-11322 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Mon Jan 01 17:32:01 2001 PST	-11323 days -17:32:01
-Thu Jan 01 00:00:00 1970 PST	Sat Sep 22 18:19:20 2001 PDT	-11587 days -17:19:20
-Wed Feb 28 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	9554 days 17:32:01
-Wed Feb 28 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	00:00:00
-Wed Feb 28 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	-1 days
-Wed Feb 28 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	-2 days
-Wed Feb 28 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	-306 days
-Wed Feb 28 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	-307 days
-Wed Feb 28 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	-1402 days
-Wed Feb 28 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	-1403 days
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	-1476 days -08:42:04
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	-1476 days -09:42:03
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	-1476 days -14:42:00
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	-1476 days -18:42:02
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	-1476 days -19:42:01
-Wed Feb 28 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	-1768 days
-Wed Feb 28 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	-1769 days
-Wed Feb 28 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	-2032 days -23:47:19
-Thu Feb 29 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	9555 days 17:32:01
-Thu Feb 29 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	1 day
-Thu Feb 29 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	00:00:00
-Thu Feb 29 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	-1 days
-Thu Feb 29 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	-305 days
-Thu Feb 29 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	-306 days
-Thu Feb 29 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	-1401 days
-Thu Feb 29 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	-1402 days
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	-1475 days -08:42:04
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	-1475 days -09:42:03
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	-1475 days -14:42:00
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	-1475 days -18:42:02
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	-1475 days -19:42:01
-Thu Feb 29 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	-1767 days
-Thu Feb 29 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	-1768 days
-Thu Feb 29 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	-2031 days -23:47:19
-Fri Mar 01 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	9556 days 17:32:01
-Fri Mar 01 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	2 days
-Fri Mar 01 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	1 day
-Fri Mar 01 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	00:00:00
-Fri Mar 01 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	-304 days
-Fri Mar 01 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	-305 days
-Fri Mar 01 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	-1400 days
-Fri Mar 01 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	-1401 days
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	-1474 days -08:42:04
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	-1474 days -09:42:03
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	-1474 days -14:42:00
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	-1474 days -18:42:02
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	-1474 days -19:42:01
-Fri Mar 01 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	-1766 days
-Fri Mar 01 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	-1767 days
-Fri Mar 01 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	-2030 days -23:47:19
-Mon Dec 30 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	9860 days 17:32:01
-Mon Dec 30 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	306 days
-Mon Dec 30 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	305 days
-Mon Dec 30 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	304 days
-Mon Dec 30 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	00:00:00
-Mon Dec 30 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	-1 days
-Mon Dec 30 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	-1096 days
-Mon Dec 30 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	-1097 days
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	-1170 days -08:42:04
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	-1170 days -09:42:03
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	-1170 days -14:42:00
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	-1170 days -18:42:02
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	-1170 days -19:42:01
-Mon Dec 30 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	-1462 days
-Mon Dec 30 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	-1463 days
-Mon Dec 30 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	-1726 days -23:47:19
-Tue Dec 31 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	9861 days 17:32:01
-Tue Dec 31 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	307 days
-Tue Dec 31 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	306 days
-Tue Dec 31 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	305 days
-Tue Dec 31 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	1 day
-Tue Dec 31 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	00:00:00
-Tue Dec 31 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	-1095 days
-Tue Dec 31 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	-1096 days
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	-1169 days -08:42:04
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	-1169 days -09:42:03
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	-1169 days -14:42:00
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	-1169 days -18:42:02
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	-1169 days -19:42:01
-Tue Dec 31 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	-1461 days
-Tue Dec 31 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	-1462 days
-Tue Dec 31 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	-1725 days -23:47:19
-Fri Dec 31 17:32:01 1999 PST	Thu Jan 01 00:00:00 1970 PST	10956 days 17:32:01
-Fri Dec 31 17:32:01 1999 PST	Wed Feb 28 17:32:01 1996 PST	1402 days
-Fri Dec 31 17:32:01 1999 PST	Thu Feb 29 17:32:01 1996 PST	1401 days
-Fri Dec 31 17:32:01 1999 PST	Fri Mar 01 17:32:01 1996 PST	1400 days
-Fri Dec 31 17:32:01 1999 PST	Mon Dec 30 17:32:01 1996 PST	1096 days
-Fri Dec 31 17:32:01 1999 PST	Tue Dec 31 17:32:01 1996 PST	1095 days
-Fri Dec 31 17:32:01 1999 PST	Fri Dec 31 17:32:01 1999 PST	00:00:00
-Fri Dec 31 17:32:01 1999 PST	Sat Jan 01 17:32:01 2000 PST	-1 days
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 02:14:05 2000 PST	-74 days -08:42:04
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 03:14:04 2000 PST	-74 days -09:42:03
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 08:14:01 2000 PST	-74 days -14:42:00
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 12:14:03 2000 PST	-74 days -18:42:02
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 13:14:02 2000 PST	-74 days -19:42:01
-Fri Dec 31 17:32:01 1999 PST	Sun Dec 31 17:32:01 2000 PST	-366 days
-Fri Dec 31 17:32:01 1999 PST	Mon Jan 01 17:32:01 2001 PST	-367 days
-Fri Dec 31 17:32:01 1999 PST	Sat Sep 22 18:19:20 2001 PDT	-630 days -23:47:19
-Sat Jan 01 17:32:01 2000 PST	Thu Jan 01 00:00:00 1970 PST	10957 days 17:32:01
-Sat Jan 01 17:32:01 2000 PST	Wed Feb 28 17:32:01 1996 PST	1403 days
-Sat Jan 01 17:32:01 2000 PST	Thu Feb 29 17:32:01 1996 PST	1402 days
-Sat Jan 01 17:32:01 2000 PST	Fri Mar 01 17:32:01 1996 PST	1401 days
-Sat Jan 01 17:32:01 2000 PST	Mon Dec 30 17:32:01 1996 PST	1097 days
-Sat Jan 01 17:32:01 2000 PST	Tue Dec 31 17:32:01 1996 PST	1096 days
-Sat Jan 01 17:32:01 2000 PST	Fri Dec 31 17:32:01 1999 PST	1 day
-Sat Jan 01 17:32:01 2000 PST	Sat Jan 01 17:32:01 2000 PST	00:00:00
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 02:14:05 2000 PST	-73 days -08:42:04
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 03:14:04 2000 PST	-73 days -09:42:03
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 08:14:01 2000 PST	-73 days -14:42:00
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 12:14:03 2000 PST	-73 days -18:42:02
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 13:14:02 2000 PST	-73 days -19:42:01
-Sat Jan 01 17:32:01 2000 PST	Sun Dec 31 17:32:01 2000 PST	-365 days
-Sat Jan 01 17:32:01 2000 PST	Mon Jan 01 17:32:01 2001 PST	-366 days
-Sat Jan 01 17:32:01 2000 PST	Sat Sep 22 18:19:20 2001 PDT	-629 days -23:47:19
-Wed Mar 15 02:14:05 2000 PST	Thu Jan 01 00:00:00 1970 PST	11031 days 02:14:05
-Wed Mar 15 02:14:05 2000 PST	Wed Feb 28 17:32:01 1996 PST	1476 days 08:42:04
-Wed Mar 15 02:14:05 2000 PST	Thu Feb 29 17:32:01 1996 PST	1475 days 08:42:04
-Wed Mar 15 02:14:05 2000 PST	Fri Mar 01 17:32:01 1996 PST	1474 days 08:42:04
-Wed Mar 15 02:14:05 2000 PST	Mon Dec 30 17:32:01 1996 PST	1170 days 08:42:04
-Wed Mar 15 02:14:05 2000 PST	Tue Dec 31 17:32:01 1996 PST	1169 days 08:42:04
-Wed Mar 15 02:14:05 2000 PST	Fri Dec 31 17:32:01 1999 PST	74 days 08:42:04
-Wed Mar 15 02:14:05 2000 PST	Sat Jan 01 17:32:01 2000 PST	73 days 08:42:04
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 02:14:05 2000 PST	00:00:00
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 03:14:04 2000 PST	-00:59:59
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 08:14:01 2000 PST	-05:59:56
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 12:14:03 2000 PST	-09:59:58
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 13:14:02 2000 PST	-10:59:57
-Wed Mar 15 02:14:05 2000 PST	Sun Dec 31 17:32:01 2000 PST	-291 days -15:17:56
-Wed Mar 15 02:14:05 2000 PST	Mon Jan 01 17:32:01 2001 PST	-292 days -15:17:56
-Wed Mar 15 02:14:05 2000 PST	Sat Sep 22 18:19:20 2001 PDT	-556 days -15:05:15
-Wed Mar 15 03:14:04 2000 PST	Thu Jan 01 00:00:00 1970 PST	11031 days 03:14:04
-Wed Mar 15 03:14:04 2000 PST	Wed Feb 28 17:32:01 1996 PST	1476 days 09:42:03
-Wed Mar 15 03:14:04 2000 PST	Thu Feb 29 17:32:01 1996 PST	1475 days 09:42:03
-Wed Mar 15 03:14:04 2000 PST	Fri Mar 01 17:32:01 1996 PST	1474 days 09:42:03
-Wed Mar 15 03:14:04 2000 PST	Mon Dec 30 17:32:01 1996 PST	1170 days 09:42:03
-Wed Mar 15 03:14:04 2000 PST	Tue Dec 31 17:32:01 1996 PST	1169 days 09:42:03
-Wed Mar 15 03:14:04 2000 PST	Fri Dec 31 17:32:01 1999 PST	74 days 09:42:03
-Wed Mar 15 03:14:04 2000 PST	Sat Jan 01 17:32:01 2000 PST	73 days 09:42:03
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 02:14:05 2000 PST	00:59:59
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 03:14:04 2000 PST	00:00:00
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 08:14:01 2000 PST	-04:59:57
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 12:14:03 2000 PST	-08:59:59
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 13:14:02 2000 PST	-09:59:58
-Wed Mar 15 03:14:04 2000 PST	Sun Dec 31 17:32:01 2000 PST	-291 days -14:17:57
-Wed Mar 15 03:14:04 2000 PST	Mon Jan 01 17:32:01 2001 PST	-292 days -14:17:57
-Wed Mar 15 03:14:04 2000 PST	Sat Sep 22 18:19:20 2001 PDT	-556 days -14:05:16
-Wed Mar 15 08:14:01 2000 PST	Thu Jan 01 00:00:00 1970 PST	11031 days 08:14:01
-Wed Mar 15 08:14:01 2000 PST	Wed Feb 28 17:32:01 1996 PST	1476 days 14:42:00
-Wed Mar 15 08:14:01 2000 PST	Thu Feb 29 17:32:01 1996 PST	1475 days 14:42:00
-Wed Mar 15 08:14:01 2000 PST	Fri Mar 01 17:32:01 1996 PST	1474 days 14:42:00
-Wed Mar 15 08:14:01 2000 PST	Mon Dec 30 17:32:01 1996 PST	1170 days 14:42:00
-Wed Mar 15 08:14:01 2000 PST	Tue Dec 31 17:32:01 1996 PST	1169 days 14:42:00
-Wed Mar 15 08:14:01 2000 PST	Fri Dec 31 17:32:01 1999 PST	74 days 14:42:00
-Wed Mar 15 08:14:01 2000 PST	Sat Jan 01 17:32:01 2000 PST	73 days 14:42:00
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 02:14:05 2000 PST	05:59:56
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 03:14:04 2000 PST	04:59:57
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 08:14:01 2000 PST	00:00:00
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 12:14:03 2000 PST	-04:00:02
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 13:14:02 2000 PST	-05:00:01
-Wed Mar 15 08:14:01 2000 PST	Sun Dec 31 17:32:01 2000 PST	-291 days -09:18:00
-Wed Mar 15 08:14:01 2000 PST	Mon Jan 01 17:32:01 2001 PST	-292 days -09:18:00
-Wed Mar 15 08:14:01 2000 PST	Sat Sep 22 18:19:20 2001 PDT	-556 days -09:05:19
-Wed Mar 15 12:14:03 2000 PST	Thu Jan 01 00:00:00 1970 PST	11031 days 12:14:03
-Wed Mar 15 12:14:03 2000 PST	Wed Feb 28 17:32:01 1996 PST	1476 days 18:42:02
-Wed Mar 15 12:14:03 2000 PST	Thu Feb 29 17:32:01 1996 PST	1475 days 18:42:02
-Wed Mar 15 12:14:03 2000 PST	Fri Mar 01 17:32:01 1996 PST	1474 days 18:42:02
-Wed Mar 15 12:14:03 2000 PST	Mon Dec 30 17:32:01 1996 PST	1170 days 18:42:02
-Wed Mar 15 12:14:03 2000 PST	Tue Dec 31 17:32:01 1996 PST	1169 days 18:42:02
-Wed Mar 15 12:14:03 2000 PST	Fri Dec 31 17:32:01 1999 PST	74 days 18:42:02
-Wed Mar 15 12:14:03 2000 PST	Sat Jan 01 17:32:01 2000 PST	73 days 18:42:02
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 02:14:05 2000 PST	09:59:58
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 03:14:04 2000 PST	08:59:59
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 08:14:01 2000 PST	04:00:02
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 12:14:03 2000 PST	00:00:00
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 13:14:02 2000 PST	-00:59:59
-Wed Mar 15 12:14:03 2000 PST	Sun Dec 31 17:32:01 2000 PST	-291 days -05:17:58
-Wed Mar 15 12:14:03 2000 PST	Mon Jan 01 17:32:01 2001 PST	-292 days -05:17:58
-Wed Mar 15 12:14:03 2000 PST	Sat Sep 22 18:19:20 2001 PDT	-556 days -05:05:17
-Wed Mar 15 13:14:02 2000 PST	Thu Jan 01 00:00:00 1970 PST	11031 days 13:14:02
-Wed Mar 15 13:14:02 2000 PST	Wed Feb 28 17:32:01 1996 PST	1476 days 19:42:01
-Wed Mar 15 13:14:02 2000 PST	Thu Feb 29 17:32:01 1996 PST	1475 days 19:42:01
-Wed Mar 15 13:14:02 2000 PST	Fri Mar 01 17:32:01 1996 PST	1474 days 19:42:01
-Wed Mar 15 13:14:02 2000 PST	Mon Dec 30 17:32:01 1996 PST	1170 days 19:42:01
-Wed Mar 15 13:14:02 2000 PST	Tue Dec 31 17:32:01 1996 PST	1169 days 19:42:01
-Wed Mar 15 13:14:02 2000 PST	Fri Dec 31 17:32:01 1999 PST	74 days 19:42:01
-Wed Mar 15 13:14:02 2000 PST	Sat Jan 01 17:32:01 2000 PST	73 days 19:42:01
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 02:14:05 2000 PST	10:59:57
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 03:14:04 2000 PST	09:59:58
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 08:14:01 2000 PST	05:00:01
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 12:14:03 2000 PST	00:59:59
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 13:14:02 2000 PST	00:00:00
-Wed Mar 15 13:14:02 2000 PST	Sun Dec 31 17:32:01 2000 PST	-291 days -04:17:59
-Wed Mar 15 13:14:02 2000 PST	Mon Jan 01 17:32:01 2001 PST	-292 days -04:17:59
-Wed Mar 15 13:14:02 2000 PST	Sat Sep 22 18:19:20 2001 PDT	-556 days -04:05:18
-Sun Dec 31 17:32:01 2000 PST	Thu Jan 01 00:00:00 1970 PST	11322 days 17:32:01
-Sun Dec 31 17:32:01 2000 PST	Wed Feb 28 17:32:01 1996 PST	1768 days
-Sun Dec 31 17:32:01 2000 PST	Thu Feb 29 17:32:01 1996 PST	1767 days
-Sun Dec 31 17:32:01 2000 PST	Fri Mar 01 17:32:01 1996 PST	1766 days
-Sun Dec 31 17:32:01 2000 PST	Mon Dec 30 17:32:01 1996 PST	1462 days
-Sun Dec 31 17:32:01 2000 PST	Tue Dec 31 17:32:01 1996 PST	1461 days
-Sun Dec 31 17:32:01 2000 PST	Fri Dec 31 17:32:01 1999 PST	366 days
-Sun Dec 31 17:32:01 2000 PST	Sat Jan 01 17:32:01 2000 PST	365 days
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 02:14:05 2000 PST	291 days 15:17:56
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 03:14:04 2000 PST	291 days 14:17:57
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 08:14:01 2000 PST	291 days 09:18:00
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 12:14:03 2000 PST	291 days 05:17:58
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 13:14:02 2000 PST	291 days 04:17:59
-Sun Dec 31 17:32:01 2000 PST	Sun Dec 31 17:32:01 2000 PST	00:00:00
-Sun Dec 31 17:32:01 2000 PST	Mon Jan 01 17:32:01 2001 PST	-1 days
-Sun Dec 31 17:32:01 2000 PST	Sat Sep 22 18:19:20 2001 PDT	-264 days -23:47:19
-Mon Jan 01 17:32:01 2001 PST	Thu Jan 01 00:00:00 1970 PST	11323 days 17:32:01
-Mon Jan 01 17:32:01 2001 PST	Wed Feb 28 17:32:01 1996 PST	1769 days
-Mon Jan 01 17:32:01 2001 PST	Thu Feb 29 17:32:01 1996 PST	1768 days
-Mon Jan 01 17:32:01 2001 PST	Fri Mar 01 17:32:01 1996 PST	1767 days
-Mon Jan 01 17:32:01 2001 PST	Mon Dec 30 17:32:01 1996 PST	1463 days
-Mon Jan 01 17:32:01 2001 PST	Tue Dec 31 17:32:01 1996 PST	1462 days
-Mon Jan 01 17:32:01 2001 PST	Fri Dec 31 17:32:01 1999 PST	367 days
-Mon Jan 01 17:32:01 2001 PST	Sat Jan 01 17:32:01 2000 PST	366 days
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 02:14:05 2000 PST	292 days 15:17:56
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 03:14:04 2000 PST	292 days 14:17:57
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 08:14:01 2000 PST	292 days 09:18:00
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 12:14:03 2000 PST	292 days 05:17:58
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 13:14:02 2000 PST	292 days 04:17:59
-Mon Jan 01 17:32:01 2001 PST	Sun Dec 31 17:32:01 2000 PST	1 day
-Mon Jan 01 17:32:01 2001 PST	Mon Jan 01 17:32:01 2001 PST	00:00:00
-Mon Jan 01 17:32:01 2001 PST	Sat Sep 22 18:19:20 2001 PDT	-263 days -23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Thu Jan 01 00:00:00 1970 PST	11587 days 17:19:20
-Sat Sep 22 18:19:20 2001 PDT	Wed Feb 28 17:32:01 1996 PST	2032 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Thu Feb 29 17:32:01 1996 PST	2031 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Fri Mar 01 17:32:01 1996 PST	2030 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Mon Dec 30 17:32:01 1996 PST	1726 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Tue Dec 31 17:32:01 1996 PST	1725 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Fri Dec 31 17:32:01 1999 PST	630 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Sat Jan 01 17:32:01 2000 PST	629 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 02:14:05 2000 PST	556 days 15:05:15
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 03:14:04 2000 PST	556 days 14:05:16
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 08:14:01 2000 PST	556 days 09:05:19
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 12:14:03 2000 PST	556 days 05:05:17
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 13:14:02 2000 PST	556 days 04:05:18
-Sat Sep 22 18:19:20 2001 PDT	Sun Dec 31 17:32:01 2000 PST	264 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Mon Jan 01 17:32:01 2001 PST	263 days 23:47:19
-Sat Sep 22 18:19:20 2001 PDT	Sat Sep 22 18:19:20 2001 PDT	00:00:00","Thu Jan 01 00:00:00 1970 PST	Thu Jan 01 00:00:00 1970 PST	@ 0
-Thu Jan 01 00:00:00 1970 PST	Wed Feb 28 17:32:01 1996 PST	@ 9554 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Thu Feb 29 17:32:01 1996 PST	@ 9555 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Fri Mar 01 17:32:01 1996 PST	@ 9556 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Mon Dec 30 17:32:01 1996 PST	@ 9860 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Tue Dec 31 17:32:01 1996 PST	@ 9861 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Fri Dec 31 17:32:01 1999 PST	@ 10956 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Sat Jan 01 17:32:01 2000 PST	@ 10957 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 02:14:05 2000 PST	@ 11031 days 2 hours 14 mins 5 secs ago
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 03:14:04 2000 PST	@ 11031 days 3 hours 14 mins 4 secs ago
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 08:14:01 2000 PST	@ 11031 days 8 hours 14 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 12:14:03 2000 PST	@ 11031 days 12 hours 14 mins 3 secs ago
-Thu Jan 01 00:00:00 1970 PST	Wed Mar 15 13:14:02 2000 PST	@ 11031 days 13 hours 14 mins 2 secs ago
-Thu Jan 01 00:00:00 1970 PST	Sun Dec 31 17:32:01 2000 PST	@ 11322 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Mon Jan 01 17:32:01 2001 PST	@ 11323 days 17 hours 32 mins 1 sec ago
-Thu Jan 01 00:00:00 1970 PST	Sat Sep 22 18:19:20 2001 PDT	@ 11587 days 17 hours 19 mins 20 secs ago
-Wed Feb 28 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	@ 9554 days 17 hours 32 mins 1 sec
-Wed Feb 28 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	@ 0
-Wed Feb 28 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	@ 1 day ago
-Wed Feb 28 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	@ 2 days ago
-Wed Feb 28 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	@ 306 days ago
-Wed Feb 28 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	@ 307 days ago
-Wed Feb 28 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	@ 1402 days ago
-Wed Feb 28 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	@ 1403 days ago
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	@ 1476 days 8 hours 42 mins 4 secs ago
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	@ 1476 days 9 hours 42 mins 3 secs ago
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	@ 1476 days 14 hours 42 mins ago
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	@ 1476 days 18 hours 42 mins 2 secs ago
-Wed Feb 28 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	@ 1476 days 19 hours 42 mins 1 sec ago
-Wed Feb 28 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	@ 1768 days ago
-Wed Feb 28 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	@ 1769 days ago
-Wed Feb 28 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	@ 2032 days 23 hours 47 mins 19 secs ago
-Thu Feb 29 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	@ 9555 days 17 hours 32 mins 1 sec
-Thu Feb 29 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	@ 1 day
-Thu Feb 29 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	@ 0
-Thu Feb 29 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	@ 1 day ago
-Thu Feb 29 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	@ 305 days ago
-Thu Feb 29 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	@ 306 days ago
-Thu Feb 29 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	@ 1401 days ago
-Thu Feb 29 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	@ 1402 days ago
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	@ 1475 days 8 hours 42 mins 4 secs ago
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	@ 1475 days 9 hours 42 mins 3 secs ago
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	@ 1475 days 14 hours 42 mins ago
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	@ 1475 days 18 hours 42 mins 2 secs ago
-Thu Feb 29 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	@ 1475 days 19 hours 42 mins 1 sec ago
-Thu Feb 29 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	@ 1767 days ago
-Thu Feb 29 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	@ 1768 days ago
-Thu Feb 29 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	@ 2031 days 23 hours 47 mins 19 secs ago
-Fri Mar 01 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	@ 9556 days 17 hours 32 mins 1 sec
-Fri Mar 01 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	@ 2 days
-Fri Mar 01 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	@ 1 day
-Fri Mar 01 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	@ 0
-Fri Mar 01 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	@ 304 days ago
-Fri Mar 01 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	@ 305 days ago
-Fri Mar 01 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	@ 1400 days ago
-Fri Mar 01 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	@ 1401 days ago
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	@ 1474 days 8 hours 42 mins 4 secs ago
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	@ 1474 days 9 hours 42 mins 3 secs ago
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	@ 1474 days 14 hours 42 mins ago
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	@ 1474 days 18 hours 42 mins 2 secs ago
-Fri Mar 01 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	@ 1474 days 19 hours 42 mins 1 sec ago
-Fri Mar 01 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	@ 1766 days ago
-Fri Mar 01 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	@ 1767 days ago
-Fri Mar 01 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	@ 2030 days 23 hours 47 mins 19 secs ago
-Mon Dec 30 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	@ 9860 days 17 hours 32 mins 1 sec
-Mon Dec 30 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	@ 306 days
-Mon Dec 30 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	@ 305 days
-Mon Dec 30 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	@ 304 days
-Mon Dec 30 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	@ 0
-Mon Dec 30 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	@ 1 day ago
-Mon Dec 30 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	@ 1096 days ago
-Mon Dec 30 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	@ 1097 days ago
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	@ 1170 days 8 hours 42 mins 4 secs ago
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	@ 1170 days 9 hours 42 mins 3 secs ago
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	@ 1170 days 14 hours 42 mins ago
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	@ 1170 days 18 hours 42 mins 2 secs ago
-Mon Dec 30 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	@ 1170 days 19 hours 42 mins 1 sec ago
-Mon Dec 30 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	@ 1462 days ago
-Mon Dec 30 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	@ 1463 days ago
-Mon Dec 30 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	@ 1726 days 23 hours 47 mins 19 secs ago
-Tue Dec 31 17:32:01 1996 PST	Thu Jan 01 00:00:00 1970 PST	@ 9861 days 17 hours 32 mins 1 sec
-Tue Dec 31 17:32:01 1996 PST	Wed Feb 28 17:32:01 1996 PST	@ 307 days
-Tue Dec 31 17:32:01 1996 PST	Thu Feb 29 17:32:01 1996 PST	@ 306 days
-Tue Dec 31 17:32:01 1996 PST	Fri Mar 01 17:32:01 1996 PST	@ 305 days
-Tue Dec 31 17:32:01 1996 PST	Mon Dec 30 17:32:01 1996 PST	@ 1 day
-Tue Dec 31 17:32:01 1996 PST	Tue Dec 31 17:32:01 1996 PST	@ 0
-Tue Dec 31 17:32:01 1996 PST	Fri Dec 31 17:32:01 1999 PST	@ 1095 days ago
-Tue Dec 31 17:32:01 1996 PST	Sat Jan 01 17:32:01 2000 PST	@ 1096 days ago
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 02:14:05 2000 PST	@ 1169 days 8 hours 42 mins 4 secs ago
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 03:14:04 2000 PST	@ 1169 days 9 hours 42 mins 3 secs ago
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 08:14:01 2000 PST	@ 1169 days 14 hours 42 mins ago
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 12:14:03 2000 PST	@ 1169 days 18 hours 42 mins 2 secs ago
-Tue Dec 31 17:32:01 1996 PST	Wed Mar 15 13:14:02 2000 PST	@ 1169 days 19 hours 42 mins 1 sec ago
-Tue Dec 31 17:32:01 1996 PST	Sun Dec 31 17:32:01 2000 PST	@ 1461 days ago
-Tue Dec 31 17:32:01 1996 PST	Mon Jan 01 17:32:01 2001 PST	@ 1462 days ago
-Tue Dec 31 17:32:01 1996 PST	Sat Sep 22 18:19:20 2001 PDT	@ 1725 days 23 hours 47 mins 19 secs ago
-Fri Dec 31 17:32:01 1999 PST	Thu Jan 01 00:00:00 1970 PST	@ 10956 days 17 hours 32 mins 1 sec
-Fri Dec 31 17:32:01 1999 PST	Wed Feb 28 17:32:01 1996 PST	@ 1402 days
-Fri Dec 31 17:32:01 1999 PST	Thu Feb 29 17:32:01 1996 PST	@ 1401 days
-Fri Dec 31 17:32:01 1999 PST	Fri Mar 01 17:32:01 1996 PST	@ 1400 days
-Fri Dec 31 17:32:01 1999 PST	Mon Dec 30 17:32:01 1996 PST	@ 1096 days
-Fri Dec 31 17:32:01 1999 PST	Tue Dec 31 17:32:01 1996 PST	@ 1095 days
-Fri Dec 31 17:32:01 1999 PST	Fri Dec 31 17:32:01 1999 PST	@ 0
-Fri Dec 31 17:32:01 1999 PST	Sat Jan 01 17:32:01 2000 PST	@ 1 day ago
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 02:14:05 2000 PST	@ 74 days 8 hours 42 mins 4 secs ago
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 03:14:04 2000 PST	@ 74 days 9 hours 42 mins 3 secs ago
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 08:14:01 2000 PST	@ 74 days 14 hours 42 mins ago
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 12:14:03 2000 PST	@ 74 days 18 hours 42 mins 2 secs ago
-Fri Dec 31 17:32:01 1999 PST	Wed Mar 15 13:14:02 2000 PST	@ 74 days 19 hours 42 mins 1 sec ago
-Fri Dec 31 17:32:01 1999 PST	Sun Dec 31 17:32:01 2000 PST	@ 366 days ago
-Fri Dec 31 17:32:01 1999 PST	Mon Jan 01 17:32:01 2001 PST	@ 367 days ago
-Fri Dec 31 17:32:01 1999 PST	Sat Sep 22 18:19:20 2001 PDT	@ 630 days 23 hours 47 mins 19 secs ago
-Sat Jan 01 17:32:01 2000 PST	Thu Jan 01 00:00:00 1970 PST	@ 10957 days 17 hours 32 mins 1 sec
-Sat Jan 01 17:32:01 2000 PST	Wed Feb 28 17:32:01 1996 PST	@ 1403 days
-Sat Jan 01 17:32:01 2000 PST	Thu Feb 29 17:32:01 1996 PST	@ 1402 days
-Sat Jan 01 17:32:01 2000 PST	Fri Mar 01 17:32:01 1996 PST	@ 1401 days
-Sat Jan 01 17:32:01 2000 PST	Mon Dec 30 17:32:01 1996 PST	@ 1097 days
-Sat Jan 01 17:32:01 2000 PST	Tue Dec 31 17:32:01 1996 PST	@ 1096 days
-Sat Jan 01 17:32:01 2000 PST	Fri Dec 31 17:32:01 1999 PST	@ 1 day
-Sat Jan 01 17:32:01 2000 PST	Sat Jan 01 17:32:01 2000 PST	@ 0
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 02:14:05 2000 PST	@ 73 days 8 hours 42 mins 4 secs ago
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 03:14:04 2000 PST	@ 73 days 9 hours 42 mins 3 secs ago
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 08:14:01 2000 PST	@ 73 days 14 hours 42 mins ago
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 12:14:03 2000 PST	@ 73 days 18 hours 42 mins 2 secs ago
-Sat Jan 01 17:32:01 2000 PST	Wed Mar 15 13:14:02 2000 PST	@ 73 days 19 hours 42 mins 1 sec ago
-Sat Jan 01 17:32:01 2000 PST	Sun Dec 31 17:32:01 2000 PST	@ 365 days ago
-Sat Jan 01 17:32:01 2000 PST	Mon Jan 01 17:32:01 2001 PST	@ 366 days ago
-Sat Jan 01 17:32:01 2000 PST	Sat Sep 22 18:19:20 2001 PDT	@ 629 days 23 hours 47 mins 19 secs ago
-Wed Mar 15 02:14:05 2000 PST	Thu Jan 01 00:00:00 1970 PST	@ 11031 days 2 hours 14 mins 5 secs
-Wed Mar 15 02:14:05 2000 PST	Wed Feb 28 17:32:01 1996 PST	@ 1476 days 8 hours 42 mins 4 secs
-Wed Mar 15 02:14:05 2000 PST	Thu Feb 29 17:32:01 1996 PST	@ 1475 days 8 hours 42 mins 4 secs
-Wed Mar 15 02:14:05 2000 PST	Fri Mar 01 17:32:01 1996 PST	@ 1474 days 8 hours 42 mins 4 secs
-Wed Mar 15 02:14:05 2000 PST	Mon Dec 30 17:32:01 1996 PST	@ 1170 days 8 hours 42 mins 4 secs
-Wed Mar 15 02:14:05 2000 PST	Tue Dec 31 17:32:01 1996 PST	@ 1169 days 8 hours 42 mins 4 secs
-Wed Mar 15 02:14:05 2000 PST	Fri Dec 31 17:32:01 1999 PST	@ 74 days 8 hours 42 mins 4 secs
-Wed Mar 15 02:14:05 2000 PST	Sat Jan 01 17:32:01 2000 PST	@ 73 days 8 hours 42 mins 4 secs
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 02:14:05 2000 PST	@ 0
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 03:14:04 2000 PST	@ 59 mins 59 secs ago
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 08:14:01 2000 PST	@ 5 hours 59 mins 56 secs ago
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 12:14:03 2000 PST	@ 9 hours 59 mins 58 secs ago
-Wed Mar 15 02:14:05 2000 PST	Wed Mar 15 13:14:02 2000 PST	@ 10 hours 59 mins 57 secs ago
-Wed Mar 15 02:14:05 2000 PST	Sun Dec 31 17:32:01 2000 PST	@ 291 days 15 hours 17 mins 56 secs ago
-Wed Mar 15 02:14:05 2000 PST	Mon Jan 01 17:32:01 2001 PST	@ 292 days 15 hours 17 mins 56 secs ago
-Wed Mar 15 02:14:05 2000 PST	Sat Sep 22 18:19:20 2001 PDT	@ 556 days 15 hours 5 mins 15 secs ago
-Wed Mar 15 03:14:04 2000 PST	Thu Jan 01 00:00:00 1970 PST	@ 11031 days 3 hours 14 mins 4 secs
-Wed Mar 15 03:14:04 2000 PST	Wed Feb 28 17:32:01 1996 PST	@ 1476 days 9 hours 42 mins 3 secs
-Wed Mar 15 03:14:04 2000 PST	Thu Feb 29 17:32:01 1996 PST	@ 1475 days 9 hours 42 mins 3 secs
-Wed Mar 15 03:14:04 2000 PST	Fri Mar 01 17:32:01 1996 PST	@ 1474 days 9 hours 42 mins 3 secs
-Wed Mar 15 03:14:04 2000 PST	Mon Dec 30 17:32:01 1996 PST	@ 1170 days 9 hours 42 mins 3 secs
-Wed Mar 15 03:14:04 2000 PST	Tue Dec 31 17:32:01 1996 PST	@ 1169 days 9 hours 42 mins 3 secs
-Wed Mar 15 03:14:04 2000 PST	Fri Dec 31 17:32:01 1999 PST	@ 74 days 9 hours 42 mins 3 secs
-Wed Mar 15 03:14:04 2000 PST	Sat Jan 01 17:32:01 2000 PST	@ 73 days 9 hours 42 mins 3 secs
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 02:14:05 2000 PST	@ 59 mins 59 secs
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 03:14:04 2000 PST	@ 0
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 08:14:01 2000 PST	@ 4 hours 59 mins 57 secs ago
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 12:14:03 2000 PST	@ 8 hours 59 mins 59 secs ago
-Wed Mar 15 03:14:04 2000 PST	Wed Mar 15 13:14:02 2000 PST	@ 9 hours 59 mins 58 secs ago
-Wed Mar 15 03:14:04 2000 PST	Sun Dec 31 17:32:01 2000 PST	@ 291 days 14 hours 17 mins 57 secs ago
-Wed Mar 15 03:14:04 2000 PST	Mon Jan 01 17:32:01 2001 PST	@ 292 days 14 hours 17 mins 57 secs ago
-Wed Mar 15 03:14:04 2000 PST	Sat Sep 22 18:19:20 2001 PDT	@ 556 days 14 hours 5 mins 16 secs ago
-Wed Mar 15 08:14:01 2000 PST	Thu Jan 01 00:00:00 1970 PST	@ 11031 days 8 hours 14 mins 1 sec
-Wed Mar 15 08:14:01 2000 PST	Wed Feb 28 17:32:01 1996 PST	@ 1476 days 14 hours 42 mins
-Wed Mar 15 08:14:01 2000 PST	Thu Feb 29 17:32:01 1996 PST	@ 1475 days 14 hours 42 mins
-Wed Mar 15 08:14:01 2000 PST	Fri Mar 01 17:32:01 1996 PST	@ 1474 days 14 hours 42 mins
-Wed Mar 15 08:14:01 2000 PST	Mon Dec 30 17:32:01 1996 PST	@ 1170 days 14 hours 42 mins
-Wed Mar 15 08:14:01 2000 PST	Tue Dec 31 17:32:01 1996 PST	@ 1169 days 14 hours 42 mins
-Wed Mar 15 08:14:01 2000 PST	Fri Dec 31 17:32:01 1999 PST	@ 74 days 14 hours 42 mins
-Wed Mar 15 08:14:01 2000 PST	Sat Jan 01 17:32:01 2000 PST	@ 73 days 14 hours 42 mins
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 02:14:05 2000 PST	@ 5 hours 59 mins 56 secs
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 03:14:04 2000 PST	@ 4 hours 59 mins 57 secs
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 08:14:01 2000 PST	@ 0
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 12:14:03 2000 PST	@ 4 hours 2 secs ago
-Wed Mar 15 08:14:01 2000 PST	Wed Mar 15 13:14:02 2000 PST	@ 5 hours 1 sec ago
-Wed Mar 15 08:14:01 2000 PST	Sun Dec 31 17:32:01 2000 PST	@ 291 days 9 hours 18 mins ago
-Wed Mar 15 08:14:01 2000 PST	Mon Jan 01 17:32:01 2001 PST	@ 292 days 9 hours 18 mins ago
-Wed Mar 15 08:14:01 2000 PST	Sat Sep 22 18:19:20 2001 PDT	@ 556 days 9 hours 5 mins 19 secs ago
-Wed Mar 15 12:14:03 2000 PST	Thu Jan 01 00:00:00 1970 PST	@ 11031 days 12 hours 14 mins 3 secs
-Wed Mar 15 12:14:03 2000 PST	Wed Feb 28 17:32:01 1996 PST	@ 1476 days 18 hours 42 mins 2 secs
-Wed Mar 15 12:14:03 2000 PST	Thu Feb 29 17:32:01 1996 PST	@ 1475 days 18 hours 42 mins 2 secs
-Wed Mar 15 12:14:03 2000 PST	Fri Mar 01 17:32:01 1996 PST	@ 1474 days 18 hours 42 mins 2 secs
-Wed Mar 15 12:14:03 2000 PST	Mon Dec 30 17:32:01 1996 PST	@ 1170 days 18 hours 42 mins 2 secs
-Wed Mar 15 12:14:03 2000 PST	Tue Dec 31 17:32:01 1996 PST	@ 1169 days 18 hours 42 mins 2 secs
-Wed Mar 15 12:14:03 2000 PST	Fri Dec 31 17:32:01 1999 PST	@ 74 days 18 hours 42 mins 2 secs
-Wed Mar 15 12:14:03 2000 PST	Sat Jan 01 17:32:01 2000 PST	@ 73 days 18 hours 42 mins 2 secs
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 02:14:05 2000 PST	@ 9 hours 59 mins 58 secs
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 03:14:04 2000 PST	@ 8 hours 59 mins 59 secs
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 08:14:01 2000 PST	@ 4 hours 2 secs
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 12:14:03 2000 PST	@ 0
-Wed Mar 15 12:14:03 2000 PST	Wed Mar 15 13:14:02 2000 PST	@ 59 mins 59 secs ago
-Wed Mar 15 12:14:03 2000 PST	Sun Dec 31 17:32:01 2000 PST	@ 291 days 5 hours 17 mins 58 secs ago
-Wed Mar 15 12:14:03 2000 PST	Mon Jan 01 17:32:01 2001 PST	@ 292 days 5 hours 17 mins 58 secs ago
-Wed Mar 15 12:14:03 2000 PST	Sat Sep 22 18:19:20 2001 PDT	@ 556 days 5 hours 5 mins 17 secs ago
-Wed Mar 15 13:14:02 2000 PST	Thu Jan 01 00:00:00 1970 PST	@ 11031 days 13 hours 14 mins 2 secs
-Wed Mar 15 13:14:02 2000 PST	Wed Feb 28 17:32:01 1996 PST	@ 1476 days 19 hours 42 mins 1 sec
-Wed Mar 15 13:14:02 2000 PST	Thu Feb 29 17:32:01 1996 PST	@ 1475 days 19 hours 42 mins 1 sec
-Wed Mar 15 13:14:02 2000 PST	Fri Mar 01 17:32:01 1996 PST	@ 1474 days 19 hours 42 mins 1 sec
-Wed Mar 15 13:14:02 2000 PST	Mon Dec 30 17:32:01 1996 PST	@ 1170 days 19 hours 42 mins 1 sec
-Wed Mar 15 13:14:02 2000 PST	Tue Dec 31 17:32:01 1996 PST	@ 1169 days 19 hours 42 mins 1 sec
-Wed Mar 15 13:14:02 2000 PST	Fri Dec 31 17:32:01 1999 PST	@ 74 days 19 hours 42 mins 1 sec
-Wed Mar 15 13:14:02 2000 PST	Sat Jan 01 17:32:01 2000 PST	@ 73 days 19 hours 42 mins 1 sec
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 02:14:05 2000 PST	@ 10 hours 59 mins 57 secs
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 03:14:04 2000 PST	@ 9 hours 59 mins 58 secs
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 08:14:01 2000 PST	@ 5 hours 1 sec
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 12:14:03 2000 PST	@ 59 mins 59 secs
-Wed Mar 15 13:14:02 2000 PST	Wed Mar 15 13:14:02 2000 PST	@ 0
-Wed Mar 15 13:14:02 2000 PST	Sun Dec 31 17:32:01 2000 PST	@ 291 days 4 hours 17 mins 59 secs ago
-Wed Mar 15 13:14:02 2000 PST	Mon Jan 01 17:32:01 2001 PST	@ 292 days 4 hours 17 mins 59 secs ago
-Wed Mar 15 13:14:02 2000 PST	Sat Sep 22 18:19:20 2001 PDT	@ 556 days 4 hours 5 mins 18 secs ago
-Sun Dec 31 17:32:01 2000 PST	Thu Jan 01 00:00:00 1970 PST	@ 11322 days 17 hours 32 mins 1 sec
-Sun Dec 31 17:32:01 2000 PST	Wed Feb 28 17:32:01 1996 PST	@ 1768 days
-Sun Dec 31 17:32:01 2000 PST	Thu Feb 29 17:32:01 1996 PST	@ 1767 days
-Sun Dec 31 17:32:01 2000 PST	Fri Mar 01 17:32:01 1996 PST	@ 1766 days
-Sun Dec 31 17:32:01 2000 PST	Mon Dec 30 17:32:01 1996 PST	@ 1462 days
-Sun Dec 31 17:32:01 2000 PST	Tue Dec 31 17:32:01 1996 PST	@ 1461 days
-Sun Dec 31 17:32:01 2000 PST	Fri Dec 31 17:32:01 1999 PST	@ 366 days
-Sun Dec 31 17:32:01 2000 PST	Sat Jan 01 17:32:01 2000 PST	@ 365 days
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 02:14:05 2000 PST	@ 291 days 15 hours 17 mins 56 secs
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 03:14:04 2000 PST	@ 291 days 14 hours 17 mins 57 secs
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 08:14:01 2000 PST	@ 291 days 9 hours 18 mins
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 12:14:03 2000 PST	@ 291 days 5 hours 17 mins 58 secs
-Sun Dec 31 17:32:01 2000 PST	Wed Mar 15 13:14:02 2000 PST	@ 291 days 4 hours 17 mins 59 secs
-Sun Dec 31 17:32:01 2000 PST	Sun Dec 31 17:32:01 2000 PST	@ 0
-Sun Dec 31 17:32:01 2000 PST	Mon Jan 01 17:32:01 2001 PST	@ 1 day ago
-Sun Dec 31 17:32:01 2000 PST	Sat Sep 22 18:19:20 2001 PDT	@ 264 days 23 hours 47 mins 19 secs ago
-Mon Jan 01 17:32:01 2001 PST	Thu Jan 01 00:00:00 1970 PST	@ 11323 days 17 hours 32 mins 1 sec
-Mon Jan 01 17:32:01 2001 PST	Wed Feb 28 17:32:01 1996 PST	@ 1769 days
-Mon Jan 01 17:32:01 2001 PST	Thu Feb 29 17:32:01 1996 PST	@ 1768 days
-Mon Jan 01 17:32:01 2001 PST	Fri Mar 01 17:32:01 1996 PST	@ 1767 days
-Mon Jan 01 17:32:01 2001 PST	Mon Dec 30 17:32:01 1996 PST	@ 1463 days
-Mon Jan 01 17:32:01 2001 PST	Tue Dec 31 17:32:01 1996 PST	@ 1462 days
-Mon Jan 01 17:32:01 2001 PST	Fri Dec 31 17:32:01 1999 PST	@ 367 days
-Mon Jan 01 17:32:01 2001 PST	Sat Jan 01 17:32:01 2000 PST	@ 366 days
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 02:14:05 2000 PST	@ 292 days 15 hours 17 mins 56 secs
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 03:14:04 2000 PST	@ 292 days 14 hours 17 mins 57 secs
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 08:14:01 2000 PST	@ 292 days 9 hours 18 mins
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 12:14:03 2000 PST	@ 292 days 5 hours 17 mins 58 secs
-Mon Jan 01 17:32:01 2001 PST	Wed Mar 15 13:14:02 2000 PST	@ 292 days 4 hours 17 mins 59 secs
-Mon Jan 01 17:32:01 2001 PST	Sun Dec 31 17:32:01 2000 PST	@ 1 day
-Mon Jan 01 17:32:01 2001 PST	Mon Jan 01 17:32:01 2001 PST	@ 0
-Mon Jan 01 17:32:01 2001 PST	Sat Sep 22 18:19:20 2001 PDT	@ 263 days 23 hours 47 mins 19 secs ago
-Sat Sep 22 18:19:20 2001 PDT	Thu Jan 01 00:00:00 1970 PST	@ 11587 days 17 hours 19 mins 20 secs
-Sat Sep 22 18:19:20 2001 PDT	Wed Feb 28 17:32:01 1996 PST	@ 2032 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Thu Feb 29 17:32:01 1996 PST	@ 2031 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Fri Mar 01 17:32:01 1996 PST	@ 2030 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Mon Dec 30 17:32:01 1996 PST	@ 1726 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Tue Dec 31 17:32:01 1996 PST	@ 1725 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Fri Dec 31 17:32:01 1999 PST	@ 630 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Sat Jan 01 17:32:01 2000 PST	@ 629 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 02:14:05 2000 PST	@ 556 days 15 hours 5 mins 15 secs
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 03:14:04 2000 PST	@ 556 days 14 hours 5 mins 16 secs
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 08:14:01 2000 PST	@ 556 days 9 hours 5 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 12:14:03 2000 PST	@ 556 days 5 hours 5 mins 17 secs
-Sat Sep 22 18:19:20 2001 PDT	Wed Mar 15 13:14:02 2000 PST	@ 556 days 4 hours 5 mins 18 secs
-Sat Sep 22 18:19:20 2001 PDT	Sun Dec 31 17:32:01 2000 PST	@ 264 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Mon Jan 01 17:32:01 2001 PST	@ 263 days 23 hours 47 mins 19 secs
-Sat Sep 22 18:19:20 2001 PDT	Sat Sep 22 18:19:20 2001 PDT	@ 0",Environment,Setting,Timestamp representation difference
-"SELECT to_char(q2, 'L9999999999999999.000')  FROM INT8_TBL",15,Result MisMatch,"$              456.000
-$ 4567890123456789.000
-$              123.000
-$ 4567890123456789.000
-$-4567890123456789.000","456.000
-4567890123456789.000
-123.000
-4567890123456789.000
--4567890123456789.000",Environment,Setting,Timestamp representation difference
-"explain (costs off)
-  select max(unique1) from tenk1 where unique1 > 42",15,Result MisMatch,"Aggregate
-->  Seq Scan on tenk1
-Filter: (unique1 > 42)","Result
-InitPlan 1 (returns $0)
-->  Limit
-->  Index Only Scan Backward using tenk1_unique1 on tenk1
-Index Cond: ((unique1 IS NOT NULL) AND (unique1 > 42))",Environment,Setting,Timestamp representation difference
-select * from copytest except select * from copytest2,1,Result MisMatch,"def	
-Unix	abc     +	2
-	def	
-Mac	abc\rdef	3",,Environment,File Paths,Environment variable leads to wrong file paths
-SELECT gid FROM pg_prepared_xacts,16,Result MisMatch,,foo3,Environment,Setting,Max prepared transactions is zero in our settings
-SELECT * FROM pxtest1,16,Result MisMatch,aaa,"aaa
-ddd",Environment,Setting,Max prepared transactions is zero in our settings
-SELECT * FROM pxtest1,16,Result MisMatch,aaa,"aaa
-ddd",Environment,Setting,Max prepared transactions is zero in our settings
-SELECT * FROM pxtest1,16,Result MisMatch,aaa,"aaa
-eee",Environment,Setting,Max prepared transactions is zero in our settings
-EXPLAIN (COSTS OFF) SELECT balk(hundred) FROM tenk1,17,Result MisMatch,"Finalize Aggregate
-->  Gather
-Workers Planned: 4
-->  Partial Aggregate
-->  Parallel Seq Scan on tenk1","Finalize Aggregate
-->  Gather
-Workers Planned: 4
-->  Partial Aggregate
-->  Parallel Index Only Scan using tenk1_hundred on tenk1",Environment,Setting,Internal dependencies between test files
-"explain (verbose, costs off)
-select unique1, unique2, generate_series(1,10)
-  from tenk1 order by unique2 limit 7",17,Result MisMatch,"Limit
-Output: unique1, unique2, (generate_series(1, 10))
-->  ProjectSet
-Output: unique1, unique2, generate_series(1, 10)
-->  Sort
-Output: unique1, unique2
-Sort Key: tenk1.unique2
-->  Seq Scan on public.tenk1
-Output: unique1, unique2","Limit
-Output: unique1, unique2, (generate_series(1, 10))
-->  ProjectSet
-Output: unique1, unique2, generate_series(1, 10)
-->  Index Scan using tenk1_unique2 on public.tenk1
-Output: unique1, unique2, two, four, ten, twenty, hundred, thousand, twothousand, fivethous, tenthous, odd, even, stringu1, stringu2, string4",Environment,Setting,Internal dependencies between test files
-"explain (verbose, costs off)
-select t1.unique1, t2.hundred
-from onek t1, tenk1 t2
-where exists (select 1 from j3
-              where j3.unique1 = t1.unique1 and j3.tenthous = t2.hundred)
-      and t1.unique1 < 1",17,Result MisMatch,"Hash Join
-Output: t1.unique1, t2.hundred
-Hash Cond: (t2.hundred = j3.tenthous)
-->  Seq Scan on public.tenk1 t2
-Output: t2.unique1, t2.unique2, t2.two, t2.four, t2.ten, t2.twenty, t2.hundred, t2.thousand, t2.twothousand, t2.fivethous, t2.tenthous, t2.odd, t2.even, t2.stringu1, t2.stringu2, t2.string4
-->  Hash
-Output: t1.unique1, j3.tenthous
-->  Nested Loop
-Output: t1.unique1, j3.tenthous
-->  Seq Scan on public.onek t1
-Output: t1.unique1, t1.unique2, t1.two, t1.four, t1.ten, t1.twenty, t1.hundred, t1.thousand, t1.twothousand, t1.fivethous, t1.tenthous, t1.odd, t1.even, t1.stringu1, t1.stringu2, t1.string4
-Filter: (t1.unique1 < 1)
-->  Index Only Scan using j3_unique1_tenthous_idx on public.j3
-Output: j3.unique1, j3.tenthous
-Index Cond: (j3.unique1 = t1.unique1)","Nested Loop
-Output: t1.unique1, t2.hundred
-->  Nested Loop
-Output: t1.unique1, j3.tenthous
-->  Index Only Scan using onek_unique1 on public.onek t1
-Output: t1.unique1
-Index Cond: (t1.unique1 < 1)
-->  Index Only Scan using j3_unique1_tenthous_idx on public.j3
-Output: j3.unique1, j3.tenthous
-Index Cond: (j3.unique1 = t1.unique1)
-->  Index Only Scan using tenk1_hundred on public.tenk1 t2
-Output: t2.hundred
-Index Cond: (t2.hundred = j3.tenthous)",Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-	select  count((unique1)) from tenk1 where hundred > 1",17,Result MisMatch,"Aggregate
-->  Seq Scan on tenk1
-Filter: (hundred > 1)","Finalize Aggregate
-->  Gather
-Workers Planned: 4
-->  Partial Aggregate
-->  Parallel Index Scan using tenk1_hundred on tenk1
-Index Cond: (hundred > 1)",Environment,Setting,Internal dependencies between test files
-DROP PUBLICATION testpub3,17,"ERROR:  publication ""testpub3"" does not exist",False,,Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-	select  sum(sp_parallel_restricted(unique1)) from tenk1
-	group by(sp_parallel_restricted(unique1))",17,Result MisMatch,"HashAggregate
-Group Key: sp_parallel_restricted(unique1)
-->  Gather
-Workers Planned: 4
-->  Parallel Seq Scan on tenk1","HashAggregate
-Group Key: sp_parallel_restricted(unique1)
-->  Gather
-Workers Planned: 4
-->  Parallel Index Only Scan using tenk1_unique1 on tenk1",Environment,Setting,Internal dependencies between test files
-"SELECT explain_memoize('
-SELECT COUNT(*),AVG(t2.unique1) FROM tenk1 t1,
-LATERAL (SELECT t2.unique1 FROM tenk1 t2
-         WHERE t1.twenty = t2.unique1 OFFSET 0) t2
-WHERE t1.unique1 < 1000;', false)",17,Result MisMatch,"Aggregate (actual rows=1 loops=N)
-->  Nested Loop (actual rows=1000 loops=N)
-->  Seq Scan on tenk1 t1 (actual rows=1000 loops=N)
-Filter: (unique1 < 1000)
-Rows Removed by Filter: 9000
-->  Memoize (actual rows=1 loops=N)
-Cache Key: t1.twenty
-Cache Mode: binary
-Hits: 980  Misses: 20  Evictions: Zero  Overflows: 0  Memory Usage: NkB
-->  Seq Scan on tenk1 t2 (actual rows=1 loops=N)
-Filter: (t1.twenty = unique1)
-Rows Removed by Filter: 9999","Aggregate (actual rows=1 loops=N)
-->  Nested Loop (actual rows=1000 loops=N)
-->  Seq Scan on tenk1 t1 (actual rows=1000 loops=N)
-Filter: (unique1 < 1000)
-Rows Removed by Filter: 9000
-->  Memoize (actual rows=1 loops=N)
-Cache Key: t1.twenty
-Cache Mode: binary
-Hits: 980  Misses: 20  Evictions: Zero  Overflows: 0  Memory Usage: NkB
-->  Index Only Scan using tenk1_unique1 on tenk1 t2 (actual rows=1 loops=N)
-Index Cond: (unique1 = t1.twenty)
-Heap Fetches: N",Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-select count(*) from
-  ( select unique1 from tenk1 union select fivethous from tenk1 ) ss",17,Result MisMatch,"Aggregate
-->  HashAggregate
-Group Key: tenk1.unique1
-->  Append
-->  Seq Scan on tenk1
-->  Seq Scan on tenk1 tenk1_1","Aggregate
-->  HashAggregate
-Group Key: tenk1.unique1
-->  Append
-->  Index Only Scan using tenk1_unique1 on tenk1
-->  Seq Scan on tenk1 tenk1_1",Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-select * from
-  tenk1 join int4_tbl on f1 = twothousand,
-  q1, q2
-where thousand = (q1 + q2)",17,Result MisMatch,"Nested Loop
-Join Filter: (tenk1.thousand = (q1.q1 + q2.q2))
-->  Nested Loop
-->  Seq Scan on q1
-->  Seq Scan on q2
-->  Hash Join
-Hash Cond: (tenk1.twothousand = int4_tbl.f1)
-->  Seq Scan on tenk1
-->  Hash
-->  Seq Scan on int4_tbl","Hash Join
-Hash Cond: (tenk1.twothousand = int4_tbl.f1)
-->  Nested Loop
-->  Nested Loop
-->  Seq Scan on q1
-->  Seq Scan on q2
-->  Bitmap Heap Scan on tenk1
-Recheck Cond: (thousand = (q1.q1 + q2.q2))
-->  Bitmap Index Scan on tenk1_thous_tenthous
-Index Cond: (thousand = (q1.q1 + q2.q2))
-->  Hash
-->  Seq Scan on int4_tbl",Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-select count(*) from tenk1 t
-where (exists(select 1 from tenk1 k where k.unique1 = t.unique2) or ten < 0)
-  and thousand = 1",17,Result MisMatch,"Aggregate
-->  Seq Scan on tenk1 t
-Filter: ((thousand = 1) AND ((hashed SubPlan 2) OR (ten < 0)))
-SubPlan 2
-->  Seq Scan on tenk1 k","Aggregate
-->  Bitmap Heap Scan on tenk1 t
-Recheck Cond: (thousand = 1)
-Filter: ((SubPlan 1) OR (ten < 0))
-->  Bitmap Index Scan on tenk1_thous_tenthous
-Index Cond: (thousand = 1)
-SubPlan 1
-->  Index Only Scan using tenk1_unique1 on tenk1 k
-Index Cond: (unique1 = t.unique2)",Environment,Setting,Internal dependencies between test files
-"SELECT explain_memoize('
-SELECT COUNT(*),AVG(t1.unique1) FROM tenk1 t1
-INNER JOIN tenk1 t2 ON t1.unique1 = t2.twenty
-WHERE t2.unique1 < 1000;', false)",17,Result MisMatch,"Aggregate (actual rows=1 loops=N)
-->  Merge Join (actual rows=1000 loops=N)
-Merge Cond: (t1.unique1 = t2.twenty)
-->  Sort (actual rows=21 loops=N)
-Sort Key: t1.unique1
-Sort Method: quicksort  Memory: 385kB
-->  Seq Scan on tenk1 t1 (actual rows=10000 loops=N)
-->  Sort (actual rows=1000 loops=N)
-Sort Key: t2.twenty
-Sort Method: quicksort  Memory: 25kB
-->  Seq Scan on tenk1 t2 (actual rows=1000 loops=N)
-Filter: (unique1 < 1000)
-Rows Removed by Filter: 9000","Aggregate (actual rows=1 loops=N)
-->  Nested Loop (actual rows=1000 loops=N)
-->  Seq Scan on tenk1 t2 (actual rows=1000 loops=N)
-Filter: (unique1 < 1000)
-Rows Removed by Filter: 9000
-->  Memoize (actual rows=1 loops=N)
-Cache Key: t2.twenty
-Cache Mode: logical
-Hits: 980  Misses: 20  Evictions: Zero  Overflows: 0  Memory Usage: NkB
-->  Index Only Scan using tenk1_unique1 on tenk1 t1 (actual rows=1 loops=N)
-Index Cond: (unique1 = t2.twenty)
-Heap Fetches: N",Environment,Setting,Internal dependencies between test files
-"explain (verbose, costs off)
-select * from
-  (values (0,9998), (1,1000)) v(id,x),
-  lateral (select f1 from int4_tbl
-           where f1 = any (select unique1 from tenk1
-                           where unique2 = v.x offset 0)) ss",17,Result MisMatch,"Nested Loop
-Output: ""*VALUES*"".column1, ""*VALUES*"".column2, int4_tbl.f1
-->  Values Scan on ""*VALUES*""
-Output: ""*VALUES*"".column1, ""*VALUES*"".column2
-->  Nested Loop Semi Join
-Output: int4_tbl.f1
-Join Filter: (int4_tbl.f1 = tenk1.unique1)
-->  Seq Scan on public.int4_tbl
-Output: int4_tbl.f1
-->  Materialize
-Output: tenk1.unique1
-->  Seq Scan on public.tenk1
-Output: tenk1.unique1
-Filter: (tenk1.unique2 = ""*VALUES*"".column2)","Nested Loop
-Output: ""*VALUES*"".column1, ""*VALUES*"".column2, int4_tbl.f1
-->  Values Scan on ""*VALUES*""
-Output: ""*VALUES*"".column1, ""*VALUES*"".column2
-->  Nested Loop Semi Join
-Output: int4_tbl.f1
-Join Filter: (int4_tbl.f1 = tenk1.unique1)
-->  Seq Scan on public.int4_tbl
-Output: int4_tbl.f1
-->  Materialize
-Output: tenk1.unique1
-->  Index Scan using tenk1_unique2 on public.tenk1
-Output: tenk1.unique1
-Index Cond: (tenk1.unique2 = ""*VALUES*"".column2)",Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-SELECT thousand, tenthous FROM tenk1
-UNION ALL
-SELECT thousand, thousand FROM tenk1
-ORDER BY thousand, tenthous",17,Result MisMatch,"Sort
-Sort Key: tenk1.thousand, tenk1.tenthous
-->  Append
-->  Seq Scan on tenk1
-->  Seq Scan on tenk1 tenk1_1","Merge Append
-Sort Key: tenk1.thousand, tenk1.tenthous
-->  Index Only Scan using tenk1_thous_tenthous on tenk1
-->  Sort
-Sort Key: tenk1_1.thousand, tenk1_1.thousand
-->  Index Only Scan using tenk1_thous_tenthous on tenk1 tenk1_1",Environment,Setting,Internal dependencies between test files
-"explain (costs off) select distinct sub.unique1, stringu1
-from tenk1, lateral (select tenk1.unique1 from generate_series(1, 1000)) as sub",17,Result MisMatch,"Unique
-->  Sort
-Sort Key: tenk1.unique1, tenk1.stringu1
-->  Nested Loop
-->  Function Scan on generate_series
-->  Materialize
-->  Seq Scan on tenk1","Unique
-->  Nested Loop
-->  Gather Merge
-Workers Planned: 2
-->  Sort
-Sort Key: tenk1.unique1, tenk1.stringu1
-->  Parallel Index Scan using tenk1_unique1 on tenk1
-->  Function Scan on generate_series",Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-select count(*) from
-  (select * from tenk1 x order by x.thousand, x.twothousand, x.fivethous) x
-  left join
-  (select * from tenk1 y order by y.unique2) y
-  on x.thousand = y.unique2 and x.twothousand = y.hundred and x.fivethous = y.unique2",17,Result MisMatch,"Aggregate
-->  Merge Left Join
-Merge Cond: (x.thousand = y.unique2)
-Join Filter: ((x.twothousand = y.hundred) AND (x.fivethous = y.unique2))
-->  Sort
-Sort Key: x.thousand, x.twothousand, x.fivethous
-->  Seq Scan on tenk1 x
-->  Materialize
-->  Sort
-Sort Key: y.unique2
-->  Seq Scan on tenk1 y","Aggregate
-->  Merge Left Join
-Merge Cond: (x.thousand = y.unique2)
-Join Filter: ((x.twothousand = y.hundred) AND (x.fivethous = y.unique2))
-->  Sort
-Sort Key: x.thousand, x.twothousand, x.fivethous
-->  Seq Scan on tenk1 x
-->  Materialize
-->  Index Scan using tenk1_unique2 on tenk1 y",Environment,Setting,Internal dependencies between test files
-"SELECT indexrelid::regclass, indrelid::regclass, attname, atttypid::regtype, opcname
-FROM (SELECT indexrelid, indrelid, unnest(indkey) as ikey,
-             unnest(indclass) as iclass, unnest(indcollation) as icoll
-      FROM pg_index) ss,
-      pg_attribute a,
-      pg_opclass opc
-WHERE a.attrelid = indrelid AND a.attnum = ikey AND opc.oid = iclass AND
-      (NOT binary_coercible(atttypid, opcintype) OR icoll != attcollation)",17,Result MisMatch,"ERROR:  function binary_coercible(oid, oid) does not exist
-LINE 8:       (NOT binary_coercible(atttypid, opcintype) OR icoll !=...
-                   ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.",,Environment,Setting,Internal dependencies between test files
-"explain (verbose, costs off)
-select unique1, x.*
-from tenk1, (select *, random() from f_immutable_int4(1) x) x
-where x = unique1",17,Result MisMatch,"Hash Join
-Output: tenk1.unique1, (1), (random())
-Hash Cond: (tenk1.unique1 = (1))
-->  Seq Scan on public.tenk1
-Output: tenk1.unique1, tenk1.unique2, tenk1.two, tenk1.four, tenk1.ten, tenk1.twenty, tenk1.hundred, tenk1.thousand, tenk1.twothousand, tenk1.fivethous, tenk1.tenthous, tenk1.odd, tenk1.even, tenk1.stringu1, tenk1.stringu2, tenk1.string4
-->  Hash
-Output: (1), (random())
-->  Result
-Output: 1, random()","Nested Loop
-Output: tenk1.unique1, (1), (random())
-->  Result
-Output: 1, random()
-->  Index Only Scan using tenk1_unique1 on public.tenk1
-Output: tenk1.unique1
-Index Cond: (tenk1.unique1 = (1))",Environment,Setting,Internal dependencies between test files
-\d+ cmdata,17,Result MisMatch,"Table ""public.cmdata""
- Column | Type | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+------+-----------+----------+---------+----------+-------------+--------------+-------------
- f1     | text |           |          |         | extended | pglz        |              | 
-Indexes:
-    ""idx"" btree (f1)
-Access method: heap","                                        Table ""public.cmdata""
- Column | Type | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+------+-----------+----------+---------+----------+-------------+--------------+-------------
- f1     | text |           |          |         | extended | lz4         |              | 
-Indexes:
-    ""idx"" btree (f1)",Environment,Setting,Internal dependencies between test files
-"explain (costs off)
-	select  count(*) from tenk1, tenk2 where tenk1.unique1 = tenk2.unique1",17,Result MisMatch,"Finalize Aggregate
-->  Gather
-Workers Planned: 4
-->  Partial Aggregate
-->  Merge Join
-Merge Cond: (tenk1.unique1 = tenk2.unique1)
-->  Sort
-Sort Key: tenk1.unique1
-->  Parallel Seq Scan on tenk1
-->  Sort
-Sort Key: tenk2.unique1
-->  Seq Scan on tenk2","Finalize Aggregate
-->  Gather
-Workers Planned: 4
-->  Partial Aggregate
-->  Merge Join
-Merge Cond: (tenk1.unique1 = tenk2.unique1)
-->  Parallel Index Only Scan using tenk1_unique1 on tenk1
-->  Index Only Scan using tenk2_unique1 on tenk2",Environment,Setting,Internal dependencies between test files
-"explain (costs off, verbose)
-  select count(*) from tenk1 a where (unique1, two) in
-    (select unique1, row_number() over() from tenk1 b)",17,Result MisMatch,"Aggregate
-Output: count(*)
-->  Hash Semi Join
-Hash Cond: ((a.unique1 = b.unique1) AND (a.two = (row_number() OVER (?))))
-->  Gather
-Output: a.unique1, a.two
-Workers Planned: 4
-->  Parallel Seq Scan on public.tenk1 a
-Output: a.unique1, a.two
-->  Hash
-Output: b.unique1, (row_number() OVER (?))
-->  WindowAgg
-Output: b.unique1, row_number() OVER (?)
-->  Gather
-Output: b.unique1
-Workers Planned: 4
-->  Parallel Seq Scan on public.tenk1 b
-Output: b.unique1","Aggregate
-Output: count(*)
-->  Hash Semi Join
-Hash Cond: ((a.unique1 = b.unique1) AND (a.two = (row_number() OVER (?))))
-->  Gather
-Output: a.unique1, a.two
-Workers Planned: 4
-->  Parallel Seq Scan on public.tenk1 a
-Output: a.unique1, a.two
-->  Hash
-Output: b.unique1, (row_number() OVER (?))
-->  WindowAgg
-Output: b.unique1, row_number() OVER (?)
-->  Gather
-Output: b.unique1
-Workers Planned: 4
-->  Parallel Index Only Scan using tenk1_unique1 on public.tenk1 b
-Output: b.unique1",Environment,Setting,Internal dependencies between test files
-"SELECT U&' \' UESCAPE '!' AS ""tricky"";
-SELECT 'tricky' AS U&""\"" UESCAPE '!';
-SELECT U&'wrong: \061';
-SELECT U&'wrong: \+0061';
-SELECT U&'wrong: +0061' UESCAPE +;
-SELECT U&'wrong: +0061' UESCAPE '+';
-SELECT U&'wrong: \db99';
-SELECT U&'wrong: \db99xy';
-SELECT U&'wrong: \db99\\';
-SELECT U&'wrong: \db99\0061';
-SELECT U&'wrong: \+00db99\+000061';
-SELECT U&'wrong: \+2FFFFF';
-SELECT E'd\u0061t\U00000061' AS ""data""",9,Result MisMatch,\,data,Misc,Parser,Nested comments
-"select B'0010' # B'011101';
-SELECT POSITION(B'1010' IN B'0000101');   ",9,Result MisMatch,"ERROR:  cannot XOR bit strings of different sizes
- position 
-----------
-        0
-(1 row)",0,Misc,Parser,Nested comments
-\d+ compressmv,9,Result MisMatch,,"                                Materialized view ""public.compressmv""
- Column | Type | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
---------+------+-----------+----------+---------+----------+-------------+--------------+-------------
- x      | text |           |          |         | extended |             |              | 
-View definition:
- SELECT cmdata1.f1 AS x
-   FROM cmdata1;",Misc,Parser,Nested comments
-execute q,18,Result MisMatch,regress_rls_bob	invisible to bob,,Misc,Version,older version of DBMS
-SELECT pg_stat_get_snapshot_timestamp() IS NOT NULL AS snapshot_ok,19,Result MisMatch,True,False,Misc,Not Sure,Not sure
-DROP USER regress_merge_privs,20,"ERROR:  role ""regress_merge_privs"" cannot be dropped because some objects depend on it
-DETAIL:  1 object in database t718",False,,Environment,Setting,Role cannot be dropped because of environment setting
-DROP USER regress_merge_no_privs,20,"ERROR:  role ""regress_merge_no_privs"" cannot be dropped because some objects depend on it
-DETAIL:  1 object in database t718",False,,Environment,Setting,Role cannot be dropped because of environment setting
-"SELECT EXTRACT(MILLENNIUM FROM CURRENT_DATE);         
-",11,Result MisMatch,3,,Misc,Parser,Mislead by the result provided by test suite
-"SELECT EXTRACT(EPOCH      FROM DATE 'infinity');    
-",11,Result MisMatch,Infinity,,Misc,Parser,Mislead by the result provided by test suite
-"SELECT EXTRACT(EPOCH FROM DATE        '1970-01-01');     
-",11,Result MisMatch,0,,Misc,Parser,Mislead by the result provided by test suite
-"SELECT * FROM information_schema.usage_privileges WHERE object_type LIKE 'FOREIGN%' AND object_name IN ('s6', 'foo') ORDER BY 1, 2, 3, 4, 5",21,Result MisMatch,"regress_foreign_data_user	regress_test_indirect	testdb		foo	FOREIGN DATA WRAPPER	USAGE	NO
-regress_test_indirect	regress_test_indirect	testdb		s6	FOREIGN SERVER	USAGE	YES
-regress_test_indirect	regress_test_role2	testdb		s6	FOREIGN SERVER	USAGE	YES","regress_foreign_data_user	regress_test_indirect	regression		foo	FOREIGN DATA WRAPPER	USAGE	NO
-regress_test_indirect	regress_test_indirect	regression		s6	FOREIGN SERVER	USAGE	YES
-regress_test_indirect	regress_test_role2	regression		s6	FOREIGN SERVER	USAGE	YES",Environment,Setting,Different schema names
-"select '""\b\f\r\n\t\v\""\''\\""'::jsonpath;
-select '""\x50\u0067\u{53}\u{051}\u{00004C}""'::jsonpath;
-select '$.foo\x50\u0067\u{53}\u{051}\u{00004C}\t\""bar'::jsonpath;
-select '""\z""'::jsonpath;
-select '$.g ? ($.a == 1)'::jsonpath;
-select '$.g ? (@ == 1)'::jsonpath;
-select '$.g ? (@.a == 1)'::jsonpath;
-select '$.g ? (@.a == 1 || @.a == 4)'::jsonpath;
-select '$.g ? (@.a == 1 && @.a == 4)'::jsonpath;
-select '$.g ? (@.a == 1 || @.a == 4 && @.b == 7)'::jsonpath;
-select '$.g ? (@.a == 1 || !(@.a == 4) && @.b == 7)'::jsonpath;
-select '$.g ? (@.a == 1 || !(@.x >= 123 || @.a == 4) && @.b == 7)'::jsonpath;
-select '$.g ? (@.x >= @[*]?(@.a > ""abc""))'::jsonpath;
-select '$.g ? ((@.x >= 123 || @.a == 4) is unknown)'::jsonpath;
-select '$.g ? (exists (@.x))'::jsonpath;
-select '$.g ? (exists (@.x ? (@ == 14)))'::jsonpath;
-select '$.g ? ((@.x >= 123 || @.a == 4) && exists (@.x ? (@ == 14)))'::jsonpath;
-select '$.g ? (+@.x >= +-(+@.a + 2))'::jsonpath;
-select '$a'::jsonpath;
-select '$a.b'::jsonpath;
-select '$a[*]'::jsonpath;
-select '$.g ? (@.zip == $zip)'::jsonpath;
-select '$.a[1,2, 3 to 16]'::jsonpath;
-select '$.a[$a + 1, ($b[*]) to -($[0] * 2)]'::jsonpath;
-select '$.a[$.a.size() - 3]'::jsonpath;
-select 'last'::jsonpath;
-select '""last""'::jsonpath;
-select '$.last'::jsonpath;
-select '$ ? (last > 0)'::jsonpath;
-select '$[last]'::jsonpath;
-select '$[$[0] ? (last > 0)]'::jsonpath;
-select 'null.type()'::jsonpath;
-select '1.type()'::jsonpath;
-select '(1).type()'::jsonpath;
-select '1.2.type()'::jsonpath;
-select '""aaa"".type()'::jsonpath;
-select 'true.type()'::jsonpath;
-select '$.double().floor().ceiling().abs()'::jsonpath;
-select '$.keyvalue().key'::jsonpath;
-select '$.datetime()'::jsonpath;
-select '$.datetime(""datetime template"")'::jsonpath;
-select '$ ? (@ starts with ""abc"")'::jsonpath;
-select '$ ? (@ starts with $var)'::jsonpath;
-select '$ ? (@ like_regex ""(invalid pattern"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag """")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""i"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""is"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""isim"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""xsms"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""q"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""iq"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""smixq"")'::jsonpath;
-select '$ ? (@ like_regex ""pattern"" flag ""a"")'::jsonpath;
-select '$ < 1'::jsonpath;
-select '($ < 1) || $.a.b <= $x'::jsonpath;
-select '@ + 1'::jsonpath;
-select '($).a.b'::jsonpath;
-select '($.a.b).c.d'::jsonpath;
-select '($.a.b + -$.x.y).c.d'::jsonpath;
-select '(-+$.a.b).c.d'::jsonpath;
-select '1 + ($.a.b + 2).c.d'::jsonpath;
-select '1 + ($.a.b > 2).c.d'::jsonpath;
-select '($)'::jsonpath;
-select '(($))'::jsonpath;
-select '((($ + 1)).a + ((2)).b ? ((((@ > 1)) || (exists(@.c)))))'::jsonpath;
-select '$ ? (@.a < 1)'::jsonpath;
-select '$ ? (@.a < -1)'::jsonpath;
-select '$ ? (@.a < +1)'::jsonpath;
-select '$ ? (@.a < .1)'::jsonpath;
-select '$ ? (@.a < -.1)'::jsonpath;
-select '$ ? (@.a < +.1)'::jsonpath;
-select '$ ? (@.a < 0.1)'::jsonpath;
-select '$ ? (@.a < -0.1)'::jsonpath;
-select '$ ? (@.a < +0.1)'::jsonpath;
-select '$ ? (@.a < 10.1)'::jsonpath;
-select '$ ? (@.a < -10.1)'::jsonpath;
-select '$ ? (@.a < +10.1)'::jsonpath;
-select '$ ? (@.a < 1e1)'::jsonpath;
-select '$ ? (@.a < -1e1)'::jsonpath;
-select '$ ? (@.a < +1e1)'::jsonpath;
-select '$ ? (@.a < .1e1)'::jsonpath;
-select '$ ? (@.a < -.1e1)'::jsonpath;
-select '$ ? (@.a < +.1e1)'::jsonpath;
-select '$ ? (@.a < 0.1e1)'::jsonpath;
-select '$ ? (@.a < -0.1e1)'::jsonpath;
-select '$ ? (@.a < +0.1e1)'::jsonpath;
-select '$ ? (@.a < 10.1e1)'::jsonpath;
-select '$ ? (@.a < -10.1e1)'::jsonpath;
-select '$ ? (@.a < +10.1e1)'::jsonpath;
-select '$ ? (@.a < 1e-1)'::jsonpath;
-select '$ ? (@.a < -1e-1)'::jsonpath;
-select '$ ? (@.a < +1e-1)'::jsonpath;
-select '$ ? (@.a < .1e-1)'::jsonpath;
-select '$ ? (@.a < -.1e-1)'::jsonpath;
-select '$ ? (@.a < +.1e-1)'::jsonpath;
-select '$ ? (@.a < 0.1e-1)'::jsonpath;
-select '$ ? (@.a < -0.1e-1)'::jsonpath;
-select '$ ? (@.a < +0.1e-1)'::jsonpath;
-select '$ ? (@.a < 10.1e-1)'::jsonpath;
-select '$ ? (@.a < -10.1e-1)'::jsonpath;
-select '$ ? (@.a < +10.1e-1)'::jsonpath;
-select '$ ? (@.a < 1e+1)'::jsonpath;
-select '$ ? (@.a < -1e+1)'::jsonpath;
-select '$ ? (@.a < +1e+1)'::jsonpath;
-select '$ ? (@.a < .1e+1)'::jsonpath;
-select '$ ? (@.a < -.1e+1)'::jsonpath;
-select '$ ? (@.a < +.1e+1)'::jsonpath;
-select '$ ? (@.a < 0.1e+1)'::jsonpath;
-select '$ ? (@.a < -0.1e+1)'::jsonpath;
-select '$ ? (@.a < +0.1e+1)'::jsonpath;
-select '$ ? (@.a < 10.1e+1)'::jsonpath;
-select '$ ? (@.a < -10.1e+1)'::jsonpath;
-select '$ ? (@.a < +10.1e+1)'::jsonpath;
-select '0'::jsonpath;
-select '00'::jsonpath;
-select '0.0'::jsonpath;
-select '0.000'::jsonpath;
-select '0.000e1'::jsonpath;
-select '0.000e2'::jsonpath;
-select '0.000e3'::jsonpath;
-select '0.0010'::jsonpath;
-select '0.0010e-1'::jsonpath;
-select '0.0010e+1'::jsonpath;
-select '0.0010e+2'::jsonpath;
-select '.001'::jsonpath;
-select '.001e1'::jsonpath;
-select '1.'::jsonpath;
-select '1.e1'::jsonpath;
-select '1a'::jsonpath;
-select '1e'::jsonpath;
-select '1.e'::jsonpath;
-select '1.2a'::jsonpath;
-select '1.2e'::jsonpath;
-select '1.2.e'::jsonpath;
-select '(1.2).e'::jsonpath;
-select '1e3'::jsonpath;
-select '1.e3'::jsonpath;
-select '1.e3.e'::jsonpath;
-select '1.e3.e4'::jsonpath;
-select '1.2e3'::jsonpath;
-select '1.2e3a'::jsonpath;
-select '1.2.e3'::jsonpath;
-select '(1.2).e3'::jsonpath;
-select '1..e'::jsonpath;
-select '1..e3'::jsonpath;
-select '(1.).e'::jsonpath;
-select '(1.).e3'::jsonpath;
-select '1?(2>3)'::jsonpath",22,Result MisMatch,"""\b\f\r\n\t\u000b\""'\\""",$[$[0]?(last > 0)],Environment,Setting,Different char names
-"SELECT to_char(val, 'L9999999999999999.099999999999999')	FROM num_data",22,Result MisMatch,"$                 .000000000000000
-$                 .000000000000000
-$        -34338492.215397047000000
-$                4.310000000000000
-$          7799461.411900000000000
-$            16397.038491000000000
-$            93901.577630260000000
-$        -83028485.000000000000000
-$            74881.000000000000000
-$        -24926804.045047420000000",".000000000000000
-.000000000000000
--34338492.215397047000000
-4.310000000000000
-7799461.411900000000000
-16397.038491000000000
-93901.577630260000000
--83028485.000000000000000
-74881.000000000000000
--24926804.045047420000000",Environment,Setting,Different char names
+-- see json_encoding test for input with unicode escapes",Misc,Parser,Nested comments
+"SELECT * FROM ctv_data \crosstabview
+DROP TABLE ctv_data",9,Result MisMatch,"\crosstabview: query result contains multiple data values for row ""1"", column ""10""",DROP TABLE ctv_data;,Misc,Parser,Nested comments

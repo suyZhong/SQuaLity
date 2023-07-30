@@ -1,16 +1,9 @@
 TESTFILE_NAME,TESTCASE_INDEX,CLUSTER
-regress-sql-prepared_xacts.csv, -1, -1
-regress-sql-comments.csv, -1, -1
-regress-sql-create_view.csv, -1, -1
-regress-sql-triggers.csv, -1, -1
-regress-sql-psql_crosstab.csv, -1, -1
-regress-sql-collate.linux.utf8.csv, -1, -1
-regress-sql-select_views.csv, -1, -1
-regress-sql-select_views.csv, -1, -1
-regress-sql-copy2.csv, -1, -1
-regress-sql-largeobject.csv, -1, -1
-regress-sql-xml.csv, -1, -1
 regress-sql-strings.csv, -1, -1
+regress-sql-updatable_views.csv, -1, -1
+regress-sql-prepared_xacts.csv, -1, -1
+regress-sql-rowsecurity.csv, -1, -1
 regress-sql-merge.csv, -1, -1
-regress-sql-amutils.csv, -1, -1
-regress-sql-guc.csv, -1, -1
+regress-sql-psql_crosstab.csv, -1, -1
+regress-sql-returning.csv, -1, -1
+regress-sql-largeobject.csv, -1, -1
