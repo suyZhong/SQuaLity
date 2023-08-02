@@ -333,6 +333,10 @@ class ResultHelper():
         else:
             for i, row in enumerate(expected_results):
                 items = row.strip().split('\t')
+                # my_debug("%s, %s", str(items), str(actual_results[i]))
+                if len(items) != len(actual_results[i]):
+                    cmp_flag = False
+                    break
                 for j, item in enumerate(items):
                     # direct comparison
                     rvalue = actual_results[i][j]

@@ -143,7 +143,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
     labels = top_type_cnt.columns.tolist()
     bar_value = top_type_cnt[:cols].values.T
     bar_num = bar_value.shape[1]
-    bar_width = 0.21
+    bar_width = 0.25
     
     '''
     Plot all bars in one figure
@@ -168,12 +168,12 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1,sharex=True, figsize=(12, 5))
         lower_limit = 0
-        break_limit = 0.04
+        break_limit = 0.05
         upper_limit = 1
         
         for i, type_cnt in enumerate(bar_value):
-            ax1.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, color='white', edgecolor='black')
-            ax2.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, color='white', edgecolor='black')
+            ax1.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, )
+            ax2.bar(np.arange(bar_num) + bar_width * i, type_cnt, hatch=hatches[i%len(hatches)], label=labels[i], width=bar_width, )
         plt.xticks(np.arange(bar_num) + bar_width + (len(labels) - 1) % 2 / 2 * bar_width , top_type_cnt[:cols].index.tolist(), rotation=45, ha='right')
         
         ax1.set_ylim(break_limit, upper_limit)
