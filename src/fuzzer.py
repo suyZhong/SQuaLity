@@ -2,12 +2,14 @@ import pandas as pd
 import logging
 import subprocess
 import re
+import os
 import random
 import signal
 import time
 from tqdm import tqdm
 import string
 from .config import CONFIG
+from .utils import TestCaseColumns
 
 # MAXINT in SQLite is 9223372036854775807
 # from data import filters
@@ -30,6 +32,18 @@ class Fuzzer():
 
     def load(self, path: str) -> pd.DataFrame:
         self.test_cases = pd.read_csv(path)
+        
+    def load_suite(self, path: str) -> pd.DataFrame:
+        all_test = pd.DataFrame(TestCaseColumns)
+        test_files = []
+        g = os.walk(path)
+        for path, _, file_list in g:
+            test_files += [os.path.join(path, file) for file in file_list]
+        for test_file in test_files:
+            df = pd.read_csv(test_file)
+            df['TESTFILE_PATH'] = test_file
+            all_test = pd.concat([all_test, df], ignore_index=True)
+        self.test_cases = all_test
 
     def extract(self, test_case) -> None:
         self.sql_list = self.test_cases['SQL'].tolist()
@@ -136,7 +150,10 @@ class SimpleFuzzer(Fuzzer):
 
     def fuzz(self, path: str) -> None:
         random.seed(self.seed)
-        self.load(path)
+        if os.path.isdir(path):
+            self.load_suite(path)
+        else:
+            self.load(path)
         self.setup_summary()
         # print time
         # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
@@ -179,14 +196,15 @@ class SQLiteSimpleFuzzer(SimpleFuzzer):
         logging.info(f"Extracting test case {test_case}")
         df: pd.DataFrame = self.test_cases
         df = df[df['TESTFILE_PATH'] == test_case]
+        df = self.filter(df)
         self.sql_list = [str(sql).removesuffix(
             ';') + ';' for sql in df['SQL'].tolist()]
-
-        # filter generate_series
-        self.sql_list = [sql for sql in self.sql_list if sql.find(
-            "generate_series") == -1]
         logging.info(f"Length of sql list: {len(self.sql_list)}")
 
+    def filter(self, df) -> None: 
+        # df = df[(df['SQL']).str.contains("generate_series") == False]
+        df = df[df['STATUS'] == True]
+        return df
 
 class DuckDBSimpleFuzzer(SimpleFuzzer):
     INT_POOL = [-1, 0, 1, 9223372036854775807, -
@@ -202,5 +220,11 @@ class DuckDBSimpleFuzzer(SimpleFuzzer):
         logging.info(f"Extracting test case {test_case}")
         df: pd.DataFrame = self.test_cases
         df = df[df['TESTFILE_PATH'] == test_case]
+        df = self.filter(df)
         self.sql_list = [str(sql).removesuffix(
             ';') + ';' for sql in df['SQL'].tolist()]
+
+    def filter(self, df) -> None:
+        df = df[(df['SQL']).str.contains("COPY") == False]
+        # df = df[df['STATUS'] == True]
+        return df
