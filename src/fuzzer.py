@@ -150,6 +150,10 @@ class SimpleFuzzer(Fuzzer):
 
         self.input = self.operator_mutator(self.input)
 
+    def crash_signal(self, err):
+        logging.debug("err: " + err)
+        return self.cli.returncode < 0
+
     def run(self) -> None:
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
@@ -161,7 +165,7 @@ class SimpleFuzzer(Fuzzer):
         logging.debug("return code:" + str(self.cli.returncode))
         logging.debug("error:")
         logging.debug(err)
-        if self.cli.returncode < 0:
+        if self.crash_signal(err):
             logging.warning(f"err: {err}")
             logging.warning(self.input)
         self.cli.terminate()
@@ -242,4 +246,7 @@ class MySQLSimpleFuzzer(SimpleFuzzer):
     def __init__(self, seed) -> None:
         super().__init__(seed)
         self.cmd = self.cmd = [
-            'mysql', '-u', CONFIG['mysql_user'], '-p' + CONFIG['mysql_password'], '-P', str(CONFIG['mysql_port']), '-h', '127.0.0.1']
+            'mysql', '--force' ,'-u', CONFIG['mysql_user'], '-p' + CONFIG['mysql_password'], '-P', str(CONFIG['mysql_port']), '-h', '127.0.0.1']
+        
+    def crash_signal(self, err:str):
+        return err.find("ERROR 2013 (HY000)")
