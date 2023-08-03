@@ -28,6 +28,10 @@ if __name__ == "__main__":
         fuzzer = fuzzer.SQLiteSimpleFuzzer(seed=args.seed)
     elif args.dbms == 'duckdb':
         fuzzer = fuzzer.DuckDBSimpleFuzzer(seed=args.seed)
+    elif args.dbms == 'psql':
+        fuzzer = fuzzer.PostgreSQLSimpleFuzzer(seed=args.seed)
+    elif args.dbms == 'mysql':
+        fuzzer = fuzzer.MySQLSimpleFuzzer(seed=args.seed)
     else:
         assert False, 'DBMS not supported'
     fuzzer.fuzz(args.corpus)

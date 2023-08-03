@@ -34,16 +34,17 @@ class Fuzzer():
         self.test_cases = pd.read_csv(path)
         
     def load_suite(self, path: str) -> pd.DataFrame:
-        all_test = pd.DataFrame(TestCaseColumns)
+        all_test = pd.DataFrame()
         test_files = []
         g = os.walk(path)
         for path, _, file_list in g:
             test_files += [os.path.join(path, file) for file in file_list]
-        for test_file in test_files:
+        for test_file in tqdm(test_files):
             df = pd.read_csv(test_file)
             df['TESTFILE_PATH'] = test_file
             all_test = pd.concat([all_test, df], ignore_index=True)
         self.test_cases = all_test
+        logging.debug(self.test_cases)
 
     def extract(self, test_case) -> None:
         self.sql_list = self.test_cases['SQL'].tolist()
@@ -122,9 +123,23 @@ class SimpleFuzzer(Fuzzer):
     def operator_mutator(self, sql: str) -> str:
         return re.sub(self.OPERATOR_REGEX, self._get_random_op, sql)
 
-    def mutate(self, iter=False) -> None:
+    def filter(self, df) -> None:
+        return df
+    
+    def extract(self, test_case) -> None:
+        logging.info(f"Extracting test case {test_case}")
+        df: pd.DataFrame = self.test_cases
+        df = df[df['TESTFILE_PATH'] == test_case]
+        df = self.filter(df)
+        self.sql_list = [str(sql).removesuffix(
+            ';') + ';' for sql in df['SQL'].tolist()]
+        logging.info(f"Length of sql list: {len(self.sql_list)}")
+    
+    def mutate(self, iter=False, non = False) -> None:
+        if non:
+            self.input = "\n".join(self.sql_list)
+            return
         # replace every number in the sql with a random new number
-
         if iter:
             self.sql_list = [self.constant_mutator(
                 str(sql), random.choice(self.FUZZING_TAG)) for sql in self.sql_list]
@@ -143,6 +158,9 @@ class SimpleFuzzer(Fuzzer):
         logging.debug(self.input)
         logging.debug("output: ")
         logging.debug(out)
+        logging.debug("return code:" + str(self.cli.returncode))
+        logging.debug("error:")
+        logging.debug(err)
         if self.cli.returncode < 0:
             logging.warning(f"err: {err}")
             logging.warning(self.input)
@@ -157,7 +175,7 @@ class SimpleFuzzer(Fuzzer):
         self.setup_summary()
         # print time
         # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-
+        
         test_cases = list(self.test_cases['TESTFILE_PATH'].unique())
         if logging.getLogger().level == logging.DEBUG:
             random.shuffle(test_cases)
@@ -166,7 +184,7 @@ class SimpleFuzzer(Fuzzer):
             self.extract(test_case)
 
             for i in self.iter_times:
-                self.mutate()
+                self.mutate(non=True)
                 signal.signal(signal.SIGALRM, self.timeout_handler)
                 signal.alarm(self.MAX_TIME_PER_RUN)
                 try:
@@ -192,15 +210,6 @@ class SQLiteSimpleFuzzer(SimpleFuzzer):
         super().__init__(seed)
         self.cmd = [CONFIG['sqlite_path']]
 
-    def extract(self, test_case) -> None:
-        logging.info(f"Extracting test case {test_case}")
-        df: pd.DataFrame = self.test_cases
-        df = df[df['TESTFILE_PATH'] == test_case]
-        df = self.filter(df)
-        self.sql_list = [str(sql).removesuffix(
-            ';') + ';' for sql in df['SQL'].tolist()]
-        logging.info(f"Length of sql list: {len(self.sql_list)}")
-
     def filter(self, df) -> None: 
         # df = df[(df['SQL']).str.contains("generate_series") == False]
         df = df[df['STATUS'] == True]
@@ -216,15 +225,21 @@ class DuckDBSimpleFuzzer(SimpleFuzzer):
         super().__init__(seed)
         self.cmd = [CONFIG['duckdb_path']]
 
-    def extract(self, test_case) -> None:
-        logging.info(f"Extracting test case {test_case}")
-        df: pd.DataFrame = self.test_cases
-        df = df[df['TESTFILE_PATH'] == test_case]
-        df = self.filter(df)
-        self.sql_list = [str(sql).removesuffix(
-            ';') + ';' for sql in df['SQL'].tolist()]
 
     def filter(self, df) -> None:
         df = df[(df['SQL']).str.contains("COPY") == False]
         # df = df[df['STATUS'] == True]
         return df
+
+class PostgreSQLSimpleFuzzer(SimpleFuzzer):
+    def __init__(self, seed) -> None:
+        super().__init__(seed)
+        self.cmd = self.cmd = [
+            'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/fuzzing?sslmode=disable", '-X', '-q']
+
+
+class MySQLSimpleFuzzer(SimpleFuzzer):
+    def __init__(self, seed) -> None:
+        super().__init__(seed)
+        self.cmd = self.cmd = [
+            'mysql', '-u', CONFIG['mysql_user'], '-p' + CONFIG['mysql_password'], '-P', str(CONFIG['mysql_port']), '-h', '127.0.0.1']
