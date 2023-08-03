@@ -49,6 +49,9 @@ class Fuzzer():
     def extract(self, test_case) -> None:
         self.sql_list = self.test_cases['SQL'].tolist()
 
+    def init_db(self):
+        pass
+    
     def mutate(self) -> None:
         pass
 
@@ -155,6 +158,7 @@ class SimpleFuzzer(Fuzzer):
         return self.cli.returncode < 0
 
     def run(self) -> None:
+        logging.debug(self.cmd)
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
         out, err = self.cli.communicate(input=self.input)
@@ -188,7 +192,8 @@ class SimpleFuzzer(Fuzzer):
             self.extract(test_case)
 
             for i in self.iter_times:
-                self.mutate(non=True)
+                self.init_db('fuzzing')
+                self.mutate()
                 signal.signal(signal.SIGALRM, self.timeout_handler)
                 signal.alarm(self.MAX_TIME_PER_RUN)
                 try:
@@ -238,15 +243,27 @@ class DuckDBSimpleFuzzer(SimpleFuzzer):
 class PostgreSQLSimpleFuzzer(SimpleFuzzer):
     def __init__(self, seed) -> None:
         super().__init__(seed)
-        self.cmd = self.cmd = [
+        self.cmd =  [
             'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/fuzzing?sslmode=disable", '-X', '-q']
 
 
 class MySQLSimpleFuzzer(SimpleFuzzer):
     def __init__(self, seed) -> None:
         super().__init__(seed)
-        self.cmd = self.cmd = [
-            'mysql', '--force' ,'-u', CONFIG['mysql_user'], '-p' + CONFIG['mysql_password'], '-P', str(CONFIG['mysql_port']), '-h', '127.0.0.1']
+        self.cmd =  [
+            'mysql', '--force' ,'-u', CONFIG['mysql_user'], '-p' + CONFIG['mysql_password'], '-P', str(CONFIG['mysql_port']), '-h', '127.0.0.1', 'fuzzing']
         
     def crash_signal(self, err:str):
-        return err.find("ERROR 2013 (HY000)")
+        return err.find("ERROR 200") != -1
+    
+    def init_db(self, db_name):
+        init_mysql_script = f"""DROP DATABASE IF EXISTS {db_name}; CREATE DATABASE {db_name}; USE {db_name};"""
+        # self.cmd += [db_name]
+        cmd =  self.cmd[:-1] + ["-e", f"{init_mysql_script}"]
+        logging.debug(f"init db {db_name}")
+        logging.debug(cmd)
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.stderr.decode().find("ERROR") != -1:
+            logging.error(f"err: {result.stderr.decode()}")
+            # logging.error(self.input)
+            exit(0)

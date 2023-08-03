@@ -21,8 +21,10 @@ if __name__ == "__main__":
     
     # get current time
     time_string = time.strftime("%Y-%m-%d-%H-%M", time.localtime())
+    if os.path.exists('logs/fuzzing') == False:
+        os.makedirs('logs/fuzzing')
     logging.basicConfig(level=getattr(logging, args.log.upper(
-    )), format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename=f'logs/fuzzing-{args.dbms}-{time_string}.log')
+    )), format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename=f'logs/fuzzing/{args.dbms}-{time_string}.log')
     # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename='logs/debug.log')
     if args.dbms == 'sqlite':
         fuzzer = fuzzer.SQLiteSimpleFuzzer(seed=args.seed)
