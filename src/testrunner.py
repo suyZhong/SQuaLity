@@ -319,7 +319,7 @@ class PyDBCRunner(Runner):
                 logging.debug(
                     "Statement %s execution error: %s", record.sql, e)
             self.handle_stmt_result(status, record, except_msg)
-            self.commit()
+            # self.commit()
             if status:
                 self.records_log.append(record)
         elif type(record) is Query:
@@ -331,7 +331,7 @@ class PyDBCRunner(Runner):
                 self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query %s execution error: %s",
                               record.sql, except_msg)
-                self.commit()
+                # self.commit()
                 self.bug_dumper.save_state(self.records_log, record, str(False), (
                     datetime.now()-self.cur_time).microseconds, is_error=True, msg="{}".format(except_msg))
                 self.allright = False
@@ -463,6 +463,9 @@ class DuckDBRunner(PyDBCRunner):
     def executemany_stmt(self, sql):
         self.con.executemany(sql)
         # self.con.fetchall()
+        
+    def commit(self):
+        self.con.commit()
 
 
 class CockroachDBRunner(PyDBCRunner):
@@ -549,6 +552,7 @@ class MySQLRunner(PyDBCRunner):
 
     def execute_stmt(self, sql):
         self.cur.execute(sql)
+        self.cur.fetchall()
 
     def executemany_stmt(self, sql: str):
         sql_list = sql.split(";")

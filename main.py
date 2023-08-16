@@ -125,10 +125,12 @@ if __name__ == "__main__":
         logging.info("running %s", test_file)
         try:
             r.run()
+            # r.commit()
         except Exception as e:
             logging.critical(
                 "Runner catch an exception %s , it is either the runner's bug or the connector's bug.", e)
             logging.info(traceback.format_exc())
+            # r.commit()
             r.not_allright()
             r.close()
         else:
