@@ -166,7 +166,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
         plt.tight_layout()
         plt.savefig(os.path.join(output, f"all_sql_type.pdf"))
     else:
-        fig, (ax1, ax2) = plt.subplots(2, 1,sharex=True, figsize=(12, 5))
+        fig, (ax1, ax2) = plt.subplots(2, 1,sharex=True, figsize=(12, 4))
         lower_limit = 0
         break_limit = 0.05
         upper_limit = 1
@@ -184,7 +184,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
         ax1.tick_params(labeltop=False)
         ax2.xaxis.tick_bottom()
         
-        d = .005
+        d = .004
         kwargs = dict(transform=ax1.transAxes, color='k', clip_on=False)
         ax1.plot((-d, +d), (-d, +d), **kwargs)
         ax1.plot((1 - d, 1 + d), (-d, +d), **kwargs)
