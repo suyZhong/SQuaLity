@@ -30,7 +30,7 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
             try:
                 file_content = parser.read_file(file, byline=True)
                 file_length = len(file_content)
-                if db_name == 'sqlite':
+                if db_name.lower() == 'sqlite':
                     if any(line.find('CREATE INDEX') >= 0 for line in file_content) or any(line.find('CREATE UNIQUE INDEX') >= 0 for line in file_content):
                         index_file_num += 1
             except UnicodeDecodeError:
@@ -41,12 +41,13 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
             file_lengths.append(file_length)
             db_dict[db_name] = file_lengths
         print(db_name, len(files))
-        if db_name == 'sqlite':
+        if db_name.lower() == 'sqlite':
             print(index_file_num)
     # begin plotting
+    plt.figure(figsize=(12, 6))
     plt.boxplot(db_dict.values(), labels=db_dict.keys())
     plt.yscale('log')
-    plt.ylabel("Length of Test Cases")
+    plt.ylabel("Lines of Code (LoC) in Each Test File")
     # plt.show()
     plt.savefig(os.path.join(output, "test_case_length.pdf"))
 
@@ -211,7 +212,7 @@ if __name__ == "__main__":
     output = arguments.output
 
     if arguments.mode == 'length':
-        plot_test_case_length(db_names=['sqlite', 'mysql', 'postgresql', 'duckdb'])
+        plot_test_case_length(db_names=['SQLite', 'MySQL', 'PostgreSQL', 'DuckDB'])
     elif arguments.mode == 'dist':
         generate_test_case_data(db_names=['sqlite', 'postgresql', 'duckdb'], output=output)
     elif arguments.mode == 'dist_cache':

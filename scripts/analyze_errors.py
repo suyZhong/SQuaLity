@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--cluster', action='store_true')
     parser.add_argument('-dep', '--dependency', action='store_true')
     parser.add_argument('-sub', '--subset', action='store_true')
-    parser.add_argument('-sf', '--suffix', default=None, type=str)
+    parser.add_argument('-sf', '--suffix', default="", type=str)
     
     args = parser.parse_args()
     dbms_name = args.dbms
