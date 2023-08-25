@@ -230,7 +230,7 @@ class Runner():
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
     LARGE_TEST_THRESHOLD = 1000
-    MAX_RUNTIME_PERSQL = 20
+    MAX_RUNTIME_PERSQL = CONFIG['max_runtime_persql']
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
@@ -303,6 +303,9 @@ class PyDBCRunner(Runner):
 
     def commit(self):
         pass
+    
+    def reset_cursor(self):
+        pass
 
     def _single_run(self, record):
         self.single_run_stats['total_executed_sql'] += 1
@@ -318,6 +321,7 @@ class PyDBCRunner(Runner):
                 except_msg = str(e)
                 logging.debug(
                     "Statement %s execution error: %s", record.sql, e)
+                # self.reset_cursor()
             self.handle_stmt_result(status, record, except_msg)
             # self.commit()
             if status:
@@ -335,6 +339,7 @@ class PyDBCRunner(Runner):
                 self.bug_dumper.save_state(self.records_log, record, str(False), (
                     datetime.now()-self.cur_time).microseconds, is_error=True, msg="{}".format(except_msg))
                 self.allright = False
+                # self.reset_cursor()
                 return
             else:
                 self.single_run_stats['success_query_num'] += 1
@@ -551,8 +556,10 @@ class MySQLRunner(PyDBCRunner):
         return self.cur.fetchall()
 
     def execute_stmt(self, sql):
+        my_debug("BEfore %s : The connection status is %s" % (sql, self.con.is_connected()))
         self.cur.execute(sql)
         self.cur.fetchall()
+        my_debug("After: The connection status is %s" % self.con.is_connected())
 
     def executemany_stmt(self, sql: str):
         sql_list = sql.split(";")
@@ -569,6 +576,9 @@ class MySQLRunner(PyDBCRunner):
             my_debug(str(results))
         self.con.commit()
 
+    def reset_cursor(self):
+        self.cur.close()
+        self.cur = self.con.cursor()
 
 class PostgreSQLRunner(CockroachDBRunner):
     def __init__(self, records: List[Record] = []) -> None:
