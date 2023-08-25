@@ -18,7 +18,7 @@ from .utils import TestCaseColumns
 class Fuzzer():
     MAX_TIME_PER_RUN = 5
 
-    def __init__(self, seed: int) -> None:
+    def __init__(self, seed: int, mode) -> None:
         self.test_cases: pd.DataFrame = None
         self.sql_list = []
         self.input = ""
@@ -49,7 +49,7 @@ class Fuzzer():
     def extract(self, test_case) -> None:
         self.sql_list = self.test_cases['SQL'].tolist()
 
-    def init_db(self):
+    def init_db(self, db_name):
         pass
     
     def mutate(self) -> None:
@@ -70,10 +70,11 @@ class SimpleFuzzer(Fuzzer):
     OPERATOR_REGEX = re.compile(
         r"(==|!=|<>|<=|>=|=|<|>)")
 
-    def __init__(self, seed) -> None:
-        super().__init__(seed)
+    def __init__(self, seed, mode) -> None:
+        super().__init__(seed, mode)
         self.cmd = []
         self.cli = None
+        self.mode = mode
         self.iter_times = tqdm(range(100)) if logging.getLogger(
         ).getEffectiveLevel() == logging.DEBUG else range(3000)
 
@@ -157,7 +158,8 @@ class SimpleFuzzer(Fuzzer):
         logging.debug("err: " + err)
         return self.cli.returncode < 0
 
-    def run(self) -> None:
+    def run(self) -> int:
+        status = True
         logging.debug(self.cmd)
         self.cli = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, encoding='utf-8', universal_newlines=True, bufsize=2 << 15)
@@ -170,9 +172,12 @@ class SimpleFuzzer(Fuzzer):
         logging.debug("error:")
         logging.debug(err)
         if self.crash_signal(err):
+            logging.warning(f"return code: {self.cli.returncode}")
             logging.warning(f"err: {err}")
             logging.warning(self.input)
+            status = False
         self.cli.terminate()
+        return status
 
     def fuzz(self, path: str) -> None:
         random.seed(self.seed)
@@ -193,11 +198,11 @@ class SimpleFuzzer(Fuzzer):
 
             for i in self.iter_times:
                 self.init_db('fuzzing')
-                self.mutate()
+                self.mutate(non = (self.mode == "simple"))
                 signal.signal(signal.SIGALRM, self.timeout_handler)
                 signal.alarm(self.MAX_TIME_PER_RUN)
                 try:
-                    self.run()
+                    status = self.run()
                 except TimeoutError:
                     logging.warning(f"Timeout for test case {test_case}")
                     logging.info(self.input)
@@ -205,6 +210,10 @@ class SimpleFuzzer(Fuzzer):
                     break
                 else:
                     signal.alarm(0)
+                if status == False:
+                    break
+                if self.mode == "simple":
+                    break
             if logging.getLogger().level == logging.DEBUG:
                 exit(0)
 
@@ -215,8 +224,8 @@ class SQLiteSimpleFuzzer(SimpleFuzzer):
     SEG_POOL = [(-1, 1), (0, 1), (1, 14), (-9223372036854775807, -
                                            9223372036854775806), (9223372036854775806, 9223372036854775807), (-0.5, 0.5)]
 
-    def __init__(self, seed=233) -> None:
-        super().__init__(seed)
+    def __init__(self, seed=233, mode='mutation') -> None:
+        super().__init__(seed, mode)
         self.cmd = [CONFIG['sqlite_path']]
 
     def filter(self, df) -> None: 
@@ -230,8 +239,8 @@ class DuckDBSimpleFuzzer(SimpleFuzzer):
     SEG_POOL = [(-1, 1), (0, 1), (1, 14), (-9223372036854775807, -
                                            9223372036854775806), (9223372036854775806, 9223372036854775807), (-0.5, 0.5)]
 
-    def __init__(self, seed=233) -> None:
-        super().__init__(seed)
+    def __init__(self, seed=233, mode='mutation') -> None:
+        super().__init__(seed, mode)
         self.cmd = [CONFIG['duckdb_path']]
 
 
@@ -241,15 +250,15 @@ class DuckDBSimpleFuzzer(SimpleFuzzer):
         return df
 
 class PostgreSQLSimpleFuzzer(SimpleFuzzer):
-    def __init__(self, seed) -> None:
-        super().__init__(seed)
+    def __init__(self, seed, mode) -> None:
+        super().__init__(seed, mode)
         self.cmd =  [
             'psql', f"postgresql://{CONFIG['postgres_user']}:{CONFIG['postgres_password']}@localhost:{CONFIG['postgres_port']}/fuzzing?sslmode=disable", '-X', '-q']
 
 
 class MySQLSimpleFuzzer(SimpleFuzzer):
-    def __init__(self, seed) -> None:
-        super().__init__(seed)
+    def __init__(self, seed, mode) -> None:
+        super().__init__(seed, mode)
         self.cmd =  [
             'mysql', '--force' ,'-u', CONFIG['mysql_user'], '-p' + CONFIG['mysql_password'], '-P', str(CONFIG['mysql_port']), '-h', '127.0.0.1', 'fuzzing']
         

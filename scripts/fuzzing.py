@@ -16,6 +16,7 @@ if __name__ == "__main__":
     arg_parser.add_argument('--log', type=str, default='INFO', help='logging level')
     arg_parser.add_argument('--corpus', type=str, default='output/psql_results_dependency_without_error.csv', help='corpus path')
     arg_parser.add_argument('-d', '--dbms', type=str, default='sqlite', help='DBMS to fuzz')
+    arg_parser.add_argument('-m', '--mode', type=str, default='mutation', help='fuzzing mode')
     arg_parser.parse_args()
     args = arg_parser.parse_args()
     
@@ -27,13 +28,13 @@ if __name__ == "__main__":
     )), format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename=f'logs/fuzzing/{args.dbms}-{time_string}.log')
     # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', filemode='w', filename='logs/debug.log')
     if args.dbms == 'sqlite':
-        fuzzer = fuzzer.SQLiteSimpleFuzzer(seed=args.seed)
+        fuzzer = fuzzer.SQLiteSimpleFuzzer(seed=args.seed, mode = args.mode)
     elif args.dbms == 'duckdb':
-        fuzzer = fuzzer.DuckDBSimpleFuzzer(seed=args.seed)
+        fuzzer = fuzzer.DuckDBSimpleFuzzer(seed=args.seed, mode = args.mode)
     elif args.dbms == 'psql':
-        fuzzer = fuzzer.PostgreSQLSimpleFuzzer(seed=args.seed)
+        fuzzer = fuzzer.PostgreSQLSimpleFuzzer(seed=args.seed, mode = args.mode)
     elif args.dbms == 'mysql':
-        fuzzer = fuzzer.MySQLSimpleFuzzer(seed=args.seed)
+        fuzzer = fuzzer.MySQLSimpleFuzzer(seed=args.seed, mode = args.mode)
     else:
         assert False, 'DBMS not supported'
     fuzzer.fuzz(args.corpus)
