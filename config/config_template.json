@@ -5,5 +5,7 @@
     "postgres_user": "postgres",
     "postgres_password": "postgres",
     "postgres_port": 5432,
-    "mysql_port": 3306
+    "mysql_port": 3306,
+    "mysql_user": "root",
+    "mysql_password": "root"
 }
