@@ -211,6 +211,7 @@ class SimpleFuzzer(Fuzzer):
                 else:
                     signal.alarm(0)
                 if status == False:
+                    logging.warning(f"Find a bug from test case {test_case}")
                     break
                 if self.mode == "simple":
                     break
