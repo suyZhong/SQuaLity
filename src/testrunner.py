@@ -504,6 +504,7 @@ class CockroachDBRunner(PyDBCRunner):
 
         self.con = psycopg2.connect(
             dsn=self.db, options="-c statement_timeout=20s")
+        self.con.autocommit = True
         self.cur = self.con.cursor()
 
     def close(self):
