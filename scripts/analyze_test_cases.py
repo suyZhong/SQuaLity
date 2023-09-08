@@ -198,7 +198,11 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
             if label.get_text() in standard_cases:
                 # label.set_bbox(dict(facecolor='none', edgecolor='black', boxstyle='bottom'))
                 label.set_weight('bold')
-        plt.xlabel("SQL Type")
+        # plt.xlabel("SQL Type")
+        # set a ylabel that in the middle of two subplots
+        fig.text(0.003, 0.6, 'Percentage', va='center', rotation='vertical')
+        ax1.set_ylabel(" ")
+        
         plt.tight_layout()
         plt.savefig(os.path.join(output, f"all_sql_type_breakdown.pdf"))
 
