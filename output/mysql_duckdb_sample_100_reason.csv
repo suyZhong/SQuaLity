@@ -4,18 +4,18 @@ False
 True
 NULL
 NULL
-NULL",mysql,Func Syntax,TYPENE,Type not exist,
+NULL",mysql,Type,TYPENE,Type not exist,
 "select [a,a+1,a+2]<[1,2,3] from range(5) tbl(a);",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[a,a+1,a+2]<[1,2,3] from range(5) tbl(a)' at line 1",False,"True
 False
 False
 False
-False",mysql,Func Syntax,TYPENE,Type not exist,
+False",mysql,Type,TYPENE,Type not exist,
 SELECT l <= r FROM list_of_struct,TYPENE,1146 (42S02): Table 'testpg.list_of_struct' doesn't exist,False,"True
 True
 False
 NULL
 NULL
-NULL",mysql,Func Syntax,TYPENE,Type not exist,
+NULL",mysql,Type,TYPENE,Type not exist,
 "WITH RECURSIVE t(y, arr) AS MATERIALIZED
 (
   SELECT 1, array[1,2,3,4,5,6]
@@ -36,31 +36,31 @@ NULL",mysql,Func Syntax,TYPENE,Type not exist,
 7	[1]
 8	[1]
 9	[1]
-10	[1]",mysql,Func Syntax,TYPENE,Type not exist,
-select * from t1 left join t2 on t1.id <> t2.id;,TYPENE,1146 (42S02): Table 'testpg.t1' doesn't exist,False,NULL	NULL,mysql,Func Syntax,TYPENE,Type not exist,
-"SELECT ""COL"".""HELLO"" FROM tbl",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '.""HELLO"" FROM tbl' at line 1",False,3,mysql,Func Syntax,TYPENE,Type not exist,
-"INSERT INTO flags VALUES('2019-10-28 23:56:25.107861','2019-10-28 23:56:25.107861','legacy','2/11')",TYPENE,1146 (42S02): Table 'testpg.flags' doesn't exist,False,True,mysql,Func Syntax,TYPENE,Type not exist,
-"INSERT INTO strings VALUES ('abab', 'Ab%'), ('aaa', 'A_a'), ('aaa', '%b%')",TYPENE,1146 (42S02): Table 'testpg.strings' doesn't exist,False,True,mysql,Func Syntax,TYPENE,Type not exist,
-SELECT * FROM a,TYPENE,1146 (42S02): Table 'testpg.a' doesn't exist,False,"1	[1, 2, 3]",mysql,Func Syntax,TYPENE,Type not exist,
+10	[1]",mysql,Type,TYPENE,Type not exist,
+select * from t1 left join t2 on t1.id <> t2.id;,TYPENE,1146 (42S02): Table 'testpg.t1' doesn't exist,False,NULL	NULL,mysql,Type,TYPENE,Type not exist,
+"SELECT ""COL"".""HELLO"" FROM tbl",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '.""HELLO"" FROM tbl' at line 1",False,3,mysql,Type,TYPENE,Type not exist,
+"INSERT INTO flags VALUES('2019-10-28 23:56:25.107861','2019-10-28 23:56:25.107861','legacy','2/11')",TYPENE,1146 (42S02): Table 'testpg.flags' doesn't exist,False,True,mysql,Type,TYPENE,Type not exist,
+"INSERT INTO strings VALUES ('abab', 'Ab%'), ('aaa', 'A_a'), ('aaa', '%b%')",TYPENE,1146 (42S02): Table 'testpg.strings' doesn't exist,False,True,mysql,Type,TYPENE,Type not exist,
+SELECT * FROM a,TYPENE,1146 (42S02): Table 'testpg.a' doesn't exist,False,"1	[1, 2, 3]",mysql,Type,TYPENE,Type not exist,
 "select * from (select [42, 43, 44]) t(a), (select unnest(t.a)) order by all;",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[42, 43, 44]) t(a), (select unnest(t.a)) order by all' at line 1",False,"[42, 43, 44]	42
 [42, 43, 44]	43
-[42, 43, 44]	44",mysql,Func Syntax,TYPENE,Type not exist,
-"INSERT INTO flags VALUES('2019-08-19 12:48:03.856232','2019-08-19 12:48:05.153111','legacy','2/0')",TYPENE,1146 (42S02): Table 'testpg.flags' doesn't exist,False,True,mysql,Func Syntax,TYPENE,Type not exist,
-"select [-100::BIGINT, 9999999999999999999::UBIGINT];",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[-100::BIGINT, 9999999999999999999::UBIGINT]' at line 1",False,"[-100, 9999999999999999999]",mysql,Func Syntax,TYPENE,Type not exist,
+[42, 43, 44]	44",mysql,Type,TYPENE,Type not exist,
+"INSERT INTO flags VALUES('2019-08-19 12:48:03.856232','2019-08-19 12:48:05.153111','legacy','2/0')",TYPENE,1146 (42S02): Table 'testpg.flags' doesn't exist,False,True,mysql,Type,TYPENE,Type not exist,
+"select [-100::BIGINT, 9999999999999999999::UBIGINT];",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[-100::BIGINT, 9999999999999999999::UBIGINT]' at line 1",False,"[-100, 9999999999999999999]",mysql,Type,TYPENE,Type not exist,
 "SELECT l, (SELECT l=ANY(SELECT l FROM lists WHERE l=s1.l) FROM lists s1 WHERE l=i1.l) AS j FROM lists i1 ORDER BY l;",TYPENE,1146 (42S02): Table 'testpg.lists' doesn't exist,False,"NULL	NULL
 [1]	1
 [2]	1
-[3]	1",mysql,Func Syntax,TYPENE,Type not exist,
-"insert into TEST values ([2,1,3]), ([2,3,4]), ([1])",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[2,1,3]), ([2,3,4]), ([1])' at line 1",False,True,mysql,Func Syntax,TYPENE,Type not exist,
-"SELECT * FROM tbl JOIN LATERAL (SELECT UNNEST(ARRAY[tbl.i * tbl.i])) t(b) ON (i>=b) ORDER BY i, b;",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[tbl.i * tbl.i])) t(b) ON (i>=b) ORDER BY i, b' at line 1",False,"1	[1, 3, 7]	1",mysql,Func Syntax,TYPENE,Type not exist,
-SELECT [] <= [],TYPENE,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[] <= []' at line 1,False,True,mysql,Func Syntax,TYPENE,Type not exist,
+[3]	1",mysql,Type,TYPENE,Type not exist,
+"insert into TEST values ([2,1,3]), ([2,3,4]), ([1])",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[2,1,3]), ([2,3,4]), ([1])' at line 1",False,True,mysql,Type,TYPENE,Type not exist,
+"SELECT * FROM tbl JOIN LATERAL (SELECT UNNEST(ARRAY[tbl.i * tbl.i])) t(b) ON (i>=b) ORDER BY i, b;",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[tbl.i * tbl.i])) t(b) ON (i>=b) ORDER BY i, b' at line 1",False,"1	[1, 3, 7]	1",mysql,Type,TYPENE,Type not exist,
+SELECT [] <= [],TYPENE,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[] <= []' at line 1,False,True,mysql,Type,TYPENE,Type not exist,
 "SELECT id, UNNEST(i), UNNEST(j) FROM (VALUES (1, ['abcd', 'efgh'], ['123456789abcd']), (2, NULL, ['123456789efgh', '123456789klmnop']), (3, ['hello', NULL, 'world'], [NULL])) tbl(id, i, j)",TYPENE,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '(1, ['abcd', 'efgh'], ['123456789abcd']), (2, NULL, ['123456789efgh', '123456789' at line 1",False,"1	abcd	123456789abcd
 1	efgh	NULL
 2	NULL	123456789efgh
 2	NULL	123456789klmnop
 3	hello	NULL
 3	NULL	NULL
-3	world	NULL",mysql,Func Syntax,TYPENE,Type not exist,
+3	world	NULL",mysql,Type,TYPENE,Type not exist,
 "select * from (
 	(select {'x': 1, 'y': 2, 'z': 3} a from range(3))) tbl(i)
 	join
@@ -75,51 +75,51 @@ SELECT [] <= [],TYPENE,1064 (42000): You have an error in your SQL syntax; check
 {'x': 1, 'y': 2, 'z': 3}	{'x': 1, 'y': 2, 'z': 3}
 {'x': 1, 'y': 2, 'z': 3}	{'x': 1, 'y': 2, 'z': 3}
 {'x': 1, 'y': 2, 'z': 3}	{'x': 1, 'y': 2, 'z': 3}
-{'x': 1, 'y': 2, 'z': 3}	{'x': 1, 'y': 2, 'z': 3}",mysql,Func Syntax,TYPENE,Type not exist,
+{'x': 1, 'y': 2, 'z': 3}	{'x': 1, 'y': 2, 'z': 3}",mysql,Type,TYPENE,Type not exist,
 "select REPLACE(a, 'l', '-') FROM strings",TYPENE,1146 (42S02): Table 'testpg.strings' doesn't exist,False,"He--o
 HuL-D
 MotörHead
-(empty)",mysql,Func Syntax,TYPENE,Type not exist,
+(empty)",mysql,Type,TYPENE,Type not exist,
 SELECT [i] FROM integers,TYPENE,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[i] FROM integers' at line 1,False,"[3]
-[4]",mysql,Func Syntax,TYPENE,Type not exist,
+[4]",mysql,Type,TYPENE,Type not exist,
 SELECT * FROM a ORDER BY id,TYPENE,1146 (42S02): Table 'testpg.a' doesn't exist,False,"1	NULL
 2	[3, 4, 5, 6]
-3	[NULL, 7]",mysql,Func Syntax,TYPENE,Type not exist,
-"select map_keys(MAP([],[]));",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[],[]))' at line 1",False,[],mysql,Func Syntax,GENERAL,no such function: ,
+3	[NULL, 7]",mysql,Type,TYPENE,Type not exist,
+"select map_keys(MAP([],[]));",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[],[]))' at line 1",False,[],mysql,UFunction,GENERAL,no such function: ,
 SELECT EXTRACT(milliseconds FROM i) FROM times,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'milliseconds FROM i) FROM times' at line 1,False,"20000
 10998
 10330
 10001
-NULL",mysql,Func Syntax,GENERAL,no such function: ,
-select list_sem([1]),GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[1])' at line 1,False,0.000000,mysql,Func Syntax,GENERAL,no such function: ,
+NULL",mysql,UFunction,GENERAL,no such function: ,
+select list_sem([1]),GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '[1])' at line 1,False,0.000000,mysql,UFunction,GENERAL,no such function: ,
 SELECT t1.x FROM t1 UNION ALL BY NAME SELECT x FROM t1 ORDER BY t1.x;,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'BY NAME SELECT x FROM t1 ORDER BY t1.x' at line 1,False,"1
 1
 3
-3",mysql,Func Syntax,GENERAL,no such function: ,
-"select regr_r2(1e230*i, 0) from range(5) tbl(i);",GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'range(5) tbl(i)' at line 1,False,,mysql,Func Syntax,GENERAL,no such function: ,
+3",mysql,UFunction,GENERAL,no such function: ,
+"select regr_r2(1e230*i, 0) from range(5) tbl(i);",GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'range(5) tbl(i)' at line 1,False,,mysql,UFunction,GENERAL,no such function: ,
 "SELECT p.begin, e.value
 FROM probe0 p ASOF RIGHT JOIN (SELECT * FROM events0 WHERE log(value + 5) > 10) e
 ON p.begin >= e.begin
 ORDER BY p.begin ASC",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ASOF RIGHT JOIN (SELECT * FROM events0 WHERE log(value + 5) > 10) e
-ON p.begin >' at line 2",False,,mysql,Func Syntax,GENERAL,no such function: ,
+ON p.begin >' at line 2",False,,mysql,UFunction,GENERAL,no such function: ,
 SELECT varchars.v.lower() FROM varchars,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '() FROM varchars' at line 1,False,"hello
-world",mysql,Func Syntax,GENERAL,no such function: ,
-"SELECT strftime(DATE '1992-01-01', '%% %Y %%');",GENERAL,1305 (42000): FUNCTION testpg.strftime does not exist,False,% 1992 %,mysql,Func Syntax,GENERAL,no such function: ,
-"SELECT mismatches('hallo', 'aloha')",GENERAL,1305 (42000): FUNCTION testpg.mismatches does not exist,False,5,mysql,Func Syntax,GENERAL,no such function: ,
+world",mysql,UFunction,GENERAL,no such function: ,
+"SELECT strftime(DATE '1992-01-01', '%% %Y %%');",GENERAL,1305 (42000): FUNCTION testpg.strftime does not exist,False,% 1992 %,mysql,UFunction,GENERAL,no such function: ,
+"SELECT mismatches('hallo', 'aloha')",GENERAL,1305 (42000): FUNCTION testpg.mismatches does not exist,False,5,mysql,UFunction,GENERAL,no such function: ,
 SELECT row_number() OVER (ORDER BY rowid) FROM a ORDER BY rowid,GENERAL,1054 (42S22): Unknown column 'rowid' in 'order clause',False,"1
-2",mysql,Func Syntax,GENERAL,no such function: ,
+2",mysql,UFunction,GENERAL,no such function: ,
 "SELECT i, j, k, l FROM integers FULL OUTER JOIN (SELECT * FROM integers2 WHERE 1=0) integers2 ON integers.i=integers2.k ORDER BY 1, 2, 3, 4",GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'OUTER JOIN (SELECT * FROM integers2 WHERE 1=0) integers2 ON integers.i=integers2' at line 1,False,"1	1	NULL	NULL
-3	3	NULL	NULL",mysql,Func Syntax,GENERAL,no such function: ,
+3	3	NULL	NULL",mysql,UFunction,GENERAL,no such function: ,
 "SELECT i FROM UNNEST(ARRAY[NULL, 'hello', 'world', 'bleorkbaejkoreijgaiorjgare']) AS tbl(i);",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '(ARRAY[NULL, 'hello', 'world', 'bleorkbaejkoreijgaiorjgare']) AS tbl(i)' at line 1",False,"NULL
 hello
 world
-bleorkbaejkoreijgaiorjgare",mysql,Func Syntax,GENERAL,no such function: ,
-"SELECT strptime('2021-05-12 19-4', '%Y-%m-%d %U-%w')",GENERAL,1305 (42000): FUNCTION testpg.strptime does not exist,False,2021-05-12 00:00:00,mysql,Func Syntax,GENERAL,no such function: ,
+bleorkbaejkoreijgaiorjgare",mysql,UFunction,GENERAL,no such function: ,
+"SELECT strptime('2021-05-12 19-4', '%Y-%m-%d %U-%w')",GENERAL,1305 (42000): FUNCTION testpg.strptime does not exist,False,2021-05-12 00:00:00,mysql,UFunction,GENERAL,no such function: ,
 SELECT x FROM t1 UNION BY NAME SELECT x FROM t1 ORDER BY t1.x;,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'BY NAME SELECT x FROM t1 ORDER BY t1.x' at line 1,False,"1
-3",mysql,Func Syntax,GENERAL,no such function: ,
-select f(x:=a) from t;,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ':=a) from t' at line 1,False,42,mysql,Func Syntax,GENERAL,no such function: ,
-"INSERT INTO tbl 	SELECT 		DATE '1992-01-02' + INTERVAL ((RANDOM() * 300)::INT) DAYS d, 		TIMESTAMP '1992-01-02 23:20:11' + INTERVAL ((RANDOM() * 300)::INT) DAYS + INTERVAL ((RANDOM() * 60 * 60)::INT) SECONDS ts, 		50 + (RANDOM() * 6000)::INT i, 		10 + (RANDOM() * 899999999)::BIGINT bi, 		1 + RANDOM() * 99 dbl, 		concat(chr(98 + (RANDOM() * 24)::INT), chr(98 + (RANDOM() * 24)::INT), chr(98 + (RANDOM() * 24)::INT), chr(98 + (RANDOM() * 24)::INT), repeat(chr(98 + (RANDOM() * 24)::INT), 29)) str 	FROM 		range(10000)",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '() * 300)::INT) DAYS d, 		TIMESTAMP '1992-01-02 23:20:11' + INTERVAL ((RANDOM() ' at line 1",False,True,mysql,Func Syntax,GENERAL,no such function: ,
-"CREATE TABLE tbl2 (union_with_list UNION(list INT[], num INT))",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'UNION(list INT[], num INT))' at line 1",False,True,mysql,Func Syntax,GENERAL,no such function: ,
+3",mysql,UFunction,GENERAL,no such function: ,
+select f(x:=a) from t;,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ':=a) from t' at line 1,False,42,mysql,UFunction,GENERAL,no such function: ,
+"INSERT INTO tbl 	SELECT 		DATE '1992-01-02' + INTERVAL ((RANDOM() * 300)::INT) DAYS d, 		TIMESTAMP '1992-01-02 23:20:11' + INTERVAL ((RANDOM() * 300)::INT) DAYS + INTERVAL ((RANDOM() * 60 * 60)::INT) SECONDS ts, 		50 + (RANDOM() * 6000)::INT i, 		10 + (RANDOM() * 899999999)::BIGINT bi, 		1 + RANDOM() * 99 dbl, 		concat(chr(98 + (RANDOM() * 24)::INT), chr(98 + (RANDOM() * 24)::INT), chr(98 + (RANDOM() * 24)::INT), chr(98 + (RANDOM() * 24)::INT), repeat(chr(98 + (RANDOM() * 24)::INT), 29)) str 	FROM 		range(10000)",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '() * 300)::INT) DAYS d, 		TIMESTAMP '1992-01-02 23:20:11' + INTERVAL ((RANDOM() ' at line 1",False,True,mysql,UFunction,GENERAL,no such function: ,
+"CREATE TABLE tbl2 (union_with_list UNION(list INT[], num INT))",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'UNION(list INT[], num INT))' at line 1",False,True,mysql,UFunction,GENERAL,no such function: ,
 "SELECT 
     coalesce(anon_1.month, anon_2.month) AS month, 
     coalesce(coalesce(CAST(anon_1.value AS REAL), 0.0) + coalesce(CAST(anon_2.value AS REAL), 0.0), 0.0) AS value
@@ -163,13 +163,13 @@ FULL OUTER JOIN (
 ) AS anon_2 ON anon_1.month = anon_2.month",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SETS((month))
     ) AS anon_3 
     FULL OUTER JOIN (
-        SELECT month AS mon' at line 16",False,2022-01-01	1100.0,mysql,Func Syntax,GENERAL,no such function: ,
-SELECT * FROM vals1 WHERE i<=0 AND j>i,GENERAL,1146 (42S02): Table 'testpg.vals1' doesn't exist,False,0	1,mysql,Func Syntax,GENERAL,no such function: ,
-"select RTRIM('', 'ho'), RTRIM('hello', 'ho'), RTRIM('papapapa', 'pa'), RTRIM('blaHblabla', 'bla'), RTRIM('blabla', NULL), RTRIM(NULL, 'blabla'), RTRIM('blabla', '')",GENERAL,1582 (42000): Incorrect parameter count in the call to native function 'RTRIM',False,(empty)	hell	(empty)	blaH	NULL	NULL	blabla,mysql,Func Syntax,GENERAL,no such function: ,
-select typeof(name) from person limit 1,GENERAL,1305 (42000): FUNCTION testpg.typeof does not exist,False,name_enum,mysql,Func Syntax,GENERAL,no such function: ,
-SELECT bool_or(True) FROM range(100) tbl(i) WHERE 1=0;,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'range(100) tbl(i) WHERE 1=0' at line 1,False,,mysql,Func Syntax,GENERAL,no such function: ,
-"SELECT try_strptime('2000-10-01 13:00:00 AM', '%Y-%m-%d %I:%M:%S %p')",GENERAL,1305 (42000): FUNCTION testpg.try_strptime does not exist,False,,mysql,Func Syntax,GENERAL,no such function: ,
-"select distinct nspname from pg_namespace "" ""where lower(nspname)='main'",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '"" ""where lower(nspname)='main'' at line 1",False,main,mysql,Func Syntax,GENERAL,no such function: ,
+        SELECT month AS mon' at line 16",False,2022-01-01	1100.0,mysql,UFunction,GENERAL,no such function: ,
+SELECT * FROM vals1 WHERE i<=0 AND j>i,GENERAL,1146 (42S02): Table 'testpg.vals1' doesn't exist,False,0	1,mysql,UFunction,GENERAL,no such function: ,
+"select RTRIM('', 'ho'), RTRIM('hello', 'ho'), RTRIM('papapapa', 'pa'), RTRIM('blaHblabla', 'bla'), RTRIM('blabla', NULL), RTRIM(NULL, 'blabla'), RTRIM('blabla', '')",GENERAL,1582 (42000): Incorrect parameter count in the call to native function 'RTRIM',False,(empty)	hell	(empty)	blaH	NULL	NULL	blabla,mysql,UFunction,GENERAL,no such function: ,
+select typeof(name) from person limit 1,GENERAL,1305 (42000): FUNCTION testpg.typeof does not exist,False,name_enum,mysql,UFunction,GENERAL,no such function: ,
+SELECT bool_or(True) FROM range(100) tbl(i) WHERE 1=0;,GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'range(100) tbl(i) WHERE 1=0' at line 1,False,,mysql,UFunction,GENERAL,no such function: ,
+"SELECT try_strptime('2000-10-01 13:00:00 AM', '%Y-%m-%d %I:%M:%S %p')",GENERAL,1305 (42000): FUNCTION testpg.try_strptime does not exist,False,,mysql,UFunction,GENERAL,no such function: ,
+"select distinct nspname from pg_namespace "" ""where lower(nspname)='main'",GENERAL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '"" ""where lower(nspname)='main'' at line 1",False,main,mysql,UFunction,GENERAL,no such function: ,
 "SELECT
   id,
   user_id,
@@ -185,42 +185,42 @@ FROM issue2549",GENERAL,"1064 (42000): You have an error in your SQL syntax; che
 1	1	NULL	NULL
 2	1	NULL	NULL
 3	1	639	639
-4	1	2027	2027",mysql,Func Syntax,GENERAL,no such function: ,
-CREATE INDEX i_index ON integers using art(i),GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'using art(i)' at line 1,False,True,mysql,Func Syntax,GENERAL,no such function: ,
-SELECT '0'::BIT::BOOL;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::BIT::BOOL' at line 1,False,False,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-"SELECT (-42)::TINYINT::HUGEINT, (-42)::SMALLINT::HUGEINT, (-42)::INTEGER::HUGEINT, (-42)::BIGINT::HUGEINT, (-42)::FLOAT::HUGEINT, (-42)::DOUBLE::HUGEINT;",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TINYINT::HUGEINT, (-42)::SMALLINT::HUGEINT, (-42)::INTEGER::HUGEINT, (-42)::BI' at line 1",False,-42	-42	-42	-42	-42	-42,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-SELECT '14:42:04.000000'::TIME::VARCHAR,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TIME::VARCHAR' at line 1,False,14:42:04,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
+4	1	2027	2027",mysql,UFunction,GENERAL,no such function: ,
+CREATE INDEX i_index ON integers using art(i),GENERAL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'using art(i)' at line 1,False,True,mysql,UFunction,GENERAL,no such function: ,
+SELECT '0'::BIT::BOOL;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::BIT::BOOL' at line 1,False,False,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+"SELECT (-42)::TINYINT::HUGEINT, (-42)::SMALLINT::HUGEINT, (-42)::INTEGER::HUGEINT, (-42)::BIGINT::HUGEINT, (-42)::FLOAT::HUGEINT, (-42)::DOUBLE::HUGEINT;",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TINYINT::HUGEINT, (-42)::SMALLINT::HUGEINT, (-42)::INTEGER::HUGEINT, (-42)::BI' at line 1",False,-42	-42	-42	-42	-42	-42,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+SELECT '14:42:04.000000'::TIME::VARCHAR,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TIME::VARCHAR' at line 1,False,14:42:04,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
 SELECT i::VARCHAR FROM ubigints ORDER BY i,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::VARCHAR FROM ubigints ORDER BY i' at line 1,False,"0
-18446744073709551615",mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-SELECT 10::tinyint<<3::tinyint;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::tinyint<<3::tinyint' at line 1,False,80,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-SELECT (i*10::TINYINT)*10::TINYINT FROM tinyints WHERE i=1 ORDER BY 1;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TINYINT)*10::TINYINT FROM tinyints WHERE i=1 ORDER BY 1' at line 1,False,100,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
+18446744073709551615",mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+SELECT 10::tinyint<<3::tinyint;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::tinyint<<3::tinyint' at line 1,False,80,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+SELECT (i*10::TINYINT)*10::TINYINT FROM tinyints WHERE i=1 ORDER BY 1;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TINYINT)*10::TINYINT FROM tinyints WHERE i=1 ORDER BY 1' at line 1,False,100,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
 "SELECT i::DECIMAL(18,0)::USMALLINT FROM usmallints ORDER BY i",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::DECIMAL(18,0)::USMALLINT FROM usmallints ORDER BY i' at line 1",False,"0
-65535",mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-select '290309-12-22 (BC) 00:00:00'::timestamp + interval (1) day,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::timestamp + interval (1) day' at line 1,False,290309-12-23 (BC) 00:00:00,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-"SELECT '7'::HUGEINT, '130'::HUGEINT, '924829852'::HUGEINT",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::HUGEINT, '130'::HUGEINT, '924829852'::HUGEINT' at line 1",False,7	130	924829852,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-select 9.2233720368547750E+18::int8;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::int8' at line 1,False,9223372036854774784,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-"SELECT set_bit('1111111'::BIT, 5, 0)",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::BIT, 5, 0)' at line 1",False,1111101,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-SELECT (200.32)::DECIMAL::UINTEGER,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::DECIMAL::UINTEGER' at line 1,False,200,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-SELECT format_bytes(1000::BIGINT*1000*1000*1000*1000-1);,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::BIGINT*1000*1000*1000*1000-1)' at line 1,False,999.9TB,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-"SELECT 42::TINYINT::HUGEINT, 42::SMALLINT::HUGEINT, 42::INTEGER::HUGEINT, 42::BIGINT::HUGEINT, 42::FLOAT::HUGEINT, 42::DOUBLE::HUGEINT;",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TINYINT::HUGEINT, 42::SMALLINT::HUGEINT, 42::INTEGER::HUGEINT, 42::BIGINT::HUG' at line 1",False,42	42	42	42	42	42,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-SELECT 8::HUGEINT >> 3,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::HUGEINT >> 3' at line 1,False,1,mysql,Func Syntax,TYPE_CAST,"unrecognized token: "":""",
-"CREATE TABLE events0 (begin VARCHAR, value INTEGER)",VARCHAR,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ', value INTEGER)' at line 1",False,True,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-EXPLAIN SELECT S='aaa' FROM test,VARCHAR,1146 (42S02): Table 'testpg.test' doesn't exist,False,,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-INSERT INTO t0 VALUES (NULL),VARCHAR,1146 (42S02): Table 'testpg.t0' doesn't exist,False,True,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
+65535",mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+select '290309-12-22 (BC) 00:00:00'::timestamp + interval (1) day,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::timestamp + interval (1) day' at line 1,False,290309-12-23 (BC) 00:00:00,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+"SELECT '7'::HUGEINT, '130'::HUGEINT, '924829852'::HUGEINT",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::HUGEINT, '130'::HUGEINT, '924829852'::HUGEINT' at line 1",False,7	130	924829852,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+select 9.2233720368547750E+18::int8;,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::int8' at line 1,False,9223372036854774784,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+"SELECT set_bit('1111111'::BIT, 5, 0)",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::BIT, 5, 0)' at line 1",False,1111101,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+SELECT (200.32)::DECIMAL::UINTEGER,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::DECIMAL::UINTEGER' at line 1,False,200,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+SELECT format_bytes(1000::BIGINT*1000*1000*1000*1000-1);,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::BIGINT*1000*1000*1000*1000-1)' at line 1,False,999.9TB,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+"SELECT 42::TINYINT::HUGEINT, 42::SMALLINT::HUGEINT, 42::INTEGER::HUGEINT, 42::BIGINT::HUGEINT, 42::FLOAT::HUGEINT, 42::DOUBLE::HUGEINT;",TYPE_CAST,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::TINYINT::HUGEINT, 42::SMALLINT::HUGEINT, 42::INTEGER::HUGEINT, 42::BIGINT::HUG' at line 1",False,42	42	42	42	42	42,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+SELECT 8::HUGEINT >> 3,TYPE_CAST,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '::HUGEINT >> 3' at line 1,False,1,mysql,Operator,TYPE_CAST,"unrecognized token: "":""",
+"CREATE TABLE events0 (begin VARCHAR, value INTEGER)",VARCHAR,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ', value INTEGER)' at line 1",False,True,mysql,Type,VARCHAR,MySQL VARCHAR need len,
+EXPLAIN SELECT S='aaa' FROM test,VARCHAR,1146 (42S02): Table 'testpg.test' doesn't exist,False,,mysql,Type,VARCHAR,MySQL VARCHAR need len,
+INSERT INTO t0 VALUES (NULL),VARCHAR,1146 (42S02): Table 'testpg.t0' doesn't exist,False,True,mysql,Type,VARCHAR,MySQL VARCHAR need len,
 "SELECT c0, prefix(t0.c0, '') FROM t0 WHERE c0 IS NULL OR c0 <> 'b' ORDER BY t0.c0;",VARCHAR,1146 (42S02): Table 'testpg.t0' doesn't exist,False,"NULL	NULL
 a	1
-d	1",mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-SELECT * FROM strings WHERE s='hello' AND s>='z',VARCHAR,1146 (42S02): Table 'testpg.strings' doesn't exist,False,,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
+d	1",mysql,Type,VARCHAR,MySQL VARCHAR need len,
+SELECT * FROM strings WHERE s='hello' AND s>='z',VARCHAR,1146 (42S02): Table 'testpg.strings' doesn't exist,False,,mysql,Type,VARCHAR,MySQL VARCHAR need len,
 SELECT * FROM collate_test ORDER BY s,VARCHAR,1146 (42S02): Table 'testpg.collate_test' doesn't exist,False,"Hallo
 ham
 HELLO
-hElp",mysql,Operation,VARCHAR,MySQL VARCHAR need len,
+hElp",mysql,Type,VARCHAR,MySQL VARCHAR need len,
 "SELECT array_slice(s, off, length+off) FROM strings",VARCHAR,1146 (42S02): Table 'testpg.strings' doesn't exist,False,"he
 worl
 b
-NULL",mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-"INSERT INTO pets VALUES ('Oogie Boogie', 'ok')",VARCHAR,1146 (42S02): Table 'testpg.pets' doesn't exist,False,True,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-"INSERT INTO Cities VALUES ('US', 'New York City', 2020, 8772)",VARCHAR,1146 (42S02): Table 'testpg.Cities' doesn't exist,False,True,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
+NULL",mysql,Type,VARCHAR,MySQL VARCHAR need len,
+"INSERT INTO pets VALUES ('Oogie Boogie', 'ok')",VARCHAR,1146 (42S02): Table 'testpg.pets' doesn't exist,False,True,mysql,Type,VARCHAR,MySQL VARCHAR need len,
+"INSERT INTO Cities VALUES ('US', 'New York City', 2020, 8772)",VARCHAR,1146 (42S02): Table 'testpg.Cities' doesn't exist,False,True,mysql,Type,VARCHAR,MySQL VARCHAR need len,
 "SELECT rank() OVER (PARTITION BY four ORDER BY ten) AS rank_1, ten, four FROM tenk1 WHERE unique2 < 10 ORDER BY four, ten",VARCHAR,1146 (42S02): Table 'testpg.tenk1' doesn't exist,False,"1	0	0
 1	0	0
 3	4	0
@@ -230,17 +230,17 @@ NULL",mysql,Operation,VARCHAR,MySQL VARCHAR need len,
 4	9	1
 1	0	2
 1	1	3
-2	3	3",mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-select 'a%c' ilike NULL escape '$';,VARCHAR,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NULL escape '$'' at line 1,False,,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
+2	3	3",mysql,Type,VARCHAR,MySQL VARCHAR need len,
+select 'a%c' ilike NULL escape '$';,VARCHAR,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'NULL escape '$'' at line 1,False,,mysql,Type,VARCHAR,MySQL VARCHAR need len,
 SELECT * FROM employee;,VARCHAR,1146 (42S02): Table 'testpg.employee' doesn't exist,False,"1	NULL	Smith	
 2	NULL	Jhon	
-4	NULL	Juliet",mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-"SELECT ARRAY_AGG(i) FROM range(0, 3) tbl(i)",VARCHAR,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'range(0, 3) tbl(i)' at line 1",False,"[0, 1, 2]",mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-CREATE TABLE tbl1(col VARCHAR),VARCHAR,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')' at line 1,False,True,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-"CREATE TABLE actors(actor_id INTEGER, first_name VARCHAR, last_name VARCHAR)",VARCHAR,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ', last_name VARCHAR)' at line 1",False,True,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-SELECT DISTINCT s FROM collate_test,VARCHAR,1146 (42S02): Table 'testpg.collate_test' doesn't exist,False,Hällo,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-"SELECT i_category, i_brand, s_store_name, s_company_name, d_year, d_moy, sum(ss_sales_price) sum_sales, avg(sum(ss_sales_price)) OVER (PARTITION BY i_category, i_brand, s_store_name, s_company_name, d_year) avg_monthly_sales, rank() OVER (PARTITION BY i_category, i_brand, s_store_name, s_company_name ORDER BY d_year, d_moy) rn FROM item, store_sales, date_dim, store WHERE ss_item_sk = i_item_sk AND ss_sold_date_sk = d_date_sk AND ss_store_sk = s_store_sk AND (d_year = 1999 OR (d_year = 1999-1 AND d_moy =12) OR (d_year = 1999+1 AND d_moy =1)) GROUP BY i_category, i_brand, s_store_name, s_company_name, d_year, d_moy;",VARCHAR,1146 (42S02): Table 'testpg.item' doesn't exist,False,Music	exportischolar	ought	Unknown	1999	1	2.800000	2.800000	1,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
-CREATE TABLE test(word VARCHAR),VARCHAR,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')' at line 1,False,True,mysql,Operation,VARCHAR,MySQL VARCHAR need len,
+4	NULL	Juliet",mysql,Type,VARCHAR,MySQL VARCHAR need len,
+"SELECT ARRAY_AGG(i) FROM range(0, 3) tbl(i)",VARCHAR,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'range(0, 3) tbl(i)' at line 1",False,"[0, 1, 2]",mysql,Type,VARCHAR,MySQL VARCHAR need len,
+CREATE TABLE tbl1(col VARCHAR),VARCHAR,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')' at line 1,False,True,mysql,Type,VARCHAR,MySQL VARCHAR need len,
+"CREATE TABLE actors(actor_id INTEGER, first_name VARCHAR, last_name VARCHAR)",VARCHAR,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ', last_name VARCHAR)' at line 1",False,True,mysql,Type,VARCHAR,MySQL VARCHAR need len,
+SELECT DISTINCT s FROM collate_test,VARCHAR,1146 (42S02): Table 'testpg.collate_test' doesn't exist,False,Hällo,mysql,Type,VARCHAR,MySQL VARCHAR need len,
+"SELECT i_category, i_brand, s_store_name, s_company_name, d_year, d_moy, sum(ss_sales_price) sum_sales, avg(sum(ss_sales_price)) OVER (PARTITION BY i_category, i_brand, s_store_name, s_company_name, d_year) avg_monthly_sales, rank() OVER (PARTITION BY i_category, i_brand, s_store_name, s_company_name ORDER BY d_year, d_moy) rn FROM item, store_sales, date_dim, store WHERE ss_item_sk = i_item_sk AND ss_sold_date_sk = d_date_sk AND ss_store_sk = s_store_sk AND (d_year = 1999 OR (d_year = 1999-1 AND d_moy =12) OR (d_year = 1999+1 AND d_moy =1)) GROUP BY i_category, i_brand, s_store_name, s_company_name, d_year, d_moy;",VARCHAR,1146 (42S02): Table 'testpg.item' doesn't exist,False,Music	exportischolar	ought	Unknown	1999	1	2.800000	2.800000	1,mysql,Type,VARCHAR,MySQL VARCHAR need len,
+CREATE TABLE test(word VARCHAR),VARCHAR,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')' at line 1,False,True,mysql,Type,VARCHAR,MySQL VARCHAR need len,
 pragma verify_parallelism,SQL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'pragma verify_parallelism' at line 1,False,True,mysql,Command,SQL,Unstandardize SQL,
 PRAGMA enable_verification,SQL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'PRAGMA enable_verification' at line 1,False,True,mysql,Command,SQL,Unstandardize SQL,
 PRAGMA enable_verification,SQL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'PRAGMA enable_verification' at line 1,False,True,mysql,Command,SQL,Unstandardize SQL,
@@ -255,9 +255,9 @@ BEGIN TRANSACTION,SQL,1064 (42000): You have an error in your SQL syntax; check 
 "CREATE TYPE mood_2 AS ENUM ('very sad', 'very ok', 'very happy')",SQL,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'TYPE mood_2 AS ENUM ('very sad', 'very ok', 'very happy')' at line 1",False,True,mysql,Command,SQL,Unstandardize SQL,
 PRAGMA enable_verification,SQL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'PRAGMA enable_verification' at line 1,False,True,mysql,Command,SQL,Unstandardize SQL,
 PRAGMA enable_verification,SQL,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'PRAGMA enable_verification' at line 1,False,True,mysql,Command,SQL,Unstandardize SQL,
-select try_cast('  1111   ' as date),SYNTAX,1584 (42000): Incorrect parameters in the call to stored function `try_cast`,False,,mysql,Operation,SYNTAX,syntax error,
+select try_cast('  1111   ' as date),SYNTAX,1584 (42000): Incorrect parameters in the call to stored function `try_cast`,False,,mysql,Misc,SYNTAX,syntax error,
 "SELECT * FROM (VALUES (1 + 1, 2, 3), (1 + 3, 2, 3)) v1;",SYNTAX,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '(1 + 1, 2, 3), (1 + 3, 2, 3)) v1' at line 1",False,"2	2	3
-4	2	3",mysql,Operation,SYNTAX,syntax error,
-"CREATE TABLE album(artistid INTEGER, albumname TEXT, albumcover TEXT, UNIQUE (artistid, albumname))",SYNTAX,1170 (42000): BLOB/TEXT column 'albumname' used in key specification without a key length,False,True,mysql,Operation,SYNTAX,syntax error,
+4	2	3",mysql,Misc,SYNTAX,syntax error,
+"CREATE TABLE album(artistid INTEGER, albumname TEXT, albumcover TEXT, UNIQUE (artistid, albumname))",SYNTAX,1170 (42000): BLOB/TEXT column 'albumname' used in key specification without a key length,False,True,mysql,Misc,SYNTAX,syntax error,
 SET default_null_order='nulls_first',SYSV,1193 (HY000): Unknown system variable 'default_null_order',False,True,mysql,Setting,SYSV,Unknown system variable,
-SELECT 170141183460469231731687303715884105727 + 1,BIGINT,None,True,False,mysql,Function,BIGINT,DuckDB expect overflow,
+SELECT 170141183460469231731687303715884105727 + 1,BIGINT,None,True,False,mysql,Type,BIGINT,DuckDB expect overflow,
