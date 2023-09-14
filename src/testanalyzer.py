@@ -22,7 +22,7 @@ def compute_similarity(a: str, b: str):
 
 class TestCaseAnalyzer():
     # currently only listed these because these are the top 10 most common SQL statements
-    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT', 'DROP TABLE', 'CREATE VIEW', 'ALTER TABLE',
+    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE','GRANT', 'DROP TABLE', 'CREATE VIEW', 'ALTER TABLE',
                       'CREATE TRIGGER', 'DROP TRIGGER', 'CREATE TEMPORARY', 'DROP VIEW',
                       'CREATE SCHEMA', 'CREATE SEQUENCE', 'WITH', 'COMMIT', 'PREPARE', 'ALTER SEQUENCE',
                       'CREATE ROLE', 'ALTER ROLE', 'DROP ROLE',
@@ -126,6 +126,16 @@ class TestCaseAnalyzer():
         if first_token.ttype is sqlparse.tokens.Keyword.DDL:
             # In "CREATE TABLE", TABLE is the second token (index 2) after whitespace
             second_token = statement.tokens[2]
+            if str(second_token).upper().startswith('MACRO'):
+                return first_token.value.upper() + " " + 'MACRO'
+            if str(second_token).upper().startswith('PUBLICATION'):
+                return first_token.value.upper() + " " + 'PUBLICATION'
+            if str(second_token).upper().startswith('SUBSCRIPTION'):
+                return first_token.value.upper() + " " + 'SUBSCRIPTION'
+            if str(second_token).upper().startswith('SERVER'):
+                return first_token.value.upper() + " " + 'SERVER'
+            if str(second_token).upper().startswith('POLICY'):
+                return first_token.value.upper() + " " + 'POLICY'
             return first_token.value.upper() + " " + second_token.value.upper()
         if first_token.ttype in sqlparse.tokens.Keyword:
             return first_token.value.upper()

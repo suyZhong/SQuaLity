@@ -100,6 +100,7 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
     type_cnt_sorted = all_type_cnt.sort_values(by='arithmetic_mean', ascending=False)
     top_type_cnt = type_cnt_sorted[:20]
     top_type_cnt.to_csv(os.path.join(output, f"all_sql_type.csv"))
+    all_type_cnt.to_csv(os.path.join(output, f"all_sql_type_all.csv"))
     top_type_cnt = top_type_cnt.drop(columns=['arithmetic_mean'])
     top_type_cnt.plot(kind='bar', width=0.8)
     plt.xticks(rotation=45, ha='right')
