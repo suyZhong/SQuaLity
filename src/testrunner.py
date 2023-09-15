@@ -423,6 +423,7 @@ class SQLiteRunner(PyDBCRunner):
         super().__init__(records)
         self.con = None
         self.cur = None
+        self.txn_status = False
         self.db_error = sqlite3.Error
 
     def connect(self, db_name):
@@ -434,7 +435,13 @@ class SQLiteRunner(PyDBCRunner):
         self.con.close()
 
     def execute_stmt(self, sql):
+        if str.upper(sql).startswith('BEGIN'):
+            self.txn_status = True
+        if str.upper(sql).startswith('COMMIT') or str.upper(sql).startswith('ROLLBACK'):
+            self.txn_status = False
         self.cur.execute(sql)
+        if not self.txn_status:
+            self.con.commit()
 
     def execute_query(self, sql):
         res = self.cur.execute(sql)
