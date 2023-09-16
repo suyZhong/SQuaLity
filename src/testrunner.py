@@ -688,7 +688,6 @@ class CLIRunner(Runner):
     def run(self):
         self.start()
         self.extract_sql()
-        i = 0
         # split sqls into groups of limit
         if len(self.sql) == 0:
             return
@@ -713,7 +712,7 @@ class CLIRunner(Runner):
             if self.cli_limit > len(self.sql):
                 my_debug(output)
             assert len(
-                output_list) == i + 1, "The length of result list should be equal to the commands have executed"
+                output_list) == len(sql_list), "The length of result list should be equal to the commands have executed"
             whole_output_list += output_list
         self.handle_results(whole_output_list)
         self.cli.terminate()

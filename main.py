@@ -11,6 +11,7 @@ from datetime import datetime
 from src import testparser
 from src import testrunner
 from src import testcollector
+from src import config
 from src.utils import DBMS_Set, Suite_Set, SETUP_PATH
 
 if __name__ == "__main__":
@@ -44,6 +45,11 @@ if __name__ == "__main__":
     filter_flaky = args.filter
     test_file = args.test_file
     log_level = args.log
+    
+    conf = config.CONFIG
+    with open(conf['bad_files'], "r") as f:
+        bad_files = f.readlines()
+        bad_files = [file.strip() for file in bad_files]
     if test_file:
         test_files = [test_file]
     else:
@@ -93,6 +99,7 @@ if __name__ == "__main__":
     r.init_filter(filter_flaky)
     r.init_dumper(dump_all=args.dump_all, suite_name=suite_name, )
     skip_index = []
+    skip_file_num = 0
     for i, test_file in enumerate(test_files):
         # if test_file == "postgresql_tests/regress/sql/select.sql":
         #     logging.getLogger().setLevel(logging.DEBUG)
@@ -103,12 +110,16 @@ if __name__ == "__main__":
         
         # skip some files
         if i in skip_index:
+            skip_file_num += 1
             continue
         if max_files <= 0 and i < abs(max_files):
             continue
         if 0 < max_files < i:
             break
         if test_file in SETUP_PATH.values():
+            continue
+        if test_file in bad_files:
+            skip_file_num += 1
             continue
         # print("-----------------------------------")
         logging.info("test file %d", i)
@@ -143,3 +154,4 @@ if __name__ == "__main__":
         # print ("#############################\n\n")
         r.dump()
     r.running_summary("ALL", (datetime.now()-begin_time).seconds)
+    print("Totally skip %d files" % skip_file_num)

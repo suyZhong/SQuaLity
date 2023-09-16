@@ -9,5 +9,5 @@
     "mysql_user": "root",
     "mysql_password": "root",
     "max_runtime_persql": 20,
-    "mysql_password": "root"
+    "bad_files": "data/parsing_errors.txt"
 }

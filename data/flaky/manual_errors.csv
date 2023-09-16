@@ -7,3 +7,4 @@ regress-sql-merge.csv, -1, -1
 regress-sql-psql_crosstab.csv, -1, -1
 regress-sql-returning.csv, -1, -1
 regress-sql-largeobject.csv, -1, -1
+regress-sql-with.csv, -1, -1
