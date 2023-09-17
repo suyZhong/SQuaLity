@@ -1,54 +1,54 @@
-SQL,ERROR_REASON,ERROR_MSG,ACTUAL_RESULT,EXPECTED_RESULT,DBMS,SUPER_TAG,TAG,DESCRIPTION,INFORMATION
-DROP TABLE other_table,ALIAS,no such table: other_table,False,True,sqlite,Syntax,ALIAS,ALIAS syntax,
-"CREATE TABLE integers AS SELECT * FROM (VALUES (10, 1), (20, 2), (30, NULL)) tbl(i, j)",ALIAS,"near ""("": syntax error",False,True,sqlite,Syntax,ALIAS,ALIAS syntax,
+SQL,ERROR_REASON,ERROR_MSG,ACTUAL_RESULT,EXPECTED_RESULT,DBMS,SUPER_TAG,TAG,DESCRIPTION,INFORMATION,Unnamed: 5
+DROP TABLE other_table,ALIAS,no such table: other_table,False,True,sqlite,Clause,ALIAS,ALIAS syntax,,
+"CREATE TABLE integers AS SELECT * FROM (VALUES (10, 1), (20, 2), (30, NULL)) tbl(i, j)",ALIAS,"near ""("": syntax error",False,True,sqlite,Clause,ALIAS,ALIAS syntax,,
 "select * from (select array[42, 43, 44]) t(a) join lateral (select unnest(t.a)) t2(b) on (a[1]<b) order by all;",ALIAS,"near ""("": syntax error",False,"[42, 43, 44]	43
-[42, 43, 44]	44",sqlite,Syntax,ALIAS,ALIAS syntax,
+[42, 43, 44]	44",sqlite,Clause,ALIAS,ALIAS syntax,,
 SELECT i1.i FROM integers i1 JOIN integers2 i2 ON i1.i<=i2.i ORDER BY 1;,ALIAS,no such table: integers,False,"1
 1
 2
-2",sqlite,Syntax,ALIAS,ALIAS syntax,
-"INSERT INTO integers SELECT * FROM repeat(3, 1500) t1(i)",ALIAS,"near ""("": syntax error",False,True,sqlite,Syntax,ALIAS,ALIAS syntax,
-SELECT (select list(l) from range(1999) tbl(l)) >= NULL,ALIAS,"near ""("": syntax error",False,,sqlite,Syntax,ALIAS,ALIAS syntax,
-"EXPLAIN SELECT * FROM (VALUES(5,5)) tbl(col0, col1) WHERE col0=5 AND col1 <= col0",ALIAS,"near ""("": syntax error",False,logical_opt	<REGEX>:.*\(col1 <= 5\).*,sqlite,Syntax,ALIAS,ALIAS syntax,
-CREATE TABLE integers2 AS SELECT * FROM integers,ALIAS,no such table: integers,False,True,sqlite,Syntax,ALIAS,ALIAS syntax,
-"EXECUTE v4([1, 2, 3])",ALIAS,"near ""EXECUTE"": syntax error",False,3,sqlite,Syntax,ALIAS,ALIAS syntax,
-"INSERT INTO t SELECT 4,4 FROM RANGE(65536)",NESTF,no such table: RANGE,False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,
-"SELECT c0 FROM range(1, NULL) t3(c0);",NESTF,"near ""("": syntax error",False,,sqlite,UFunction,NESTF,NESTED FUNCTION,
-"create table filtered ( 	col map(integer, integer), 	idx integer )",NESTF,"near ""integer"": syntax error",False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,
-"SELECT 1 FROM range(1) t2, t0",NESTF,no such table: range,False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,
+2",sqlite,Clause,ALIAS,ALIAS syntax,,
+"INSERT INTO integers SELECT * FROM repeat(3, 1500) t1(i)",ALIAS,"near ""("": syntax error",False,True,sqlite,Clause,ALIAS,ALIAS syntax,,
+SELECT (select list(l) from range(1999) tbl(l)) >= NULL,ALIAS,"near ""("": syntax error",False,,sqlite,Clause,ALIAS,ALIAS syntax,,
+"EXPLAIN SELECT * FROM (VALUES(5,5)) tbl(col0, col1) WHERE col0=5 AND col1 <= col0",ALIAS,"near ""("": syntax error",False,logical_opt	<REGEX>:.*\(col1 <= 5\).*,sqlite,Clause,ALIAS,ALIAS syntax,,
+CREATE TABLE integers2 AS SELECT * FROM integers,ALIAS,no such table: integers,False,True,sqlite,Clause,ALIAS,ALIAS syntax,,
+"EXECUTE v4([1, 2, 3])",ALIAS,"near ""EXECUTE"": syntax error",False,3,sqlite,Clause,ALIAS,ALIAS syntax,,
+"INSERT INTO t SELECT 4,4 FROM RANGE(65536)",NESTF,no such table: RANGE,False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"SELECT c0 FROM range(1, NULL) t3(c0);",NESTF,"near ""("": syntax error",False,,sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"create table filtered ( 	col map(integer, integer), 	idx integer )",NESTF,"near ""integer"": syntax error",False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"SELECT 1 FROM range(1) t2, t0",NESTF,no such table: range,False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,,
 SELECT list_count(l) FROM lists,NESTF,no such function: list_count,False,"2
 0
 NULL
 0
 5
-3",sqlite,UFunction,NESTF,NESTED FUNCTION,
-"SELECT list_position([], 7)",NESTF,no such column: ,False,0,sqlite,UFunction,NESTF,NESTED FUNCTION,
-INSERT INTO t1 SELECT 1 FROM RANGE(1024),NESTF,no such table: RANGE,False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,
+3",sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"SELECT list_position([], 7)",NESTF,no such column: ,False,0,sqlite,UFunction,NESTF,NESTED FUNCTION,,
+INSERT INTO t1 SELECT 1 FROM RANGE(1024),NESTF,no such table: RANGE,False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,,
 "select * from range(4,19,5)a;",NESTF,no such table: range,False,"4
 9
-14",sqlite,UFunction,NESTF,NESTED FUNCTION,
-"INSERT INTO a SELECT i id, NULL c FROM range(2, 250000, 1) tbl(i)",NESTF,"near ""("": syntax error",False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,
+14",sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"INSERT INTO a SELECT i id, NULL c FROM range(2, 250000, 1) tbl(i)",NESTF,"near ""("": syntax error",False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,,
 "SELECT array_extract(s, 2147483646) FROM strings",NESTF,no such function: array_extract,False,"(empty)
 (empty)
 (empty)
-NULL",sqlite,UFunction,NESTF,NESTED FUNCTION,
-"SELECT COUNT(*) FROM test t1, range(2000) t2",NESTF,no such table: range,False,4000,sqlite,UFunction,NESTF,NESTED FUNCTION,
-"select string_agg(struct_pack(i :=  i, j := i + 2), ',') from range(10) tbl(i);",NESTF,"unrecognized token: "":""",False,"{'i': 0, 'j': 2},{'i': 1, 'j': 3},{'i': 2, 'j': 4},{'i': 3, 'j': 5},{'i': 4, 'j': 6},{'i': 5, 'j': 7},{'i': 6, 'j': 8},{'i': 7, 'j': 9},{'i': 8, 'j': 10},{'i': 9, 'j': 11}",sqlite,UFunction,NESTF,NESTED FUNCTION,
-SELECT SUM(1) FROM integers;,NESTF,Result MisMatch,,3000,sqlite,UFunction,NESTF,NESTED FUNCTION,
-SELECT NULL = (select list(l) from range(1999) tbl(l)),NESTF,"near ""("": syntax error",False,,sqlite,UFunction,NESTF,NESTED FUNCTION,
-SELECT sum(i) FROM integers WHERE i >= 10 AND i <= 15,NESTF,Result MisMatch,,75.000000,sqlite,UFunction,NESTF,NESTED FUNCTION,
+NULL",sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"SELECT COUNT(*) FROM test t1, range(2000) t2",NESTF,no such table: range,False,4000,sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"select string_agg(struct_pack(i :=  i, j := i + 2), ',') from range(10) tbl(i);",NESTF,"unrecognized token: "":""",False,"{'i': 0, 'j': 2},{'i': 1, 'j': 3},{'i': 2, 'j': 4},{'i': 3, 'j': 5},{'i': 4, 'j': 6},{'i': 5, 'j': 7},{'i': 6, 'j': 8},{'i': 7, 'j': 9},{'i': 8, 'j': 10},{'i': 9, 'j': 11}",sqlite,UFunction,NESTF,NESTED FUNCTION,,
+SELECT SUM(1) FROM integers;,NESTF,Result MisMatch,,3000,sqlite,UFunction,NESTF,NESTED FUNCTION,,
+SELECT NULL = (select list(l) from range(1999) tbl(l)),NESTF,"near ""("": syntax error",False,,sqlite,UFunction,NESTF,NESTED FUNCTION,,
+SELECT sum(i) FROM integers WHERE i >= 10 AND i <= 15,NESTF,Result MisMatch,,75.000000,sqlite,UFunction,NESTF,NESTED FUNCTION,,
 "SELECT list_slice(s, 0, 2) FROM strings",NESTF,no such function: list_slice,False,"he
 wo
 b
-NULL",sqlite,UFunction,NESTF,NESTED FUNCTION,
-"select round(var_pop(val), 1) from stddev_test  where val is not null",NESTF,no such function: var_pop,False,171961.200000,sqlite,UFunction,NESTF,NESTED FUNCTION,
+NULL",sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"select round(var_pop(val), 1) from stddev_test  where val is not null",NESTF,no such function: var_pop,False,171961.200000,sqlite,UFunction,NESTF,NESTED FUNCTION,,
 "SELECT i, flatten(j) FROM nested_lists",NESTF,no such table: nested_lists,False,"0	[0, 8, 4, 12]
 1	[1, 9, 5, 13]
 2	[2, 10, 6, 14]
-3	[3, 11, 7, 15]",sqlite,UFunction,NESTF,NESTED FUNCTION,
-"select map_extract(m,3) from (select MAP(LIST_VALUE(1, 2, 3, 4),LIST_VALUE(10, 9, 8, 7)) as m) as T",NESTF,no such function: LIST_VALUE,False,[8],sqlite,UFunction,NESTF,NESTED FUNCTION,
+3	[3, 11, 7, 15]",sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"select map_extract(m,3) from (select MAP(LIST_VALUE(1, 2, 3, 4),LIST_VALUE(10, 9, 8, 7)) as m) as T",NESTF,no such function: LIST_VALUE,False,[8],sqlite,UFunction,NESTF,NESTED FUNCTION,,
 SELECT * FROM tbl JOIN LATERAL (SELECT UNNEST(tbl.arr)) t(b) ON (i=b) ORDER BY i;,NESTF,"near ""SELECT"": syntax error",False,"1	[1, 3, 7]	1
-3	[3, NULL, 4]	3",sqlite,UFunction,NESTF,NESTED FUNCTION,
+3	[3, NULL, 4]	3",sqlite,UFunction,NESTF,NESTED FUNCTION,,
 "SELECT * FROM range(0, 10, 1)",NESTF,no such table: range,False,"0
 1
 2
@@ -58,8 +58,8 @@ SELECT * FROM tbl JOIN LATERAL (SELECT UNNEST(tbl.arr)) t(b) ON (i=b) ORDER BY i
 6
 7
 8
-9",sqlite,UFunction,NESTF,NESTED FUNCTION,
-"INSERT INTO t3 SELECT i+1 FROM range(0,100) tbl(i)",NESTF,"near ""("": syntax error",False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,
+9",sqlite,UFunction,NESTF,NESTED FUNCTION,,
+"INSERT INTO t3 SELECT i+1 FROM range(0,100) tbl(i)",NESTF,"near ""("": syntax error",False,True,sqlite,UFunction,NESTF,NESTED FUNCTION,,
 "SELECT ARRAY_AGG(1)
 UNION ALL
 (
@@ -85,31 +85,31 @@ LIMIT 1000;",PARENTHESES,"near ""("": syntax error",False,"[1]
 [1000, 1001, 1002]
 [10000, 10001, 10002]
 [100000, 100001, 100002]
-[1000000, 1000001, 1000002, 1000003]",sqlite,Syntax,PARENTHESES,SQLite don't support sub clause in parenthese,
+[1000000, 1000001, 1000002, 1000003]",sqlite,Clause,PARENTHESES,SQLite don't support sub clause in parenthese,,
 (SELECT a FROM test ORDER BY a+1) UNION SELECT b FROM test2 ORDER BY 1;,PARENTHESES,"near ""("": syntax error",False,"NULL
 1
 2
 3
-4",sqlite,Syntax,PARENTHESES,SQLite don't support sub clause in parenthese,
-"INSERT INTO integers (VALUES (1), (2), (3), (NULL))",PARENTHESES,"near ""VALUES"": syntax error",False,True,sqlite,Syntax,PARENTHESES,SQLite don't support sub clause in parenthese,
-SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,
-SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,
-SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,
-SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,
-"INSERT INTO test.hello VALUES (2), (3), (4)",CREATE,no such table: test.hello,False,True,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",
-"SELECT IFELSE(1, IFELSE(1,'a','b'), 'c')",CREATE,no such function: IFELSE,False,a,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",
-"create table defg.""a.b.c"" (x int)",CREATE,unknown database defg,False,True,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",
-"SELECT in_expression_list(1, 1, 2)",CREATE,no such function: in_expression_list,False,True,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",
-SELECT EXTRACT(day FROM interval '157 days ago'),CREATE,"near ""FROM"": syntax error",False,-157,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",
-ALTER TABLE person ALTER name TYPE name_enum,ALTERALTER,"near ""ALTER"": syntax error",False,True,sqlite,Command,ALTERALTER,"SQLite does not support alter column/name directly using ALTER TABLE, IF EXIST",
-ALTER TABLE IF EXISTS t0 ADD COLUMN IF NOT EXISTS c0 int,ALTERALTER,"near ""EXISTS"": syntax error",False,True,sqlite,Command,ALTERALTER,"SQLite does not support alter column/name directly using ALTER TABLE, IF EXIST",
-ALTER TABLE integers ALTER j TYPE BIGINT,ALTERALTER,"near ""ALTER"": syntax error",False,True,sqlite,Command,ALTERALTER,"SQLite does not support alter column/name directly using ALTER TABLE, IF EXIST",
+4",sqlite,Clause,PARENTHESES,SQLite don't support sub clause in parenthese,,
+"INSERT INTO integers (VALUES (1), (2), (3), (NULL))",PARENTHESES,"near ""VALUES"": syntax error",False,True,sqlite,Clause,PARENTHESES,SQLite don't support sub clause in parenthese,,
+SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,,
+SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,,
+SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,,
+SET default_null_order='nulls_first',SET,"near ""SET"": syntax error",False,True,sqlite,Command,SET,No Set in SQLite,,
+"INSERT INTO test.hello VALUES (2), (3), (4)",CREATE,no such table: test.hello,False,True,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",,
+"SELECT IFELSE(1, IFELSE(1,'a','b'), 'c')",CREATE,no such function: IFELSE,False,a,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",,
+"create table defg.""a.b.c"" (x int)",CREATE,unknown database defg,False,True,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",,
+"SELECT in_expression_list(1, 1, 2)",CREATE,no such function: in_expression_list,False,True,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",,
+SELECT EXTRACT(day FROM interval '157 days ago'),CREATE,"near ""FROM"": syntax error",False,-157,sqlite,Command,CREATE,"CREATE things not supported (SCHEMA, MACRO, TYPE)",,
+ALTER TABLE person ALTER name TYPE name_enum,ALTERALTER,"near ""ALTER"": syntax error",False,True,sqlite,Command,ALTERALTER,"SQLite does not support alter column/name directly using ALTER TABLE, IF EXIST",,
+ALTER TABLE IF EXISTS t0 ADD COLUMN IF NOT EXISTS c0 int,ALTERALTER,"near ""EXISTS"": syntax error",False,True,sqlite,Command,ALTERALTER,"SQLite does not support alter column/name directly using ALTER TABLE, IF EXIST",,
+ALTER TABLE integers ALTER j TYPE BIGINT,ALTERALTER,"near ""ALTER"": syntax error",False,True,sqlite,Command,ALTERALTER,"SQLite does not support alter column/name directly using ALTER TABLE, IF EXIST",,
 select * from tbl;,REPLACE,no such table: tbl,False,"1	10	1
 2	20	1
 3	30	1
-4	2	3",sqlite,Command,REPLACE,No CREATE OR REPLACE,
-"insert into tbl VALUES (3,5,3) on conflict (i) do update set k = 10 WHERE k == 1",REPLACE,no such table: tbl,False,True,sqlite,Command,REPLACE,No CREATE OR REPLACE,
-select * from tbl;,REPLACE,no such table: tbl,False,5	20,sqlite,Command,REPLACE,No CREATE OR REPLACE,
+4	2	3",sqlite,Command,REPLACE,No CREATE OR REPLACE,,
+"insert into tbl VALUES (3,5,3) on conflict (i) do update set k = 10 WHERE k == 1",REPLACE,no such table: tbl,False,True,sqlite,Command,REPLACE,No CREATE OR REPLACE,,
+select * from tbl;,REPLACE,no such table: tbl,False,5	20,sqlite,Command,REPLACE,No CREATE OR REPLACE,,
 "SELECT p.begin, e.value
 FROM probe0 p ASOF LEFT JOIN events0 e
 ON p.begin >= e.begin
@@ -122,32 +122,32 @@ ORDER BY p.begin ASC",ASOF_JOIN,"near ""ASOF"": syntax error",False,"0	NULL
 6	2
 7	2
 8	3
-9	3",sqlite,Misc,ASOF_JOIN,ASOF_JOIN not supported,
-"CREATE TABLE tbl3 ( 	a INTEGER, 	FOREIGN KEY (a) REFERENCES tbl2 (also_price) )",REFERENCE,None,True,False,sqlite,Misc,REFERENCE,SQLite could create table reference Invalid,
-SELECT '14:42:04.999999'::TIME::VARCHAR,TYPE_CAST,"unrecognized token: "":""",False,14:42:04.999999,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
-SELECT '1-01-01'::DATE::VARCHAR,TYPE_CAST,"unrecognized token: "":""",False,True,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
+9	3",sqlite,Clause,ASOF_JOIN,ASOF_JOIN not supported,,
+"CREATE TABLE tbl3 ( 	a INTEGER, 	FOREIGN KEY (a) REFERENCES tbl2 (also_price) )",REFERENCE,None,True,False,sqlite,Clause,REFERENCE,SQLite could create table reference Invalid,,
+SELECT '14:42:04.999999'::TIME::VARCHAR,TYPE_CAST,"unrecognized token: "":""",False,14:42:04.999999,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
+SELECT '1-01-01'::DATE::VARCHAR,TYPE_CAST,"unrecognized token: "":""",False,True,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
 "SELECT suit FROM card_select_args(1, 13, _name:='king' ) ORDER BY suit;",TYPE_CAST,"unrecognized token: "":""",False,"clubs
 diamonds
 hearts
-spades",sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
-"SELECT try_strptime('30', '%j'), strftime('1900-01-30'::DATE, '%-j')",TYPE_CAST,"unrecognized token: "":""",False,1900-01-30 00:00:00	30,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
-select '2008-01-01 00:00:11'::TIMESTAMP_US = '2008-01-01 00:00:11'::TIMESTAMP_NS,TYPE_CAST,"unrecognized token: "":""",False,True,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
-select 1::HUGEINT | 2::HUGEINT,TYPE_CAST,"unrecognized token: "":""",False,3,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
+spades",sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
+"SELECT try_strptime('30', '%j'), strftime('1900-01-30'::DATE, '%-j')",TYPE_CAST,"unrecognized token: "":""",False,1900-01-30 00:00:00	30,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
+select '2008-01-01 00:00:11'::TIMESTAMP_US = '2008-01-01 00:00:11'::TIMESTAMP_NS,TYPE_CAST,"unrecognized token: "":""",False,True,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
+select 1::HUGEINT | 2::HUGEINT,TYPE_CAST,"unrecognized token: "":""",False,3,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
 SELECT i::INTEGER FROM utinyints ORDER BY i,TYPE_CAST,"unrecognized token: "":""",False,"0
-255",sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
-SELECT bit_length('1010111111101010011101011'::BIT),TYPE_CAST,"unrecognized token: "":""",False,25,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
+255",sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
+SELECT bit_length('1010111111101010011101011'::BIT),TYPE_CAST,"unrecognized token: "":""",False,25,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
 "SELECT NULL UNION ALL SELECT LIST_VALUE() UNION ALL SELECT LIST_VALUE(NULL::INTEGER) UNION ALL SELECT LIST_VALUE(1, 2, 3)",TYPE_CAST,"unrecognized token: "":""",False,"NULL
 []
 [NULL]
-[1, 2, 3]",sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
-ALTER TABLE foo ADD b INTEGER,TYPE_CAST,no such table: foo,False,True,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",
-"EXECUTE v13(1=0, 'hello', 'world')",EXECUTE,"near ""EXECUTE"": syntax error",False,world,sqlite,Command,EXECUTE,EXECUTE not support,
-"EXECUTE s1(42, 'dpfkg')",EXECUTE,"near ""EXECUTE"": syntax error",False,42	dpfkg,sqlite,Command,EXECUTE,EXECUTE not support,
-EXECUTE v1('hello'),EXECUTE,"near ""EXECUTE"": syntax error",False,VARCHAR,sqlite,Command,EXECUTE,EXECUTE not support,
+[1, 2, 3]",sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
+ALTER TABLE foo ADD b INTEGER,TYPE_CAST,no such table: foo,False,True,sqlite,Operator,TYPE_CAST,"Type cast in DuckDB is '::', which is unsupported in SQLite",,
+"EXECUTE v13(1=0, 'hello', 'world')",EXECUTE,"near ""EXECUTE"": syntax error",False,world,sqlite,Command,EXECUTE,EXECUTE not support,,
+"EXECUTE s1(42, 'dpfkg')",EXECUTE,"near ""EXECUTE"": syntax error",False,42	dpfkg,sqlite,Command,EXECUTE,EXECUTE not support,,
+EXECUTE v1('hello'),EXECUTE,"near ""EXECUTE"": syntax error",False,VARCHAR,sqlite,Command,EXECUTE,EXECUTE not support,,
 SELECT * FROM sc3(suit);,EXECUTE,no such table: sc3,False,"clubs
 diamonds
 hearts
-spades",sqlite,Command,EXECUTE,EXECUTE not support,
+spades",sqlite,Command,EXECUTE,EXECUTE not support,,
 SELECT TRY_CAST(s AS UTINYINT) FROM strings,TRYCAST,"near ""AS"": syntax error",False,"NULL
 NULL
 NULL
@@ -155,46 +155,46 @@ NULL
 0
 0
 255
-NULL",sqlite,UFunction,TRYCAST,TRY_CAST not supported,
-select try_cast('290309-12-21 (BC) 12:59:59.999999' as timestamp),TRYCAST,"near ""as"": syntax error",False,,sqlite,UFunction,TRYCAST,TRY_CAST not supported,
+NULL",sqlite,UFunction,TRYCAST,TRY_CAST not supported,,
+select try_cast('290309-12-21 (BC) 12:59:59.999999' as timestamp),TRYCAST,"near ""as"": syntax error",False,,sqlite,UFunction,TRYCAST,TRY_CAST not supported,,
 "SELECT array_extract(s, 2) FROM strings",STRING,no such function: array_extract,False,"e
 o
 (empty)
-NULL",sqlite,UFunction,STRING,Text Function ,
-"SELECT * FROM null_byte WHERE regexp_full_match(v, concat('goo', chr(0), 'se'))",STRING,no such table: null_byte,False,goo\0se,sqlite,UFunction,STRING,Text Function ,
-"SELECT try_strptime('2001-02-30', '%Y-%m-%d')",STRING,no such function: try_strptime,False,,sqlite,UFunction,STRING,Text Function ,
-"SELECT * FROM t0 WHERE NOT REGEXP_MATCHES(t0.c0, '1');",STRING,no such function: REGEXP_MATCHES,False,,sqlite,UFunction,STRING,Text Function ,
-"SELECT suffix('aaa', NULL)",STRING,no such function: suffix,False,,sqlite,UFunction,STRING,Text Function ,
-SELECT 'aaa' SIMILAR TO 'a[a-z]{2}',STRING,"near ""TO"": syntax error",False,1,sqlite,UFunction,STRING,Text Function ,
-"insert into people values (1, 'Zuckerberg', ARRAY['New York'])",NESTDATA,"near ""['New York']"": syntax error",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-"INSERT INTO all_types VALUES('b',[[], NULL, [], [NULL]])",NESTDATA,"unrecognized token: ""]""",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
+NULL",sqlite,UFunction,STRING,Text Function ,,
+"SELECT * FROM null_byte WHERE regexp_full_match(v, concat('goo', chr(0), 'se'))",STRING,no such table: null_byte,False,goo\0se,sqlite,UFunction,STRING,Text Function ,,
+"SELECT try_strptime('2001-02-30', '%Y-%m-%d')",STRING,no such function: try_strptime,False,,sqlite,UFunction,STRING,Text Function ,,
+"SELECT * FROM t0 WHERE NOT REGEXP_MATCHES(t0.c0, '1');",STRING,no such function: REGEXP_MATCHES,False,,sqlite,UFunction,STRING,Text Function ,,
+"SELECT suffix('aaa', NULL)",STRING,no such function: suffix,False,,sqlite,UFunction,STRING,Text Function ,,
+SELECT 'aaa' SIMILAR TO 'a[a-z]{2}',STRING,"near ""TO"": syntax error",False,1,sqlite,UFunction,STRING,Text Function ,,
+"insert into people values (1, 'Zuckerberg', ARRAY['New York'])",NESTDATA,"near ""['New York']"": syntax error",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+"INSERT INTO all_types VALUES('b',[[], NULL, [], [NULL]])",NESTDATA,"unrecognized token: ""]""",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
 SELECT l IS DISTINCT FROM r FROM struct_int,NESTDATA,no such table: struct_int,False,"False
 True
 True
 True
 True
-False",sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-"SELECT [{'x': 'duck', 'y': 1}] < [{'x': 'duck', 'y': 1}, {'x': 'goose', 'y': 2}]",NESTDATA,"no such column: {'x': 'duck', 'y': 1}",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-SELECT (SELECT CASE WHEN 1=0 THEN {'a': 3} ELSE NULL END),NESTDATA,"unrecognized token: ""{""",False,,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-"CREATE VIEW struct_str AS SELECT * FROM (VALUES 	({'x': 'duck'}, {'x': 'duck'}), 	({'x': 'duck'}, {'x': 'goose'}), 	({'x': 'goose'}, {'x': 'duck'}), 	(NULL, {'x': 'duck'}), 	({'x': 'goose'}, NULL), 	(NULL, NULL) 	) tbl(l, r)",NESTDATA,"unrecognized token: ""{""",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-"SELECT NULL < {'x': 'duck', 'y': 1}",NESTDATA,"unrecognized token: ""{""",False,,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-"INSERT INTO t1 VALUES (ARRAY[(2, 'a'), (3,'b')])",NESTDATA,"near ""[(2, 'a'), (3,'b')]"": syntax error",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-SELECT [1] = [1],NESTDATA,no such column: 1,False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),
-"SELECT try_strptime('Mon 30, December 30, 7:3:5 PM', '%a %d, %B %y, %I:%M:%S %p')",TIMEF,no such function: try_strptime,False,2030-12-30 19:03:05,sqlite,UFunction,TIMEF,Timestamp Functions not supported,
-SELECT stats(WEEKDAY(d)) FROM dates LIMIT 1;,TIMEF,no such function: WEEKDAY,False,<REGEX>:.*0.*6.*,sqlite,UFunction,TIMEF,Timestamp Functions not supported,
-SET default_null_order='nulls_last',TIMEF,"near ""SET"": syntax error",False,True,sqlite,UFunction,TIMEF,Timestamp Functions not supported,
-"SELECT (SELECT 1=ANY(SELECT UNNEST(i))) FROM (VALUES ([1, 2, 3])) tbl(i);",ANY,"near ""SELECT"": syntax error",False,True,sqlite,Operator,ANY,ANY operator not supported,
-SELECT 1 = ANY(SELECT NULL),ANY,"near ""SELECT"": syntax error",False,,sqlite,Operator,ANY,ANY operator not supported,
+False",sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+"SELECT [{'x': 'duck', 'y': 1}] < [{'x': 'duck', 'y': 1}, {'x': 'goose', 'y': 2}]",NESTDATA,"no such column: {'x': 'duck', 'y': 1}",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+SELECT (SELECT CASE WHEN 1=0 THEN {'a': 3} ELSE NULL END),NESTDATA,"unrecognized token: ""{""",False,,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+"CREATE VIEW struct_str AS SELECT * FROM (VALUES 	({'x': 'duck'}, {'x': 'duck'}), 	({'x': 'duck'}, {'x': 'goose'}), 	({'x': 'goose'}, {'x': 'duck'}), 	(NULL, {'x': 'duck'}), 	({'x': 'goose'}, NULL), 	(NULL, NULL) 	) tbl(l, r)",NESTDATA,"unrecognized token: ""{""",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+"SELECT NULL < {'x': 'duck', 'y': 1}",NESTDATA,"unrecognized token: ""{""",False,,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+"INSERT INTO t1 VALUES (ARRAY[(2, 'a'), (3,'b')])",NESTDATA,"near ""[(2, 'a'), (3,'b')]"": syntax error",False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+SELECT [1] = [1],NESTDATA,no such column: 1,False,True,sqlite,Type,NESTDATA,Nested data type unsupported ({'x': 1}),,
+"SELECT try_strptime('Mon 30, December 30, 7:3:5 PM', '%a %d, %B %y, %I:%M:%S %p')",TIMEF,no such function: try_strptime,False,2030-12-30 19:03:05,sqlite,UFunction,TIMEF,Timestamp Functions not supported,,
+SELECT stats(WEEKDAY(d)) FROM dates LIMIT 1;,TIMEF,no such function: WEEKDAY,False,<REGEX>:.*0.*6.*,sqlite,UFunction,TIMEF,Timestamp Functions not supported,,
+SET default_null_order='nulls_last',TIMEF,"near ""SET"": syntax error",False,True,sqlite,UFunction,TIMEF,Timestamp Functions not supported,,
+"SELECT (SELECT 1=ANY(SELECT UNNEST(i))) FROM (VALUES ([1, 2, 3])) tbl(i);",ANY,"near ""SELECT"": syntax error",False,True,sqlite,Operator,ANY,ANY operator not supported,,
+SELECT 1 = ANY(SELECT NULL),ANY,"near ""SELECT"": syntax error",False,,sqlite,Operator,ANY,ANY operator not supported,,
 "SELECT *
   FROM monthly_sales
     PIVOT(SUM(amount) FOR MONTH IN ('JAN', 'FEB', 'MAR', 'APR'))
       AS p
   ORDER BY EMPID;",PIVOT,"near ""("": syntax error",False,"1	10400	8000	11000	18000
-2	39500	90700	12000	5300",sqlite,Command,PIVOT,Not supported SQL UNPIVOT PIVOT,
-select time '23:59:59.999999',DATETIME,no such column: time,False,23:59:59.999999,sqlite,Type,DATETIME,Datetime type not supported,
-"SELECT strftime('%Y', TIMESTAMP '1992-01-01');",DATETIME,"near ""'1992-01-01'"": syntax error",False,1992,sqlite,Type,DATETIME,Datetime type not supported,
-"SELECT COUNT(*), COUNT(ts), COUNT(flag) FROM right_join",DATETIME,no such table: right_join,False,87842	87775	87842,sqlite,Type,DATETIME,Datetime type not supported,
-"SELECT COUNT(t1.rowid) FROM t1, v0 RIGHT JOIN t0 ON v0.c0=t0.c0",DATETIME,no such table: t1,False,True,sqlite,Type,DATETIME,Datetime type not supported,
+2	39500	90700	12000	5300",sqlite,Command,PIVOT,Not supported SQL UNPIVOT PIVOT,,
+select time '23:59:59.999999',DATETIME,no such column: time,False,23:59:59.999999,sqlite,Type,DATETIME,Datetime type not supported,,
+"SELECT strftime('%Y', TIMESTAMP '1992-01-01');",DATETIME,"near ""'1992-01-01'"": syntax error",False,1992,sqlite,Type,DATETIME,Datetime type not supported,,
+"SELECT COUNT(*), COUNT(ts), COUNT(flag) FROM right_join",DATETIME,no such table: right_join,False,87842	87775	87842,sqlite,Type,DATETIME,Datetime type not supported,,
+"SELECT COUNT(t1.rowid) FROM t1, v0 RIGHT JOIN t0 ON v0.c0=t0.c0",DATETIME,no such table: t1,False,True,sqlite,Type,DATETIME,Datetime type not supported,,
 "select max(base), max(referenced), sum(refined), sum(unrefined) from (
     select
     	row_number() over w AS base,
@@ -203,7 +203,7 @@ select time '23:59:59.999999',DATETIME,no such column: time,False,23:59:59.99999
     	sum(i % 4) over (rows between 1 preceding and 1 following) AS unrefined
     from integers
     WINDOW w AS (partition by i // 4 order by i % 4)
-) q;",DIVIDE,"near ""/"": syntax error",False,4	4	60	69,sqlite,Operator,DIVIDE,SQLite doesn't support //,
+) q;",DIVIDE,"near ""/"": syntax error",False,4	4	60	69,sqlite,Operator,DIVIDE,SQLite doesn't support //,,
 "SELECT DISTINCT sqlancer_v0.c1, sqlancer_t0.rowid
 FROM sqlancer_v0 NATURAL FULL JOIN sqlancer_t0
 ORDER BY 2 ASC;",DIVIDE,no such table: sqlancer_v0,False,"NULL	0
@@ -235,10 +235,10 @@ NULL	25
 NULL	26
 NULL	27
 NULL	28
-NULL	29",sqlite,Operator,DIVIDE,SQLite doesn't support //,
-START TRANSACTION,TRANS,"near ""START"": syntax error",False,True,sqlite,Command,TRANS,SQLite doesn't support START TRANSACTION,
-DROP TABLE b CASCADE,DROP,"near ""CASCADE"": syntax error",False,True,sqlite,Command,DROP,Issue related to DROP,
-"SELECT DISTINCT ON (2) j, (SELECT i FROM integers) FROM integers ORDER BY 2",DISTINCT,"near ""ON"": syntax error",False,3	2,sqlite,Command,DISTINCT,DISTINCT ON,
-"SELECT COVAR_SAMP(x,y), COVAR_SAMP(x,1), COVAR_SAMP(1,y), COVAR_SAMP(x,NULL), COVAR_SAMP(NULL,y) FROM integers",AGGREGATE,no such function: COVAR_SAMP,False,120.000000	0.000000	0.000000	NULL	NULL,sqlite,UFunction,AGGREGATE,AGGREGATE function in DuckDB not supported,
-"CREATE INDEX i1 ON t0 (c1, CAST('c' AS INT))",CASTUNKN,None,True,False,sqlite,Function,CASTUNKN,SQLite would cast to text if meet unknow type in CAST(),
-"SELECT CAST(10000000000 AS DECIMAL(10,0))",CASTUNKN,None,True,False,sqlite,Function,CASTUNKN,SQLite would cast to text if meet unknow type in CAST(),
+NULL	29",sqlite,Operator,DIVIDE,SQLite doesn't support //,,
+START TRANSACTION,TRANS,"near ""START"": syntax error",False,True,sqlite,Command,TRANS,SQLite doesn't support START TRANSACTION,,
+DROP TABLE b CASCADE,DROP,"near ""CASCADE"": syntax error",False,True,sqlite,Command,DROP,Issue related to DROP,,
+"SELECT DISTINCT ON (2) j, (SELECT i FROM integers) FROM integers ORDER BY 2",DISTINCT,"near ""ON"": syntax error",False,3	2,sqlite,Command,DISTINCT,DISTINCT ON,,
+"SELECT COVAR_SAMP(x,y), COVAR_SAMP(x,1), COVAR_SAMP(1,y), COVAR_SAMP(x,NULL), COVAR_SAMP(NULL,y) FROM integers",AGGREGATE,no such function: COVAR_SAMP,False,120.000000	0.000000	0.000000	NULL	NULL,sqlite,UFunction,AGGREGATE,AGGREGATE function in DuckDB not supported,,
+"CREATE INDEX i1 ON t0 (c1, CAST('c' AS INT))",CASTUNKN,None,True,False,sqlite,Function,CASTUNKN,SQLite would cast to text if meet unknow type in CAST(),,
+"SELECT CAST(10000000000 AS DECIMAL(10,0))",CASTUNKN,None,True,False,sqlite,Function,CASTUNKN,SQLite would cast to text if meet unknow type in CAST(),,

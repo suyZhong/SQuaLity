@@ -5,7 +5,7 @@ LINE 1: SELECT x as a FROM t1 UNION ALL BY NAME SELECT x FROM t1;
 ",False,"3	NULL
 1	NULL
 NULL	3
-NULL	1",postgresql,Misc,UBYNAME,UNION ALL BY NAME,,
+NULL	1",postgresql,Clause,UBYNAME,UNION ALL BY NAME,,
 "SELECT damerau_levenshtein(NULL, s) FROM strings",STRING,"function damerau_levenshtein(unknown, character varying) does not exist
 LINE 1: SELECT damerau_levenshtein(NULL, s) FROM strings
                ^
@@ -405,15 +405,15 @@ LINE 1: FROM tbl
 SELECT (SELECT 0) c0 WHERE (SELECT c0);,SELECT,"column ""c0"" does not exist
 LINE 1: SELECT (SELECT 0) c0 WHERE (SELECT c0);
                                            ^
-",False,,postgresql,Misc,SELECT,SELECT column,,
+",False,,postgresql,Clause,SELECT,SELECT column,,
 "CREATE TABLE t1(c4 UUID, c0 REAL AS(0))",GENCOL,"syntax error at or near ""AS""
 LINE 1: CREATE TABLE t1(c4 UUID, c0 REAL AS(0))
                                          ^
-",False,True,postgresql,Misc,GENCOL,GENERATED columnds not supported,,
+",False,True,postgresql,Clause,GENCOL,GENERATED columnds not supported,,
 "INSERT INTO test VALUES (5, DEFAULT)",GENCOL,"relation ""test"" does not exist
 LINE 1: INSERT INTO test VALUES (5, DEFAULT)
                     ^
-",False,True,postgresql,Misc,GENCOL,GENERATED columnds not supported,,
+",False,True,postgresql,Clause,GENCOL,GENERATED columnds not supported,,
 SELECT INTERVAL '-2yrs 4 d 5 hrs 1 mins 3 seconds 20 mseconds 16 useconds'::VARCHAR;,INTERVAL,Result MisMatch,-2 years +4 days 05:01:03.020016,-2 years 4 days 05:01:03.020016,postgresql,IType,INTERVAL,INTERVAL time varchar not same,,
 "SELECT AGE(TIMESTAMP '2001-04-10', t2) FROM timestamp;",INTERVAL,Result MisMatch,"NULL
 NULL
@@ -428,17 +428,17 @@ NULL
 -18 years -2 months -1 days
 NULL
 NULL",postgresql,IType,INTERVAL,INTERVAL time varchar not same,,
-ALTER TABLE test ALTER i SET DATA TYPE VARCHAR,REINDEX,None,True,False,postgresql,Misc,REINDEX,Postgresql updata column would drop and rebuild index,,
+ALTER TABLE test ALTER i SET DATA TYPE VARCHAR,REINDEX,None,True,False,postgresql,Clause,REINDEX,Postgresql updata column would drop and rebuild index,,
 "SELECT c0 FROM (SELECT 1, 1 UNION ALL SELECT 1, 2) t0(c0, c1) GROUP BY ALL HAVING c1>0 ORDER BY c0",BYALL,"syntax error at or near ""HAVING""
 LINE 1: ... 1 UNION ALL SELECT 1, 2) t0(c0, c1) GROUP BY ALL HAVING c1>...
                                                              ^
 ",False,"1
-1",postgresql,Misc,BYALL,GROUP BY /ORDER BY ALL not supported ,,
+1",postgresql,Clause,BYALL,GROUP BY /ORDER BY ALL not supported ,,
 "SELECT sum(distinct value), GROUPING_ID(course), course, COUNT(*) FROM students GROUP BY course ORDER BY all;",BYALL,"syntax error at or near ""all""
 LINE 1: ...course, COUNT(*) FROM students GROUP BY course ORDER BY all;
                                                                    ^
 ",False,"12	0	Math	3
-56	0	CS	5",postgresql,Misc,BYALL,GROUP BY /ORDER BY ALL not supported ,,
+56	0	CS	5",postgresql,Clause,BYALL,GROUP BY /ORDER BY ALL not supported ,,
 "create or replace table tbl ( 	a integer, 	b integer, 	c integer, 	primary key (a, b) )",REPLACE,"syntax error at or near ""table""
 LINE 1: create or replace table tbl (  a integer,  b integer,  c int...
                           ^
