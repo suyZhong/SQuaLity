@@ -44,7 +44,7 @@ def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
         if db_name.lower() == 'sqlite':
             print(index_file_num)
     # begin plotting
-    plt.figure(figsize=(12, 6))
+    plt.figure()
     plt.boxplot(db_dict.values(), labels=db_dict.keys())
     plt.yscale('log')
     plt.ylabel("Lines of Code (LoC) in Each Test File")

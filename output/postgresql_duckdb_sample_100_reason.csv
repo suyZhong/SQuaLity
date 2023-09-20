@@ -385,8 +385,8 @@ LINE 5:   FIRST_VALUE (order_id RESPECT NULLS) over (
 2	1	NULL	614
 3	1	639	614
 4	1	2027	614",postgresql,UFunction,WINDOWF,Window function not supported,,
-UPDATE employee SET id=2 WHERE id=3,REFERENCE,None,True,False,postgresql,Misc,REFERENCE,DuckDB Limitation constraints,,
-ALTER TABLE t0 DROP c1,REFERENCE,None,True,False,postgresql,Misc,REFERENCE,DuckDB Limitation constraints,,
+UPDATE employee SET id=2 WHERE id=3,REFERENCE,None,True,False,postgresql,Clause,REFERENCE,DuckDB Limitation constraints,,
+ALTER TABLE t0 DROP c1,REFERENCE,None,True,False,postgresql,Clause,REFERENCE,DuckDB Limitation constraints,,
 "select REPLACE(b, 'Ä', '--') FROM strings",STR,"relation ""strings"" does not exist
 LINE 1: select REPLACE(b, 'Ä', '--') FROM strings
                                           ^

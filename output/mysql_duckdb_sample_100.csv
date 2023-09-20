@@ -33,7 +33,7 @@ NULL",False,157,23-09-11-10:20,True,"1064 (42000): You have an error in your SQL
 NATURAL ANTI JOIN (select right_table.a FROM right_table JOIN other ON (other.a = right_table.a)) joined_right_table;",Query,43	1	1,False,174,23-09-11-10:21,True,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ANTI JOIN (select right_table.a FROM right_table JOIN other ON (other.a = right_' at line 2,1215,NTJ
 6,mysql,733,duckdb_tests/sql/parser/test_operator_precedence.test,,6,SELECT 1+2^2;,Query,5,1,245,23-09-11-10:20,True,Result MisMatch,313,EXP
 50,mysql,1181,duckdb_tests/sql/function/string/test_damerau_levenshtein.test,,50,DROP TABLE strings,Statement,True,False,515,23-09-11-10:20,True,1051 (42S02): Unknown table 'testddb.strings',601,VARCHAR
-2,mysql,2161,duckdb_tests/sql/prepared/prepare_mixed_types.test,,2,EXECUTE v1(42),Query,42	42,False,139,23-09-11-10:21,True,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '(42)' at line 1,1203,EXECUTE
+2,mysql,2161,duckdb_tests/sql/prepared/prepare_mixed_types.test,,2,EXECUTE v1(42),Query,42	42,False,139,23-09-11-10:21,True,1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '(42)' at line 1,1203,EXECUTES
 10,mysql,2101,duckdb_tests/sql/subquery/scalar/test_uncorrelated_varchar_subquery.test,,10,SELECT * FROM strings WHERE EXISTS(SELECT v FROM strings WHERE v='bla'),Query,,False,326,23-09-11-10:21,True,1146 (42S02): Table 'testddb.strings' doesn't exist,1151,VARCHAR
 17,mysql,2327,duckdb_tests/sql/returning/returning_update.test,,17,"UPDATE table3
 SET c3 = t2.c2
@@ -202,7 +202,7 @@ ORDER BY ALL' at line 2",1232,ASOF_JOIN
 3
 3
 3",False,293,23-09-11-10:21,True,1146 (42S02): Table 'testddb.integers' doesn't exist,1337,ADHOC
-2,mysql,977,duckdb_tests/sql/pivot/pivot_prepare.test,,2,"PREPARE v1 AS SELECT *   FROM monthly_sales     PIVOT(SUM(amount + ?) FOR MONTH IN ('JAN', 'FEB', 'MAR', 'APR'))       AS p   ORDER BY EMPID",Statement,True,False,254,23-09-11-10:20,True,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'AS SELECT *   FROM monthly_sales     PIVOT(SUM(amount + ?) FOR MONTH IN ('JAN', ' at line 1",518,EXECUTE
+2,mysql,977,duckdb_tests/sql/pivot/pivot_prepare.test,,2,"PREPARE v1 AS SELECT *   FROM monthly_sales     PIVOT(SUM(amount + ?) FOR MONTH IN ('JAN', 'FEB', 'MAR', 'APR'))       AS p   ORDER BY EMPID",Statement,True,False,254,23-09-11-10:20,True,"1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'AS SELECT *   FROM monthly_sales     PIVOT(SUM(amount + ?) FOR MONTH IN ('JAN', ' at line 1",518,EXECUTES
 37,mysql,1862,duckdb_tests/sql/types/enum/test_enum_table.test,,37,"select count(*), current_mood from person group by current_mood",Query,"1	ok
 2	sad
 1	happy",False,276,23-09-11-10:21,True,1146 (42S02): Table 'testddb.person' doesn't exist,972,CREATE
