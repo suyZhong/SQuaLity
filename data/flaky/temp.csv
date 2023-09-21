@@ -1,0 +1,5 @@
+TESTFILE_NAME,TESTCASE_INDEX,CLUSTER
+issues-general-test_2743.csv,9,-1
+regress-sql-with.csv,17,-1
+regress-sql-json.csv,86,-1
+regress-sql-json.csv,326,-1
