@@ -1,0 +1,27 @@
+index,SUPER_TAG,TAG,DESCRIPTION
+1,Environment,File Paths,Environment variable leads to wrong file paths
+2,Client,Data Type,Different representation for nested data structure
+3,Environment,File Paths,Environment difference of file structures
+4,Misc,Function,Unsupported result conparison method
+5,Client,Numeric,Float point precision
+6,Client,Data Type,Datetime object difference
+7,Misc,Function,Unsupported test runner function: multiple connection
+8,Client,Numeric,Binary object difference
+9,Misc,Parser,Nested comments
+10,Client,Numeric,Big integer representation
+11,Misc,Parser,Mislead by the result provided by test suite
+12,Client,Data Type,Boolean
+13,Extension,Load,Expect extension not loaded but actually loaded
+14,Extension,Shared Library,Expected shared library
+15,Environment,Setting,Timestamp representation difference
+16,Environment,Setting,Max prepared transactions is zero in our settings
+17,Environment,Set up,Internal dependencies between test files
+18,Misc,Version,older version of DBMS
+19,Misc,Not Sure,Not sure
+20,Environment,Setting,Role cannot be dropped because of environment setting
+21,Environment,Set up,Different schema names
+22,Environment,Setting,Different char names
+23,Environment,Set up,Unsuccessful privilege setup
+24,Environment,Setting,Locale
+25,Client,Exception,Trigger exception in the client however not in the same version of DBMS
+,,,

@@ -1,0 +1,6 @@
+postgresql_tests/regress/sql/psql.sql
+postgresql_tests/regress/sql/collate.icu.utf8.sql
+postgresql_tests/regress/sql/comments.sql
+postgresql_tests/regress/sql/collate.linux.utf8.sql
+postgresql_tests/regress/sql/copy2.sql
+postgresql_tests/regress/sql/xml.sql

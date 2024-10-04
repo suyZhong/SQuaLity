@@ -8,7 +8,3 @@ output/*
 test.ipynb
 demo/*
 .vscode
-data/*
-scripts/*
-!scripts/analyze_errors.py
-!scripts/fuzzing.py

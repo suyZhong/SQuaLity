@@ -230,7 +230,7 @@ class Runner():
 class PyDBCRunner(Runner):
     MAX_RUNTIME = 500
     LARGE_TEST_THRESHOLD = 1000
-    MAX_RUNTIME_PERSQL = 20
+    MAX_RUNTIME_PERSQL = CONFIG['max_runtime_persql']
 
     def __init__(self, records: List[Record] = []) -> None:
         super().__init__(records)
@@ -303,6 +303,9 @@ class PyDBCRunner(Runner):
 
     def commit(self):
         pass
+    
+    def reset_cursor(self):
+        pass
 
     def _single_run(self, record):
         self.single_run_stats['total_executed_sql'] += 1
@@ -318,8 +321,9 @@ class PyDBCRunner(Runner):
                 except_msg = str(e)
                 logging.debug(
                     "Statement %s execution error: %s", record.sql, e)
+                # self.reset_cursor()
             self.handle_stmt_result(status, record, except_msg)
-            self.commit()
+            # self.commit()
             if status:
                 self.records_log.append(record)
         elif type(record) is Query:
@@ -331,10 +335,11 @@ class PyDBCRunner(Runner):
                 self.single_run_stats['failed_query_num'] += 1
                 logging.debug("Query %s execution error: %s",
                               record.sql, except_msg)
-                self.commit()
+                # self.commit()
                 self.bug_dumper.save_state(self.records_log, record, str(False), (
                     datetime.now()-self.cur_time).microseconds, is_error=True, msg="{}".format(except_msg))
                 self.allright = False
+                # self.reset_cursor()
                 return
             else:
                 self.single_run_stats['success_query_num'] += 1
@@ -418,6 +423,7 @@ class SQLiteRunner(PyDBCRunner):
         super().__init__(records)
         self.con = None
         self.cur = None
+        self.txn_status = False
         self.db_error = sqlite3.Error
 
     def connect(self, db_name):
@@ -429,7 +435,13 @@ class SQLiteRunner(PyDBCRunner):
         self.con.close()
 
     def execute_stmt(self, sql):
+        if str.upper(sql).startswith('BEGIN'):
+            self.txn_status = True
+        if str.upper(sql).startswith('COMMIT') or str.upper(sql).startswith('ROLLBACK'):
+            self.txn_status = False
         self.cur.execute(sql)
+        if not self.txn_status:
+            self.con.commit()
 
     def execute_query(self, sql):
         res = self.cur.execute(sql)
@@ -463,6 +475,9 @@ class DuckDBRunner(PyDBCRunner):
     def executemany_stmt(self, sql):
         self.con.executemany(sql)
         # self.con.fetchall()
+        
+    def commit(self):
+        self.con.commit()
 
 
 class CockroachDBRunner(PyDBCRunner):
@@ -496,6 +511,7 @@ class CockroachDBRunner(PyDBCRunner):
 
         self.con = psycopg2.connect(
             dsn=self.db, options="-c statement_timeout=20s")
+        self.con.autocommit = True
         self.cur = self.con.cursor()
 
     def close(self):
@@ -548,7 +564,10 @@ class MySQLRunner(PyDBCRunner):
         return self.cur.fetchall()
 
     def execute_stmt(self, sql):
+        my_debug("BEfore %s : The connection status is %s" % (sql, self.con.is_connected()))
         self.cur.execute(sql)
+        self.cur.fetchall()
+        my_debug("After: The connection status is %s" % self.con.is_connected())
 
     def executemany_stmt(self, sql: str):
         sql_list = sql.split(";")
@@ -565,6 +584,9 @@ class MySQLRunner(PyDBCRunner):
             my_debug(str(results))
         self.con.commit()
 
+    def reset_cursor(self):
+        self.cur.close()
+        self.cur = self.con.cursor()
 
 class PostgreSQLRunner(CockroachDBRunner):
     def __init__(self, records: List[Record] = []) -> None:
@@ -666,7 +688,6 @@ class CLIRunner(Runner):
     def run(self):
         self.start()
         self.extract_sql()
-        i = 0
         # split sqls into groups of limit
         if len(self.sql) == 0:
             return
@@ -691,7 +712,7 @@ class CLIRunner(Runner):
             if self.cli_limit > len(self.sql):
                 my_debug(output)
             assert len(
-                output_list) == i + 1, "The length of result list should be equal to the commands have executed"
+                output_list) == len(sql_list), "The length of result list should be equal to the commands have executed"
             whole_output_list += output_list
         self.handle_results(whole_output_list)
         self.cli.terminate()

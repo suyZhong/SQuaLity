@@ -557,8 +557,15 @@ class DTParser(SLTParser):
             if len(tokens) > 2:
                 return
             status = (tokens[1] == 'ok')
+            if not status and any([line == '----' for line in lines[1:]]):
+                lines = lines[:lines.index('----')]
+            # We need to split the statement into several statements
+            # some of the DuckDB test case are like:
+            # statement ok
+            # CREATE .......;
+            # INSERT .........;
             statements = (" ".join([re.sub(r'--.*', '', line)
-                          for line in lines[1:]])).strip().split(';\n')
+                          for line in lines[1:]])).strip().split('; ')
             statements = list(filter(None, statements))
             for stmt in statements:
                 record = Statement(sql=stmt.rstrip(';'), result=str(

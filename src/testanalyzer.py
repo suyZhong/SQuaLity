@@ -4,6 +4,7 @@ import random
 import sqlparse
 import re
 from sqlparse.sql import Identifier
+from sqlparse.tokens import Keyword
 import pandas as pd
 from tqdm import tqdm
 from copy import copy
@@ -22,7 +23,7 @@ def compute_similarity(a: str, b: str):
 
 class TestCaseAnalyzer():
     # currently only listed these because these are the top 10 most common SQL statements
-    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE', 'SET', 'GRANT', 'DROP TABLE', 'CREATE VIEW', 'ALTER TABLE',
+    STANDARD_CASES = ['SELECT', 'CREATE TABLE', 'INSERT', 'DROP', 'UPDATE', 'ROLLBACK', 'ALTER', 'DELETE','GRANT', 'DROP TABLE', 'CREATE VIEW', 'ALTER TABLE',
                       'CREATE TRIGGER', 'DROP TRIGGER', 'CREATE TEMPORARY', 'DROP VIEW',
                       'CREATE SCHEMA', 'CREATE SEQUENCE', 'WITH', 'COMMIT', 'PREPARE', 'ALTER SEQUENCE',
                       'CREATE ROLE', 'ALTER ROLE', 'DROP ROLE',
@@ -105,6 +106,55 @@ class TestCaseAnalyzer():
         if sql_type in self.STANDARD_CASES:
             return True
         return False
+    
+    def get_where_length(self, sql: str):
+        try:
+            parsed = sqlparse.parse(sql)
+        except Exception as e:
+            logging.debug(f"Error: {e} in SQL {sql}")
+            return None
+        try:
+            statement = parsed[0]
+        except IndexError:
+            logging.debug(f"Error: No statement found in SQL {sql}")
+            return None
+        if not statement.get_type() == "SELECT":
+            return -1
+        for token in statement.tokens:
+            if str(token).startswith("WHERE"):
+                return len(str(token).split()) - 1
+        return 0
+    
+    
+    def get_join_type(self, sql: str):
+        try:
+            parsed = sqlparse.parse(sql)
+        except Exception as e:
+            logging.debug(f"Error: {e} in SQL {sql}")
+            return None
+        try:
+            statement = parsed[0]
+        except IndexError:
+            logging.debug(f"Error: No statement found in SQL {sql}")
+            return None
+        if not statement.get_type() == "SELECT":
+            return 'NON-QUERY'
+        from_seen = False
+        for i, token in enumerate(statement.tokens):
+            if from_seen and token.ttype is Keyword:
+                from_seen = False
+            if from_seen and str(token).upper().startswith("WHERE"):
+                from_seen = False
+            if from_seen:
+                if isinstance(token, sqlparse.sql.Function):
+                    continue
+                if token.ttype is None and str(token).find(",") != -1:
+                    return "IMPLICIT"
+            if token.ttype is Keyword and token.value.upper() in ('JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'CROSS JOIN'):
+                return token.value.upper()
+            if token.ttype is Keyword and token.value.upper() == "FROM":
+                from_seen = True
+        return 'SIMPLE'
 
     def get_sql_statement_type(self, sql: str):
         if sql.lstrip().startswith('\\'):
@@ -126,6 +176,16 @@ class TestCaseAnalyzer():
         if first_token.ttype is sqlparse.tokens.Keyword.DDL:
             # In "CREATE TABLE", TABLE is the second token (index 2) after whitespace
             second_token = statement.tokens[2]
+            if str(second_token).upper().startswith('MACRO'):
+                return first_token.value.upper() + " " + 'MACRO'
+            if str(second_token).upper().startswith('PUBLICATION'):
+                return first_token.value.upper() + " " + 'PUBLICATION'
+            if str(second_token).upper().startswith('SUBSCRIPTION'):
+                return first_token.value.upper() + " " + 'SUBSCRIPTION'
+            if str(second_token).upper().startswith('SERVER'):
+                return first_token.value.upper() + " " + 'SERVER'
+            if str(second_token).upper().startswith('POLICY'):
+                return first_token.value.upper() + " " + 'POLICY'
             return first_token.value.upper() + " " + second_token.value.upper()
         if first_token.ttype in sqlparse.tokens.Keyword:
             return first_token.value.upper()
@@ -300,18 +360,6 @@ class TestResultAnalyzer():
         print(all_results.info())
         return all_results
 
-    # def find_dependencies(self, logs: str, dep_type='CREATE'):
-    #     dependencies = set()
-    #     parsed = sqlparse.parse(logs)
-    #     for sql in parsed:
-    #         if str(sql.token_first()) in dep_type:
-    #             tokens = sql.tokens
-    #             identifiers = [str(token) for token in parsed.flatten(
-    #             ) if token.ttype is sqlparse.tokens.Name]
-    #             # splits the string into a list of substrings at each space.
-    #             # The result is a flattened list of substrings without spaces.
-    #             dependencies.update(identifiers)
-    #     return dependencies
 
     def extract_success_subset(self, filename: str):
         all_results = self.results[self.results['TESTFILE_PATH'] == filename]

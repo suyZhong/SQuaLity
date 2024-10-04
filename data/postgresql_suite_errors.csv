@@ -1,0 +1,90 @@
+DBMS,SUPER_TAG,TAG,DESCRIPTION,INFORMATION
+sqlite,Command,SET,SET not supported in SQLite,DS
+sqlite,Command,PSQL_CMD,PSQL Command not supported,DS
+sqlite,Operator,TYPE_CAST,"unrecognized token: "":""",Syn
+sqlite,Command,CREATE,"CREATE things, MATERILIZE, SCHEMA, DOMAIN, OPERATOR, FUNCTION, RULE,STATISTICS",DS
+sqlite,Clause,PARTITION,Unsupported Partition,DS
+sqlite,Type,NESTDATA,NESTDATA unsupported,DS
+sqlite,Command,ALTER,ALTER things,DS
+sqlite,UFunction,PGUNIQUE,analyze,DS
+sqlite,Command,TXN,Specific transaction pattern not supported,DS
+sqlite,Clause,EXPLAINARG,EXPLAIN no arguments,Syn
+sqlite,Type,TIMESTAMP,TIME type not supported,DS
+sqlite,Operator,JSON,JSON operator @@,Syn
+sqlite,UFunction,SYSF,"brin_desummarize_range  https://www.postgresql.org/docs/15/functions-admin.html ",DS
+sqlite,Clause,DROPC,Things related to DROP e.g. no cascade,Syn
+sqlite,Type,BINT,Unsupported binary type,DS
+sqlite,Clause,CREATEIN,CREATE RELATED,DS
+sqlite,UFunction,NESTF,Nested Function not supported,DS
+sqlite,Command,FETCH,Fetch statement,DS
+sqlite,Command,LOCK,Lock statement,DS
+sqlite,Command,TRUNCATE,Truncate,DS
+sqlite,Command,REFRESH,refresh,DS
+sqlite,Clause,ALIAS,ALIAS syntax not good,Syn
+sqlite,Operator,BOOL,Bool operator,DS
+sqlite,Command,DROP,DROP things,DS
+sqlite,UFunction,NUMF,Numeric values related funcs,DS
+sqlite,Type,DEFAULT,DEFAULT,DS
+sqlite,Command,COPY,no COPY,DS
+sqlite,UFunction,TIMEF,Time related function,DS
+mysql,Command,PSQL_CMD,PSQL Command not supported,DS
+mysql,Operator,TYPE_CAST,"unrecognized token: "":""",Syn
+mysql,Type,NUMT,Num type,Syn
+mysql,UFunction,PGUNIQUE,Postgresql unique function,DS
+mysql,Command,CREATE,CREATE things,DS
+mysql,Setting,SYSV,Unknown System variable,DS
+mysql,Command,TXN,Transaction name,Syn
+mysql,Clause,PARTITION,Unsupported Partition,DS
+mysql,Operator,FUNCARG,=> in CALL,Syn
+mysql,Clause,EXPLAINARG,EXPLAIN no arguments,Syn
+mysql,Clause,INSERT,UPSERT Syntax not match,Syn
+mysql,Type,NESTDATA,Nest data type,DS
+mysql,Type,GEO,GEO type not supported,DS
+mysql,Clause,CREATEIN,CREATE INDEX ... using/CREATE CLause,Syn
+mysql,UFunction,NESTF,NEST Functions,DS
+mysql,Command,ROLE,CREATE ROLE PRIVILIGE,DS
+mysql,Clause,ADHOC,SELECT FROM adhoc values,Syn
+mysql,Command,COMMENT,COMMENT NOT supported,DS
+mysql,Command,FETCH,FETCH not supported,DS
+mysql,Operator,NUMO,Num operator different : select 10.0 ^ -2,Syn
+mysql,Type,VARCHAR,VARCHAR Need length,Syn
+mysql,UFunction,STRINGUF,String function,DS
+mysql,Command,VACUUM,Vacuum,DS
+mysql,Command,ANALYZE,analyze,DS
+mysql,Command,ALTER,Alter related,DS
+duckdb,UFunction,PGUNIQUE,Postgresql unique function,DS
+duckdb,Setting,SYSV,Unknown System variable,DS
+duckdb,Clause,CREATEIN,Create table inherit/Other caluse,DS
+duckdb,Command,PSQL_CMD,PSQL Command not supported,DS
+duckdb,Clause,PARTITION,Unsupported Partition,DS
+duckdb,Command,ALTER,ALTER Foreign not supported,DS
+duckdb,Function,STRINGF,String function return inconsistent,Sem
+duckdb,UFunction,TIMEF,Time reltaed function not supported,DS
+duckdb,Type,GEO,GEO type not supported,DS
+duckdb,Function,ISSUE,Potential issue,Sem
+duckdb,Command,CREATE,CREATE things,DS
+duckdb,IType,FORMAT,Inconsistent format of nestdata,Sem
+duckdb,UFunction,COMPF,Comparison functions,DS
+duckdb,Command,DISCARD,Discard not supported,DS
+duckdb,Type,FIN,Type money not supported,DS
+duckdb,Type,NESTDATA,"NESTDATA Type ",DS
+duckdb,Type,NUMT,NUM Type not supported,DS
+duckdb,Command,REINDEX,REINDEX,DS
+duckdb,Type,TIMESTAMP,Timestamp not supported,DS
+duckdb,Clause,STAR,Binder Error: STAR expression is only allowed as the root element of an expression. Use COLUMNS(*) instead.,Syn
+duckdb,Command,COMMENT,COMMENT Not supported,DS
+duckdb,Clause,DROPC,DROP,Syn
+duckdb,Type,NETWORK,NETWORK Type,DS
+duckdb,Clause,EXPLAINARG,EXPLAIN no arguments,Syn
+duckdb,Operator,COMPO,Comparison operator,DS
+duckdb,Type,DEFAULT,DEFAULT,DS
+duckdb,Command,TXN,TXN commands,Syn
+duckdb,Command,COPY,COPY not supported,DS
+duckdb,Command,VACUUM,Vacuum,DS
+duckdb,UFunction,NUMF,Num fucntion,DS
+duckdb,UFunction,NESTF,Nest/json function,DS
+duckdb,Clause,WITHO,Not implemented Error: WITH ORDINALITY not implemented,DS
+duckdb,Type,STRINGT,STRING Type related,Syn
+duckdb,UFunction,STRINGUF,String function not supported,DS
+duckdb,Command,DROP,Drop things not available,DS
+,,,,

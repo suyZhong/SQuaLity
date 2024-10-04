@@ -1,0 +1,30 @@
+DBMS,SUPER_TAG,TAG,REASON,INFORMATION
+duckdb,IOperator,INT_DIV,"In SQLite, the backslash ('\') is used as the default symbol for integer division.",Sem
+duckdb,Operator,VARCHAR_SYNTAX,The unary plus operation '+' is not supported on a text type in target DBMS,Syn
+duckdb,Command,COL_IN_AGG,A column is not included in the GROUP BY clause or part of an aggregate function.,Syn
+duckdb,Command,TRIGGER,Trigger not supported or syntax error,DS
+duckdb,Command,UPDATE_MUL,Multiple values updates not supported,DS
+duckdb,Type,INTEGER,Integer overflow,FP
+duckdb,Command,REPLACE,REPLACE statements are not supported,DS
+duckdb,Command,REINDEX,REINDEX statements are not supported,DS
+duckdb,Command,EMPTY_SET,A non-empty set of values is required,Syn
+postgresql,Operator,VARCHAR_SYNTAX,The unary plus operation '+' is not supported on a text type in target DBMS,Syn
+postgresql,Command,VIEW_DEPENDENCY,Depedencies on other objects,
+postgresql,Operator,DIV_ZERO,A warning is issued instead of returning NULL when a division by zero occurs.,FP
+postgresql,Command,TRIGGER,Trigger not supported or syntax error,DS
+postgresql,Function,NULLIF,Functions would cast all arguments and return value after casted,Sem
+postgresql,Function,CAST,CAST (as Integer) use round(),Sem
+postgresql,Function,COALESCE,Functions would cast all arguments and return value after casted,Sem
+postgresql,Type,INTEGER,Integer overflow,FP
+postgresql,Command,EMPTY_SET,A non-empty set of values is required,Syn
+postgresql,Command,REPLACE,REPLACE statements are not supported,DS
+postgresql,Command,REINDEX,REINDEX statements are not supported,DS
+postgresql,Operator,TYPE_CAST,Invalid type cast,Sem
+postgresql,Command,UPDATE_MUL,Multiple values updates not supported,DS
+postgresql,Function,CASE_END,Functions would cast all arguments and return value after casted,Sem
+postgresql,Command,OPERATE_VIEW,Performing update and delete operations on views,Syn
+mysql,Command,COL_IN_AGG,A column is not included in the GROUP BY clause or part of an aggregate function.,Syn
+mysql,Command,TRIGGER,Trigger not supported or syntax error,DS
+mysql,Command,DROP_INDEX,"""DROP INDEX index_name"" is not supported.",Syn
+mysql,Command,OPERATE_VIEW,Performing update and delete operations on views,Syn
+mysql,Issue,TIMEOUT,Execution time is too long,Time

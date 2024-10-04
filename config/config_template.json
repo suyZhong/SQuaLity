@@ -7,5 +7,7 @@
     "postgres_port": 5432,
     "mysql_port": 3306,
     "mysql_user": "root",
-    "mysql_password": "root"
+    "mysql_password": "root",
+    "max_runtime_persql": 20,
+    "bad_files": "data/flaky/parsing_errors.txt"
 }
