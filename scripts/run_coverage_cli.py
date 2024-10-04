@@ -26,16 +26,6 @@ def extract_and_run(dbms_name: str, parser: testparser.Parser, runner: testrunne
         # print(runner.cmd)
         print("Running coverage for test file: ", test_file)
         
-        all_sql = "".join([record.sql + ";\n" for record in records])
-        # Use subprocess to run the SQL queries
-        # process = subprocess.Popen(runner.cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
-        # process.stdin.write(all_sql.encode())
-        # process.stdin.close()
-        # try:
-        #     process.wait(timeout=10)
-        # except subprocess.TimeoutExpired:
-        #     process.kill()
-        #     process.wait()
         
         with open('logs/temp.sql', 'w') as f:
             for record in records:
@@ -57,8 +47,6 @@ if __name__ == "__main__":
     cli_cmd = args.cli
 
     cli_runner = testrunner.CLIRunner()
-    # cli_runner.cmd = "/home/suyang/Projects/SQuaLity-sigmod/resources/SQLite-b2534d8d/sqlite3"
-    # cli_runner.cmd = "/home/suyang/Projects/SQuaLity-sigmod/resources/duckdb/build/coverage/duckdb"
     cli_runner.cmd = cli_cmd
     # Extract SQL Logic Test (SQLite testcase)
     if suite == 'sqlite' or suite == 'all':

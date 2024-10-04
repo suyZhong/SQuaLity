@@ -360,18 +360,6 @@ class TestResultAnalyzer():
         print(all_results.info())
         return all_results
 
-    # def find_dependencies(self, logs: str, dep_type='CREATE'):
-    #     dependencies = set()
-    #     parsed = sqlparse.parse(logs)
-    #     for sql in parsed:
-    #         if str(sql.token_first()) in dep_type:
-    #             tokens = sql.tokens
-    #             identifiers = [str(token) for token in parsed.flatten(
-    #             ) if token.ttype is sqlparse.tokens.Name]
-    #             # splits the string into a list of substrings at each space.
-    #             # The result is a flattened list of substrings without spaces.
-    #             dependencies.update(identifiers)
-    #     return dependencies
 
     def extract_success_subset(self, filename: str):
         all_results = self.results[self.results['TESTFILE_PATH'] == filename]

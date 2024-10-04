@@ -53,12 +53,6 @@ def extract_and_run(dbms_name: str, parser: testparser.Parser, runner: testrunne
             process.kill()
             process.wait()
         
-        # with open('logs/temp.sql', 'w') as f:
-        #     for record in records:
-        #         f.write(record.sql + ';\n')
-        # os.system(runner.cmd + ' < logs/temp.sql')
-        
-        
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()

@@ -60,6 +60,8 @@ if __name__ == "__main__":
         '-' + begin_time.strftime("%m-%d-%H%M")
 
     log_file += ".log"
+    if not os.path.exists("logs"):
+        os.mkdir("logs")
     if log_level != "DEBUG":
         logging.basicConfig(filename=log_file, encoding='utf-8',
                             level=getattr(logging, log_level.upper()),)
