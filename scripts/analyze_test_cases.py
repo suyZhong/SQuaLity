@@ -13,8 +13,8 @@ import pandas as pd
 import numpy as np
 
 Supported_DBMS = ['SQLite', 'MySQL', 'DuckDB', 'PostgreSQL']
-Image_Dir = "../SQuaLity-Paper/assets/img"
-Table_Dir = "../SQuaLity-Paper/assets/table"
+Image_Dir = "../SQuaLity-assets/img"
+Table_Dir = "../SQuaLity-assets/table"
 
 def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
     db_dict = {}
@@ -131,6 +131,67 @@ def generate_test_case_data(db_names = Supported_DBMS, input:str = 'data/',outpu
     plt.tight_layout()
     plt.savefig(os.path.join(output, f"standard_percentage.pdf"))
 
+def generate_test_case_select(db_names = Supported_DBMS, input:str = 'data/',output:str = Table_Dir):
+    db_dict = {}
+    standard_percentage_perfile = []
+    standard_percentage_overall = []
+    for db_name in db_names:
+        db_dict[db_name] = {}
+        analyzer = testanalyzer.TestCaseAnalyzer()
+        print(f"Processing {db_name}")
+        # data we need to collect
+        record_counts = []
+        
+        test_case_path = os.path.join(input, db_name)
+        analyzer.load_testcases(test_case_path)
+        # get total test cases
+        print(f"Total test cases: {analyzer.test_num}")
+        analyzer.test_cases = analyzer.test_cases[analyzer.test_cases['TYPE'] != 'CONTROL']
+        analyzer.test_cases['SQL_TYPE']  = analyzer.test_cases.apply(lambda row: analyzer.get_sql_statement_type(row['SQL'].lstrip()), axis=1)
+        analyzer.test_cases['WHERE_LENGTH'] = analyzer.test_cases.apply(lambda row: analyzer.get_where_length(row['SQL'].lstrip()), axis=1)
+        sql_where_len = analyzer.test_cases['WHERE_LENGTH'].dropna()
+        sql_where_len = sql_where_len[sql_where_len >= 0]
+
+        negative_percentage = sql_where_len[sql_where_len == 0].count() / sql_where_len.count()
+        print(f"Negative Percentage: {negative_percentage}")
+        positive_percentage = sql_where_len[sql_where_len > 0].count() / sql_where_len.count()
+        print(f"Positive Percentage: {positive_percentage}")
+        
+        where_len_count = sql_where_len.value_counts(normalize=True)
+        where_len_count.to_csv(os.path.join(output, f"{db_name}_where_length.csv"))
+        # get number of negative of the where length
+        
+def generate_test_case_join(db_names = Supported_DBMS, input:str = 'data/',output:str = Table_Dir):
+    db_dict = {}
+    standard_percentage_perfile = []
+    standard_percentage_overall = []
+    for db_name in db_names:
+        db_dict[db_name] = {}
+        analyzer = testanalyzer.TestCaseAnalyzer()
+        print(f"Processing {db_name}")
+        # data we need to collect
+        record_counts = []
+        
+        test_case_path = os.path.join(input, db_name)
+        analyzer.load_testcases(test_case_path)
+        # get total test cases
+        print(f"Total test cases: {analyzer.test_num}")
+        analyzer.test_cases = analyzer.test_cases[analyzer.test_cases['TYPE'] != 'CONTROL']
+        analyzer.test_cases['JOIN'] = analyzer.test_cases.apply(lambda row: analyzer.get_join_type(row['SQL'].lstrip()), axis=1)
+        sql_join = analyzer.test_cases['JOIN'].dropna()
+        sql_join = sql_join[sql_join != "NON-QUERY"]
+
+        negative_percentage = sql_join[sql_join == "SIMPLE"].count() / sql_join.count()
+        print(f"Simple Percentage: {negative_percentage}")
+        positive_percentage = sql_join[sql_join != "SIMPLE"].count() / sql_join.count()
+        print(f"Other Percentage: {positive_percentage}")
+        
+        join_count = sql_join.value_counts(normalize=True)
+        join_count.to_csv(os.path.join(output, f"{db_name}_join.csv"))
+        # get number of negative of the where length
+        
+
+
 def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',output:str = Table_Dir, break_down:bool = True):
     top_type_cnt = pd.read_csv(input, index_col=0)
     top_type_cnt.drop(columns=['arithmetic_mean'], inplace=True)
@@ -211,7 +272,7 @@ def generate_test_case_data_from_cache(input:str = 'data/all_sql_type.csv',outpu
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', "--mode", choices=['length', 'dist', 'dist_cache', 'standard'], default='dist')
+    parser.add_argument('-m', "--mode", choices=['length', 'dist', 'dist_cache', 'standard', 'select', 'join'], default='dist')
     parser.add_argument('-o', "--output", type=str, default=Image_Dir, help="output directory")
     arguments = parser.parse_args()
     output = arguments.output
@@ -222,3 +283,7 @@ if __name__ == "__main__":
         generate_test_case_data(db_names=['sqlite', 'postgresql', 'duckdb'], output=output)
     elif arguments.mode == 'dist_cache':
         generate_test_case_data_from_cache(input="data/all_sql_type.csv", output=output, break_down=True)
+    elif arguments.mode == 'select':
+        generate_test_case_select(db_names=['postgresql', 'duckdb', 'sqlite'], output=output)
+    elif arguments.mode == 'join':
+        generate_test_case_join(db_names=['postgresql', 'duckdb', 'sqlite'], output=output)

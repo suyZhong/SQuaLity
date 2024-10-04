@@ -4,6 +4,7 @@ import random
 import sqlparse
 import re
 from sqlparse.sql import Identifier
+from sqlparse.tokens import Keyword
 import pandas as pd
 from tqdm import tqdm
 from copy import copy
@@ -105,6 +106,55 @@ class TestCaseAnalyzer():
         if sql_type in self.STANDARD_CASES:
             return True
         return False
+    
+    def get_where_length(self, sql: str):
+        try:
+            parsed = sqlparse.parse(sql)
+        except Exception as e:
+            logging.debug(f"Error: {e} in SQL {sql}")
+            return None
+        try:
+            statement = parsed[0]
+        except IndexError:
+            logging.debug(f"Error: No statement found in SQL {sql}")
+            return None
+        if not statement.get_type() == "SELECT":
+            return -1
+        for token in statement.tokens:
+            if str(token).startswith("WHERE"):
+                return len(str(token).split()) - 1
+        return 0
+    
+    
+    def get_join_type(self, sql: str):
+        try:
+            parsed = sqlparse.parse(sql)
+        except Exception as e:
+            logging.debug(f"Error: {e} in SQL {sql}")
+            return None
+        try:
+            statement = parsed[0]
+        except IndexError:
+            logging.debug(f"Error: No statement found in SQL {sql}")
+            return None
+        if not statement.get_type() == "SELECT":
+            return 'NON-QUERY'
+        from_seen = False
+        for i, token in enumerate(statement.tokens):
+            if from_seen and token.ttype is Keyword:
+                from_seen = False
+            if from_seen and str(token).upper().startswith("WHERE"):
+                from_seen = False
+            if from_seen:
+                if isinstance(token, sqlparse.sql.Function):
+                    continue
+                if token.ttype is None and str(token).find(",") != -1:
+                    return "IMPLICIT"
+            if token.ttype is Keyword and token.value.upper() in ('JOIN', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'CROSS JOIN'):
+                return token.value.upper()
+            if token.ttype is Keyword and token.value.upper() == "FROM":
+                from_seen = True
+        return 'SIMPLE'
 
     def get_sql_statement_type(self, sql: str):
         if sql.lstrip().startswith('\\'):
