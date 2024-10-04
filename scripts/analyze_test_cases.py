@@ -13,8 +13,8 @@ import pandas as pd
 import numpy as np
 
 Supported_DBMS = ['SQLite', 'MySQL', 'DuckDB', 'PostgreSQL']
-Image_Dir = "../SQuaLity-assets/img"
-Table_Dir = "../SQuaLity-assets/table"
+Image_Dir = "./logs"
+Table_Dir = "./logs"
 
 def plot_test_case_length(db_names = Supported_DBMS, output:str = Image_Dir):
     db_dict = {}
@@ -278,7 +278,7 @@ if __name__ == "__main__":
     output = arguments.output
 
     if arguments.mode == 'length':
-        plot_test_case_length(db_names=['SQLite', 'MySQL', 'PostgreSQL', 'DuckDB'])
+        plot_test_case_length(db_names=['SQLite', 'MySQL', 'PostgreSQL', 'DuckDB'], output=output)
     elif arguments.mode == 'dist':
         generate_test_case_data(db_names=['sqlite', 'postgresql', 'duckdb'], output=output)
     elif arguments.mode == 'dist_cache':
