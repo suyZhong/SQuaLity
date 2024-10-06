@@ -54,15 +54,15 @@ if __name__ == "__main__":
         ddt_parser = testparser.DTParser()
         extract('duckdb', ddt_parser, compression=False)
 
-    # Extract CockroachDB test
-    if suite == 'cockroachdb' or suite == 'all':
-        cdbt_parser = testparser.CDBTParser()
-        extract('cockroachdb', cdbt_parser, compression=False)
+    # # Extract CockroachDB test
+    # if suite == 'cockroachdb' or suite == 'all':
+    #     cdbt_parser = testparser.CDBTParser()
+    #     extract('cockroachdb', cdbt_parser, compression=False)
 
-    # Extract MySQL test
-    if suite == 'mysql' or suite == 'all':
-        mysql_parser = testparser.MYTParser()
-        extract('mysql', mysql_parser, compression=False)
+    # # Extract MySQL test
+    # if suite == 'mysql' or suite == 'all':
+    #     mysql_parser = testparser.MYTParser()
+    #     extract('mysql', mysql_parser, compression=False)
 
     if suite == 'postgresql' or suite == 'all':
         postgres_parser = testparser.PGTParser()
