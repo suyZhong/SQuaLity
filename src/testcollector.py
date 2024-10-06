@@ -24,6 +24,7 @@ class TestcaseCollector():
             self.output_path += ".zip"
 
     def save_records(self, records: List[Record]):
+        tmp_list = []
         self.testcase_df = pd.DataFrame(columns=self.columns)
         for record in records:
             record_type = type(record)
@@ -47,9 +48,8 @@ class TestcaseCollector():
                 self.record_row['IS_HASH'] = record.is_hash
             elif record_type is Control:
                 self.record_row['SQL'] = str(record.action.value)
-
-            self.testcase_df = pd.concat(
-                [self.testcase_df, pd.DataFrame([self.record_row])], ignore_index=True)
+            tmp_list.append(self.record_row)
+        self.testcase_df = pd.DataFrame(tmp_list, columns=self.columns)
 
     def dump_to_csv(self):
         self.testcase_df.to_csv(self.output_path, mode='w', header=True)
