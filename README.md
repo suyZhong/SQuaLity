@@ -8,7 +8,7 @@ Requirements:
 
 - python>=3.9
 - Run `pip3 install -r requirements.txt` in command line
-- MySQL, PostgreSQL and CockroachDB server setup
+- DBMS server setup
 
 ### demo
 
@@ -55,7 +55,7 @@ The `MODE` specifies the analysis mode.
 - `select`: count the distribution of the SELECT statements (RQ2)
 - `join`: count the distribution of the JOIN statements (RQ2)
 
-Note: for RQ2, might take a long time to run the analysis due to SQLite's large test suite. Will parrelize the analysis in the future.
+Note: for RQ2, might take a long time to run the analysis due to SQLite's large test suite. Will parrallelize the analysis in the future.
 
 ### Execute test suites
 
