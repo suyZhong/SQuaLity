@@ -59,10 +59,12 @@ class TestCaseAnalyzer():
             for path, _, file_list in g:
                 test_files += [os.path.join(path, file) for file in file_list]
 
+            all_dfs = []
             for test_file in tqdm(test_files):
                 df = self.read_testcase(test_file)
                 df['TESTFILE_PATH'] = test_file
-                all_test = pd.concat([all_test, df], ignore_index=True)
+                all_dfs.append(df)
+            all_test = pd.concat(all_dfs, ignore_index=True)
             self.test_cases = all_test
         else:
             logging.warning("dir_name and file_name could not be both empty!")
