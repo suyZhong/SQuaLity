@@ -30,6 +30,12 @@ cd SQuaLity
 ./scripts/install_test.sh
 ```
 
+Original test cases license:
+- [SQLite](https://www.sqlite.org/copyright.html)
+- [DuckDB](https://github.com/duckdb/duckdb/blob/main/LICENSE)
+- [PostgreSQL](https://www.postgresql.org/about/licence/)
+- [MySQL](https://github.com/mysql/mysql-server/blob/trunk/LICENSE)
+
 ## Run SQuaLity
 
 ### Analyze test suites (RQ1, RQ2)
