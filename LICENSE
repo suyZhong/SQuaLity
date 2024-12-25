@@ -19,3 +19,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+----
+
+SQuaLity references and may use certain test suites from external projects,
+each of which has its own separate copyright notices and license terms.
+SQuaLity itself does not contain, bundle, or distribute code or test cases 
+from these external projects. Any use of these external test suites is 
+subject to the respective project's licensing and terms.
