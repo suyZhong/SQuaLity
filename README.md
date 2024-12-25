@@ -30,11 +30,12 @@ cd SQuaLity
 ./scripts/install_test.sh
 ```
 
-Original test cases license:
-- [SQLite](https://www.sqlite.org/copyright.html)
-- [DuckDB](https://github.com/duckdb/duckdb/blob/main/LICENSE)
-- [PostgreSQL](https://www.postgresql.org/about/licence/)
-- [MySQL](https://github.com/mysql/mysql-server/blob/trunk/LICENSE)
+Original test cases are under different licenses. For more information, please see below:
+- [SQLite](https://www.sqlite.org/copyright.html) is in the public domain and does not require a license.
+- [DuckDB](https://github.com/duckdb/duckdb/blob/main/LICENSE) is under the MIT License.
+- [PostgreSQL](https://www.postgresql.org/about/licence/) is under the [PostgreSQL license](https://www.opensource.org/licenses/postgresql).
+- [MySQL](https://github.com/mysql/mysql-server/blob/trunk/LICENSE) is under version 2 of the GNU
+   General Public License (GPLv2).
 
 ## Run SQuaLity
 
