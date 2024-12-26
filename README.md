@@ -23,12 +23,19 @@ pip3 install -r requirements.txt
 
 ### Install original test suites
 
-The test suites are stored in `$DBMS_suites` folders. The following commands download the *latest* original test suites from the official repositories.
+The test suites are stored in `$DBMS_suites` folders. They are not included in the artifact. The following commands download the *latest* original test suites from the official repositories.
 
 ```shell
 cd SQuaLity
 ./scripts/install_test.sh
 ```
+
+Original test cases are under different licenses. For more information, please see below:
+- [SQLite](https://www.sqlite.org/copyright.html) is in the public domain and does not require a license.
+- [DuckDB](https://github.com/duckdb/duckdb/blob/main/LICENSE) is under the MIT License.
+- [PostgreSQL](https://www.postgresql.org/about/licence/) is under the [PostgreSQL license](https://www.opensource.org/licenses/postgresql).
+- [MySQL](https://github.com/mysql/mysql-server/blob/trunk/LICENSE) is under version 2 of the GNU
+   General Public License (GPLv2).
 
 ## Run SQuaLity
 
