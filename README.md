@@ -23,7 +23,7 @@ pip3 install -r requirements.txt
 
 ### Install original test suites
 
-The test suites are stored in `$DBMS_suites` folders. The following commands download the *latest* original test suites from the official repositories.
+The test suites are stored in `$DBMS_suites` folders. They are not included in the artifact. The following commands download the *latest* original test suites from the official repositories.
 
 ```shell
 cd SQuaLity
