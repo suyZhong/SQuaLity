@@ -1,18 +1,18 @@
 # SQuaLity
 
-SQuaLity is a tool that unified several test suites from different Database Management Systems (DBMS). It can do a cross check for one DBMS using test cases of others, and find compatibility issues of different SQL dialects.
+SQuaLity is a tool that unifies test suites from different Database Management Systems (DBMS). It performs cross-compatibility testing by running test cases from one DBMS on another, helping identify compatibility issues between different SQL dialects.
 
-## Getting started
+## Getting Started
 
-Requirements:
+**Requirements:**
 
-- python>=3.9
-- Run `pip3 install -r requirements.txt` in command line
+- Python >= 3.10
+- Run `pip3 install -r requirements.txt` to install dependencies
 - DBMS server setup
 
-### demo
+### Demo
 
-The following commands clone SQuaLity, install the packages and run a single test case (by running a SQL Logic Test (SLT) test case on DuckDB using DuckDB Python connector). SQuaLity would log the running status in `logs/debug.log` and output the results in `output/duckdb_sqlite_debug_results.csv`.
+The following commands will clone SQuaLity, install the required packages, and run a single test case (executing an SQL Logic Test (SLT) test case on DuckDB using the DuckDB Python connector). SQuaLity logs the execution status in `logs/debug.log` and outputs results to `output/duckdb_sqlite_debug_results.csv`.
 
 ```shell
 git clone git@github.com:suyZhong/SQuaLity.git
@@ -21,72 +21,77 @@ pip3 install -r requirements.txt
 ./demo.sh
 ```
 
-### Install original test suites
+### Install Original Test Suites
 
-The test suites are stored in `$DBMS_suites` folders. They are not included in the artifact. The following commands download the *latest* original test suites from the official repositories.
+The test suites are stored in `$DBMS_suites` folders and are not included in this artifact. The following commands download the *latest* original test suites from their official repositories.
 
 ```shell
 cd SQuaLity
 ./scripts/install_test.sh
 ```
 
-Original test cases are under different licenses. For more information, please see below:
+Original test cases are distributed under different licenses. For more information, please refer to:
 - [SQLite](https://www.sqlite.org/copyright.html) is in the public domain and does not require a license.
-- [DuckDB](https://github.com/duckdb/duckdb/blob/main/LICENSE) is under the MIT License.
-- [PostgreSQL](https://www.postgresql.org/about/licence/) is under the [PostgreSQL license](https://www.opensource.org/licenses/postgresql).
-- [MySQL](https://github.com/mysql/mysql-server/blob/trunk/LICENSE) is under version 2 of the GNU
-   General Public License (GPLv2).
+- [DuckDB](https://github.com/duckdb/duckdb/blob/main/LICENSE) is licensed under the MIT License.
+- [PostgreSQL](https://www.postgresql.org/about/licence/) is licensed under the [PostgreSQL License](https://www.opensource.org/licenses/postgresql).
+- [MySQL](https://github.com/mysql/mysql-server/blob/trunk/LICENSE) is licensed under version 2 of the GNU General Public License (GPLv2).
 
-## Run SQuaLity
+## Run SQuaLity (For Reproducibility)
 
-### Analyze test suites (RQ1, RQ2)
+### Test Suites Used in the Paper
 
-We use python scripts to analyze the test suites. 
+For reproducibility purposes, the test suites used in our paper should be downloaded from this [link](https://figshare.com/s/afff4757f0788b2f0ac7). However, you can also experiment with the latest versions of the test suites to explore new findings.
 
-First, extract the test cases from the test suites to our unified format.
+### Analyze Test Suites (RQ1, RQ2)
+
+We use Python scripts to analyze the test suites.
+
+First, extract test cases from the test suites into our unified format:
 
 ```shell
-python3 scripts/extract_test_cases.py -s all
+python3 scripts/extract_testcases.py -s all
 ```
 
-Then, analyze the test suites.
+Then analyze the test suites:
 
 ```
 python3 scripts/analyze_test_cases.py -m $MODE -o $OUTPUT_DIR
 ```
 
-The `MODE` specifies the analysis mode.
+The `MODE` parameter specifies the analysis mode:
 
-- `length`: count the LOC of each test case (RQ1)
-- `dist`: count the distribution of the overall SQL statements (RQ2)
-- `select`: count the distribution of the SELECT statements (RQ2)
-- `join`: count the distribution of the JOIN statements (RQ2)
+- `length`: Count the lines of code (LOC) for each test case (RQ1)
+- `dist`: Count the distribution of overall SQL statements (RQ2)
+- `select`: Count the distribution of SELECT statements (RQ2)
+- `join`: Count the distribution of JOIN statements (RQ2)
 
-Note: for RQ2, might take a long time to run the analysis due to SQLite's large test suite. Will parrallelize the analysis in the future.
+Example: `python3 scripts/analyze_test_cases.py -m length -o output`
 
-### Execute test suites
+**Note:** For RQ2, the analysis might take a long time due to SQLite's large test suite. We plan to parallelize the analysis in future versions.
 
-The following command runs SQuaLity on a specific DBMS using a specific test suite. The results are stored in `output/$DBMS_$SUITE_results.csv`.
+### Execute Test Suites
+
+The following command runs SQuaLity on a specific DBMS using a specific test suite. Results are stored in `output/$DBMS_$SUITE_results.csv`.
 
 ```shell
 python3 main.py --dbms $DBMS --s $SUITE [-f DB_NAME] --dump_all --filter --log INFO
 ```
 
-For example, run SQuaLity on DuckDB using the PostgreSQL test suite:
+**Example 1:** Run SQuaLity on DuckDB using the PostgreSQL test suite:
 
 ```shell
 python3 main.py --dbms duckdb --s postgresql  -f output/testpgdb --dump_all --filter --log INFO
 ```
 
-Or run MySQL on it (create a MySQL server first and set up the connection in `./config/config.json`):
+**Example 2:** Run MySQL on the same test suite (requires setting up a MySQL server and configuring the connection in `./config/config.json`):
 
 ```shell
 python3 main.py --dbms mysql --s postgresql  -f output/testpgdb --dump_all --filter --log INFO
 ```
 
-### Results files
+### Results Files
 
-After running the test suites, the results are stored in `output` and the logs are stored in `logs`. 
+After running the test suites, results are stored in the `output` directory and logs are stored in the `logs` directory. 
 
 ```
 .
@@ -99,13 +104,13 @@ After running the test suites, the results are stored in `output` and the logs a
 ...
 ```
 
-The `*.log*` file contains the detailed information of the test cases that successed or failed. The `*.log.out*` file contains the running summary of the test cases.
+The `*.log*` files contain detailed information about test cases that succeeded or failed. The `*.log.out*` files contain execution summaries of the test cases.
 
-The `*results.csv` file contains the execution result of each test case. The `*logs.csv` file contains the SQL statements that built the schema of failing test cases.
+The `*results.csv` files contain the execution results for each test case. The `*logs.csv` files contain the SQL statements used to build schemas for failing test cases.
 
-### Analyze results (RQ3, RQ4)
+### Analyze Results (RQ3, RQ4)
 
-We use jupyter notebook to analyze the results of the test suites. 
+We use Jupyter notebooks to analyze the test suite results. 
 
 ```shell
 .
@@ -118,13 +123,13 @@ We use jupyter notebook to analyze the results of the test suites.
 ...
 ```
 
-Execute the jupyter notebook to analyze the results of the test suites. Manual analysis is required to understand the compatibility issues of different SQL dialects. In general, the analysis includes the following steps:
+Execute the Jupyter notebooks to analyze the test suite results. Manual analysis is required to understand the compatibility issues between different SQL dialects. The analysis generally includes the following steps:
 
-1. Load the results of the test suites.
-2. Filter some test cases that failed in the test suites by regular expressions.
-3. Sample the rest of the failed test cases. Sampled test cases are stored in `output/$DBMS_$SUITE_sample_100.csv`.
-4. Manully analyze the sampled failed test cases and find the compatibility issues of different SQL dialects.
-    - For each of the sampled test case, we analyze the error reason and update the column `ERROR_REASON` in the csv file.
-    - We summarize the compatibility issues in `data/$SUITE_suite_errors.csv`.
-5. Export the analysis statistics.
+1. Load the test suite results.
+2. Filter test cases that failed using regular expressions.
+3. Sample the remaining failed test cases. Sampled test cases are stored in `output/$DBMS_$SUITE_sample_100.csv`.
+4. Manually analyze the sampled failed test cases to identify compatibility issues between different SQL dialects:
+    - For each sampled test case, analyze the error reason and update the `ERROR_REASON` column in the CSV file.
+    - Summarize the compatibility issues in `data/$SUITE_suite_errors.csv`.
+5. Export analysis statistics.
 
