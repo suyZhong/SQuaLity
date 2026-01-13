@@ -36,11 +36,20 @@ Original test cases are distributed under different licenses. For more informati
 - [PostgreSQL](https://www.postgresql.org/about/licence/) is licensed under the [PostgreSQL License](https://www.opensource.org/licenses/postgresql).
 - [MySQL](https://github.com/mysql/mysql-server/blob/trunk/LICENSE) is licensed under version 2 of the GNU General Public License (GPLv2).
 
-## Run SQuaLity (For Reproducibility)
 
 ### Test Suites Used in the Paper
 
-For reproducibility purposes, the test suites used in our paper should be downloaded from this [link](https://figshare.com/s/afff4757f0788b2f0ac7). However, you can also experiment with the latest versions of the test suites to explore new findings.
+For reproducibility purposes, the test suites used in our paper should be downloaded from this [link](https://doi.org/10.5281/zenodo.13896444). Unzip the downloaded file and place the test suites in the corresponding folders:
+
+```.
+├── duckdb_suites
+├── mysql_suites
+├── postgresql_suites
+├── sqlite_suites
+```
+
+
+## Run SQuaLity (For Reproducibility)
 
 ### Analyze Test Suites (RQ1, RQ2)
 
@@ -71,7 +80,7 @@ Example: `python3 scripts/analyze_test_cases.py -m length -o output`
 
 ### Execute Test Suites
 
-The following command runs SQuaLity on a specific DBMS using a specific test suite. Results are stored in `output/$DBMS_$SUITE_results.csv`.
+The following command runs SQuaLity on a specific DBMS using a specific test suite. Results are stored in `output/$DBMS_$SUITE_filter_results.csv`.
 
 ```shell
 python3 main.py --dbms $DBMS --s $SUITE [-f DB_NAME] --dump_all --filter --log INFO
