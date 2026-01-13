@@ -42,10 +42,10 @@ Original test cases are distributed under different licenses. For more informati
 For reproducibility purposes, the test suites used in our paper should be downloaded from this [link](https://doi.org/10.5281/zenodo.13896444). Unzip the downloaded file and place the test suites in the corresponding folders:
 
 ```.
-├── duckdb_suites
-├── mysql_suites
-├── postgresql_suites
-├── sqlite_suites
+├── duckdb_tests
+├── mysql_tests
+├── postgresql_tests
+├── sqlite_tests
 ```
 
 
